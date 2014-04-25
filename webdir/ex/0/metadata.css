@@ -1,0 +1,11 @@
+/* ----------------------------------------------
+   Lecture-specific colours
+   ---------------------------------------------- */
+.rightbordersolid
+{
+  border-right: 1px solid #808b91;
+}
+.backcolor
+{
+  background-color: #808b91;
+}

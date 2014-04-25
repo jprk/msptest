@@ -1,0 +1,48 @@
+<html>
+<head>
+</head>
+<body>
+<p>
+aaaaaaa
+</p>
+<script type="text/javascript">
+
+function validnumber ( obj )
+{
+	if ( isNaN ( obj.value ))
+	{
+		objid = obj.id;
+    /* Value of obj cannot be represented as a number. */
+		alert ( "Hodnota '" + obj.value + "' není èíslo! (" + objid + ")" );
+		/* And focus the field again */
+		obj.value = "";
+		setTimeout ( "document.getElementById(objid).focus();", 1 );
+		setTimeout ( "document.getElementById(objid).select();", 1 );
+		return false;
+	}
+}
+
+function validate(isField){
+
+splitDate = isField.value.split("/");
+refDate = new Date(isField.value);
+if (splitDate[0] < 1 || splitDate[0] > 12 || refDate.getDate() != splitDate[1] || splitDate[2].length != 4 || (!/^19|20/.test(splitDate[2])))
+{
+alert('Invalid date');
+//isField.value = "";
+isField.focus();
+return false;
+}
+isField.value = isField.value.replace(/^(\d{1}\/)/,"0$1").replace(/(\d{2}\/)(\d{1}\/)/,"$10$2")
+}
+
+</script>
+<Form>
+
+Some Date: (mm/dd/yyyy) <input type='text' size='9' id="input1" name='nDate' onblur="validnumber (this);"><br>
+Another: (mm/dd/yyyy) <input type='text' size='9' name='zDate' onblur="validnumber (this);"><br>
+Nothing: <input type='text' size='9'  onblur="validate(this)">
+
+</Form>
+</Body>
+</HTML>

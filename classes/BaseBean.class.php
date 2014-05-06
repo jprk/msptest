@@ -249,7 +249,10 @@ class BaseBean
 	{
 		if ( $this->_debugMode )
 		{
-			echo "<!--\n";
+            $bt = debug_backtrace();
+            $caller = array_shift ( $bt );
+            $ucaller = array_shift ( $bt );
+            echo "<!-- " . $caller['file'] . ":" . $caller['line'] . " in `" . $ucaller['function'] . "()`\n";
 			echo $name . ":\n";
 			print_r ( $val );
 			echo "\n-->\n";

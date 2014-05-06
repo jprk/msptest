@@ -156,7 +156,15 @@ class CPPSmarty extends Smarty
    */
   function dbQuery ( $query, $idx=NULL )
   {
-    if ( $this->debug ) echo "<!-- Q:'" . $query . "' -->\n";
+    if ( $this->debug )
+    {
+      $bt = debug_backtrace();
+      array_shift ( $bt );
+      $caller = array_shift ( $bt );
+      $ucaller = array_shift ( $bt );
+      echo "<!-- " . $caller['file'] . ":" . $caller['line'] . " in `" . $ucaller['function'] . "()`\n";
+      echo "     dbQuery():'" . $query . "' -->\n";
+    }
     $result = mysql_query ($query);
 
     /* Is the result a meaningful `resource` or did an error occur? */
@@ -201,7 +209,15 @@ class CPPSmarty extends Smarty
   
   function dbQuerySingle ($query)
   {
-    if ( $this->debug ) echo "<!-- QS:'" . $query . "' -->\n";
+    if ( $this->debug )
+    {
+      $bt = debug_backtrace();
+      array_shift ( $bt );
+      $caller = array_shift ( $bt );
+      $ucaller = array_shift ( $bt );
+      echo "<!-- " . $caller['file'] . ":" . $caller['line'] . " in `" . $ucaller['function'] . "()`\n";
+      echo "     dbQuerySingle():'" . $query . "' -->\n";
+    }
     $result = mysql_query ($query);
     
     /* Is the result a meaningful `resource` or did an error occur? */

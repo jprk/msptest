@@ -339,14 +339,52 @@ class ExcersiseRepBookingBean extends DatabaseBean
         $replIds = array2ToDBString ( $replacementList, 'id' );
         $this->dumpVar('replIds',$replIds);
         $failedList = $this->dbQuery (
-            "SELECT rs.*, st.*, rd.date, ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AS `fromtime` " .
+            "SELECT lg.group_id, rs.*, st.*, rd.date, ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AS `fromtime` " .
             "FROM repl_stud AS rs LEFT JOIN student AS st ON rs.student_id=st.id " .
             "LEFT JOIN replacement_dates AS rd ON rs.replacement_id = rd.id " .
-            "LEFT JOIN excersise AS ex ON rd.excersise_id = ex.id WHERE " .
+            "LEFT JOIN excersise AS ex ON rd.excersise_id = ex.id " .
+            "LEFT JOIN labtask_group AS lg ON rs.lgrp_id = lg.id WHERE " .
+            "replacement_id IN(" . $replIds . ") AND " .
             "NOW()>ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AND dateto IS NULL AND confirmed=0 " .
             "ORDER BY st.surname,st.firstname,rd.date"
             );
-        $this->_smarty->assign ( 'failstudents', $failedList );
+        $this->dumpVar ( 'failedList', $failedList );
+
+        /* Preprocess the list: the output shall be an array of arrays, where the top-level array is indexed by
+           distinct students and the lower level array contains the failures. Will be implemented as and array
+           of associative arrays holding the resultset elements, with an added element for failures. */
+        $student_keys = array_flip ( array ( 'id', 'login', 'firstname', 'surname', 'yearno', 'groupno', 'email' ));
+        $failed_keys = array_flip ( array ( 'replacement_id', 'group_id', 'lgrp_id', 'datefrom', 'date', 'fromtime' ));
+        /* This is used to identify repeating students in the $failedList. */
+        $prev_student_id = NULL;
+        $failedStudents = array();
+        $sr = NULL;
+        foreach ( $failedList as $student )
+        {
+            $student_id = $student['id'];
+            $sf = array_intersect_key( $student, $failed_keys );
+            if ( $student_id != $prev_student_id )
+            {
+                /* If there is a student to append to the list of failed students, do so. */
+                if ( $prev_student_id != NULL ) $failedStudents[] = $sr;
+                /* Remember the new student's id. */
+                $prev_student_id = $student_id;
+                /* This should create $sr containing the element with keys in $student_keys. */
+                $sr = array_intersect_key( $student, $student_keys );
+                $sr['numfailures'] = 1;
+                $sr['fail'] = array ( $sf );
+            }
+            else
+            {
+                /* We have seen the student before. */
+                $sr['numfailures']++;
+                $sr['fail'][] = $sf;
+            }
+        }
+        /* The last student has to be added here. */
+        if ( $prev_student_id != NULL ) $failedStudents[] = $sr;
+
+        $this->_smarty->assign ( 'failstudents', $failedStudents );
         return $failedList;
     }
 

@@ -18,8 +18,10 @@ table.admintable, table.pointtable {
     width: 100%;
 }
 
-table.admintable td {
-	padding: 2pt 3pt;
+table.admintable td,
+table.admintable th
+{
+	padding: 4px;
 }
 
 #main, #news {

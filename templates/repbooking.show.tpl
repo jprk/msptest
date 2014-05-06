@@ -9,23 +9,34 @@
         <tr class="newobject">
             <th>Jméno</th>
             <th>Ročník / Skupina</th>
+            <th>Počet</th>
             <th>Datum</th>
             <th>Skupina úloh</th>
         </tr>
         </thead>
         <tbody>
-        {section name=rs loop=$failstudents}
-            {if $smarty.section.rs.iteration is even}
-            <tr class="rowA">
-                {else}
-            <tr class="rowB">
+        {foreach from=$failstudents item=student name=rs}
+            {if $smarty.foreach.rs.iteration is even}
+            <tr class="rowA" style="vertical-align: baseline;">
+            {else}
+            <tr class="rowB" style="vertical-align: baseline;">
             {/if}
-            <td>{$failstudents[rs].surname} {$failstudents[rs].firstname}</td>
-            <td align="center">{$failstudents[rs].yearno} / {$failstudents[rs].groupno}</td>
-            <td>{$failstudents[rs].fromtime|date_format:"%d.%m.%Y %H:%M"}</td>
-            <td>{$failstudents[rs].lab_id}</td>
+            <td rowspan="{$student.numfailures}">{$student.surname} {$student.firstname}</td>
+            <td rowspan="{$student.numfailures}" align="center">{$student.yearno} / {$student.groupno}</td>
+            <td rowspan="{$student.numfailures}" align="center">{$student.numfailures}</td>
+            {foreach from=$student.fail item=failure name=rf}
+                {if $smarty.foreach.rf.iteration > 1}
+                    {if $smarty.foreach.rs.iteration is even}
+        <tr class="rowA"  style="vertical-align: baseline;">
+                    {else}
+        <tr class="rowB" style="vertical-align: baseline;">
+                    {/if}
+                {/if}
+            <td>{$failure.fromtime|date_format:"%d.%m.%Y %H:%M"}</td>
+            <td>S{$failure.group_id}</td>
         </tr>
-        {/section}
+            {/foreach}
+        {/foreach}
         </tbody>
     </table>
 </form>

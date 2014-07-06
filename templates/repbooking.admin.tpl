@@ -35,16 +35,16 @@
             </td>
             <td align="center"><input type="radio"
                                       name="replstatus[{$replstudents[rs].id}]"
-                                      value="2"{$replstudents[rs].present}/></td>
+                                      value="2"{$replstudents[rs].passed}/></td>
             <td align="center"><input type="radio"
                                       name="replstatus[{$replstudents[rs].id}]"
-                                      value="4"{$replstudents[rs].testfailed}/></td>
+                                      value="3"{$replstudents[rs].failed}/></td>
             <td align="center"><input type="radio"
                                       name="replstatus[{$replstudents[rs].id}]"
                                       value="1"{$replstudents[rs].excused}/></td>
             <td align="center"><input type="radio"
                                       name="replstatus[{$replstudents[rs].id}]"
-                                      value="0"{$replstudents[rs].failed}/></td>
+                                      value="0"{$replstudents[rs].noshow}/></td>
         </tr>
         {/section}
         <tr class="submitrow">

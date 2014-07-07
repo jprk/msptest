@@ -22,13 +22,21 @@ define ( 'ERR_NO_FILE_SPECIFIED',  3 );
 define ( 'ERR_ADMIN_MODE',         4 ); // error catched, display admin menu
 define ( 'ERR_INVALID_ID',         5 );
 
+/**
+ * Base class of the LectWeb system.
+ *
+ * @property CPPSmarty $_smarty
+ */
 class BaseBean
 {
     private $_assignList;
     
     protected $_debugMode;
 	protected $_smarty;
-    
+
+    protected $id;
+    public    $rs;
+
 	protected $action;
 	protected $object;
     protected $returntoparent;

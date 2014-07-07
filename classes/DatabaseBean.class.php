@@ -3,9 +3,7 @@
 class DatabaseBean extends BaseBean
 {
 	private $_table;
-	protected $id;
-	protected $rs;
-	
+
     /**
      * Update the value of $this->rs with values of all visible variables
      * defined in the class.

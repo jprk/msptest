@@ -12,6 +12,10 @@ define ( 'NEWS_ARTICLE', 2 );
 
 define ( 'IMG_SIZE', 190 );
 
+/**
+ * Modified Smarty class for LectWeb.
+ * @method void assign(string $smartyVariable, mixed $data) Assigns data to Smarty variable.
+ */
 class CPPSmarty extends Smarty
 {
 	var $_currencies, $_submenu, $_locale ;
@@ -153,6 +157,8 @@ class CPPSmarty extends Smarty
    * Enter description here ...
    * @param string $query The query string.
    * @param string $idx The index in case of custom indexing.
+   * @return array Array of associative arrays holding result set data.
+   * @throws Exception In case of an invalid SQL query.
    */
   function dbQuery ( $query, $idx=NULL )
   {
@@ -256,7 +262,7 @@ class CPPSmarty extends Smarty
   
   function dbQueryArticleIdSet ()
   {
-      $resultset = $this->dbQuery ("SELECT Id, title FROM articles ORDER BY title");
+      $resultset = $this->dbQuery ("SELECT id, title FROM articles ORDER BY title");
         
       $idSet = array ();
     

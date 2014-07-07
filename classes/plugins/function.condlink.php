@@ -10,7 +10,7 @@ function smarty_function_condlink($params, &$smarty)
 {
     /* This is the list of mandatory parameters. */
     $mparams = array ( 'text' => NULL, 'condition' => NULL,
-                        'obj'=> NULL, 'act'=> NULL, 'id'=> NULL );
+                        'obj'=> NULL, 'act'=> NULL, 'id'=> NULL  );
     /* Merge the parameter array with the mandatory parameters.
        Use `mparams` as the base so that any entry with an identical
        key in `params` will overwrite it. */
@@ -28,12 +28,19 @@ function smarty_function_condlink($params, &$smarty)
         }
     }
 
+    /* Check for optional parameter `getstr` holding a GET request string that will
+       be added to the URL. */
+    if ( ! array_key_exists( 'getstr', $params ))
+    {
+        $params['getstr'] = '';
+    }
+
     if ( $params['condition'] )
     {
         $text = '<a href="?act=' .
                 $params['act'] . ',' .
                 $params['obj'] . ',' .
-                $params['id'] . '">' . $params['text'] . '</a>';
+                $params['id'] . $params['getstr'] . '">' . $params['text'] . '</a>';
     }
     else
     {

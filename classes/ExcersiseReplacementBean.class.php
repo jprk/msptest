@@ -140,27 +140,25 @@ class ExcersiseReplacementBean extends DatabaseBean
 
     function getReplacements ( $termDates )
     {
-        /* Get the list of all excersises for the given lecture id and the
-             current school year. */
-        $excersiseBean = new ExcersiseBean ( NULL, $this->_smarty, NULL, NULL );
-        $excersiseList = $excersiseBean->getFull ( $this->id, $this->schoolyear );
+        /* Get the list of all exercises for the given lecture id and the current school year. */
+        $exerciseBean = new ExcersiseBean ( NULL, $this->_smarty, NULL, NULL );
+        $exerciseList = $exerciseBean->getFull ( $this->id, $this->schoolyear );
 
-        /* Convert the excersise list to a list indexed by excersise id so that
-           it can be merged into the list of replacements. */
-        $excersiseList = resultsetToIndexKey ( $excersiseList, 'id' );
+        /* Convert the exercise list to a list indexed by exercise id so that it can be merged
+           into the list of replacements. */
+        $exerciseList = resultsetToIndexKey ( $exerciseList, 'id' );
 
-        /* Get a list of already defined replacement dates for this term
-           * and the given list of excersise ids. The list is indexed by date and
-           * it may contains dates that were entered manually (like excersises
-           * that were moved from their scheduled occurrence due to holidays,
-           * technical problems etc.).   */
-        $reps = $this->getReplacementsForExcList ( $excersiseList, $termDates );
+        /* Get a list of already defined replacement dates for this term and the given list of
+           exercise ids. The list is indexed by date and it may contains dates that were entered
+           manually (like exercises that were moved from their scheduled occurrence due to holidays,
+           technical problems etc.).   */
+        $reps = $this->getReplacementsForExcList ( $exerciseList, $termDates );
 
-        /* Populate the entries in the `reps` with excersise info. */
+        /* Populate the entries in the `reps` with exercise info. */
         foreach ( $reps as $key => $val )
         {
             $eId = $val['excersise_id'];
-            $reps[$key] = array_merge ( $excersiseList[$eId], $reps[$key] );
+            $reps[$key] = array_merge ( $exerciseList[$eId], $reps[$key] );
         }
 
         return $reps;

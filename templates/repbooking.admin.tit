@@ -1,1 +1,1 @@
-Zápis prezence pro docvičení
+Zápis prezence pro docvičení dne {$replacement.date|date_format:"%d.%m.%Y"} v {if $replacement.mfrom}{$replacement.mfrom|date_format:"%H:%M"}{else}{$excersise.from|date_format:"%H:%M"}{/if}

@@ -1,8 +1,8 @@
 <?php
 /**
- * Interface to replacement excersises and labs (used for physics labs at the moment).
+ * Interface to replacement exercises and labs (used for physics labs at the moment).
  *
- * (c) Jan Prikryl, 2012
+ * (c) Jan Prikryl, 2012,2014
  */
 class ExcersiseRepBookingBean extends DatabaseBean
 {
@@ -11,11 +11,17 @@ class ExcersiseRepBookingBean extends DatabaseBean
     /* Limit the possibility to cancel the booking to some minutes before start. */
     const CANCEL_INTERVAL = 15;
 
-    const FAILED  = 0;
-    const EXCUSED = 1;
-    const PRESENT = 2;
+    const NOSHOW  = 0; /**> Booked, but did not show up. */
+    const EXCUSED = 1; /**> Booked and excused themselves for not showing up. */
+    const PASSED = 2; /**> Arrived and passed the test. */
+    const FAILED  = 3; /**> Arrived but did not pass the test. */
 
     const SESSION_LGRPID_KEY = 'lgrpid';
+
+    /* Booking type to display */
+    const BOOKING_ALL = 0;      /**> All bookings for a student. */
+    const BOOKING_NOSHOW = 1;   /**> Only failed replacements (no show) */
+    const BOOKING_FAILED = 2;   /**> Only failed tests */
 
     /* Static project resource identifier for ftok().
        Has to be a single character. */
@@ -25,6 +31,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
     private $replId;
     private $datefrom;
     private $replstatus;
+    private $bookingtype;
 
     /* Constructor */
 	function __construct ( $id, &$smarty, $action, $object )
@@ -33,7 +40,8 @@ class ExcersiseRepBookingBean extends DatabaseBean
 		parent::__construct( $id, $smarty, 'repl_stud', $action, $object );
 		/* Update internals. */
 		//self::_setDefaults();
-	}
+        $this->bookingtype = self::NOSHOW;
+    }
 	
 	function dbInsert ( $repl_id, $student_id, $lgrp_id )
 	{
@@ -42,14 +50,15 @@ class ExcersiseRepBookingBean extends DatabaseBean
 				$repl_id . "," .
                 $student_id . "," .
                 $lgrp_id .
-                ",NOW(),NULL,FALSE)"
+                ",NOW(),NULL,FALSE,FALSE)"
 				);
 	}
 
-    function dbReplace ( $repl_id, $student_id, $datefrom, $dateto, $confirmed )
+    function dbReplace ( $repl_id, $student_id, $datefrom, $dateto, $passed, $failed )
     {
         $this->dbQuery (
-            "UPDATE repl_stud SET dateto=" . $dateto . ", confirmed=" . $confirmed . " WHERE " .
+            "UPDATE repl_stud SET dateto=" . $dateto . ", passed=" . intval($passed) . ", failed=" . intval($failed) .
+            " WHERE " .
             "replacement_id=" . $repl_id . " AND " .
             "student_id=" . $student_id . " AND " .
             "datefrom='" . $datefrom . "'" );
@@ -268,6 +277,9 @@ class ExcersiseRepBookingBean extends DatabaseBean
 
     function getStudentList ()
     {
+        /* The flag indicating a valid excuse from the replacement exercise is set by having `dateto` filed set to
+           a later date than the date that allows automatic deletion of an existing booking (currently it is
+           `self::CANCEL_INTERVAL` minutes, see the last line of the SQL command. */
         $studentList = $this->dbQuery (
             "SELECT rs.*,st.* FROM repl_stud AS rs " .
             "LEFT JOIN student AS st ON rs.student_id=st.id " .
@@ -277,28 +289,35 @@ class ExcersiseRepBookingBean extends DatabaseBean
             "(rs.dateto IS NULL OR " .
             "rs.dateto>(ADDTIME(rd.date,IFNULL(rd.mfrom,ex.from))-INTERVAL " . self::CANCEL_INTERVAL . " MINUTE)) "
             );
-        /* Loop over the list and decide which of the three radio inputs
+        /* Loop over the list and decide which of the four radio inputs
            shall be checked. */
         if ( ! empty ( $studentList ))
         {
             foreach ( $studentList as $key => $val )
             {
-                if ( $val['confirmed'] )
+                if ( $val['passed'] )
                 {
                     /* This student really attended the replacement exercise and passed the admission test. */
-                    $studentList[$key]['present'] = ' checked="checked"';
+                    $studentList[$key]['passed'] = ' checked="checked"';
+                    $studentList[$key]['failed'] = '';
                 }
-                elseif ( $val['testfailed'] )
+                elseif ( $val['failed'] )
                 {
                     /* This student really attended the replacement exercise, but did not pass the admission test. */
-                    $studentList[$key]['present'] = ' checked="checked"';
+                    $studentList[$key]['failed'] = ' checked="checked"';
+                    $studentList[$key]['passed'] = '';
                 }
                 else
                 {
+                    /* These are student that did not attend the exercise. */
+                    $studentList[$key]['failed'] = '';
+                    $studentList[$key]['passed'] = '';
+
+                    /* Either they simply did not show up or they excused themselves beforehand. */
                     if ( empty ( $val['dateto'] ))
                     {
                         /* These students did not attend and did not excuse themselves. */
-                        $studentList[$key]['failed'] = ' checked="checked"';
+                        $studentList[$key]['noshow'] = ' checked="checked"';
                     }
                     else
                     {
@@ -334,30 +353,40 @@ class ExcersiseRepBookingBean extends DatabaseBean
         return current($lgrpList);
     }
 
-    function assignFailedStudents ( $replacementList )
+    private function getStudentBookings ( $replacementList, $type=self::BOOKING_ALL )
     {
+        $failedBookingPart = "";
+        if ( $type == self::BOOKING_NOSHOW )
+            $failedBookingPart = "AND NOW()>ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AND dateto IS NULL AND passed=0 AND failed=0 ";
+        elseif ( $type == self::BOOKING_FAILED )
+            $failedBookingPart = "AND NOW()>ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AND dateto IS NULL AND failed=1 ";
+
         $replIds = array2ToDBString ( $replacementList, 'id' );
         $this->dumpVar('replIds',$replIds);
+
         $failedList = $this->dbQuery (
-            "SELECT lg.group_id, rs.*, st.*, rd.date, ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AS `fromtime` " .
+            "SELECT lg.group_id, rs.*, rd.date, " .
+            "st.id, st.login, st.firstname, st.surname, st.yearno, st.groupno, st.email, " .
+            "ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AS `fromtime`, " .
+            "NOW()>ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AS `finished` " .
             "FROM repl_stud AS rs LEFT JOIN student AS st ON rs.student_id=st.id " .
             "LEFT JOIN replacement_dates AS rd ON rs.replacement_id = rd.id " .
             "LEFT JOIN excersise AS ex ON rd.excersise_id = ex.id " .
             "LEFT JOIN labtask_group AS lg ON rs.lgrp_id = lg.id WHERE " .
-            "replacement_id IN(" . $replIds . ") AND " .
-            "NOW()>ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AND dateto IS NULL AND confirmed=0 " .
+            "replacement_id IN(" . $replIds . ") " .
+            $failedBookingPart .
             "ORDER BY st.surname,st.firstname,rd.date"
-            );
+        );
         $this->dumpVar ( 'failedList', $failedList );
 
         /* Preprocess the list: the output shall be an array of arrays, where the top-level array is indexed by
            distinct students and the lower level array contains the failures. Will be implemented as and array
            of associative arrays holding the resultset elements, with an added element for failures. */
         $student_keys = array_flip ( array ( 'id', 'login', 'firstname', 'surname', 'yearno', 'groupno', 'email' ));
-        $failed_keys = array_flip ( array ( 'replacement_id', 'group_id', 'lgrp_id', 'datefrom', 'date', 'fromtime' ));
+        $failed_keys = array_flip ( array ( 'replacement_id', 'group_id', 'lgrp_id', 'datefrom', 'date', 'fromtime', 'dateto', 'confirmed', 'finished' ));
         /* This is used to identify repeating students in the $failedList. */
         $prev_student_id = NULL;
-        $failedStudents = array();
+        $bookings = array();
         $sr = NULL;
         foreach ( $failedList as $student )
         {
@@ -365,27 +394,40 @@ class ExcersiseRepBookingBean extends DatabaseBean
             $sf = array_intersect_key( $student, $failed_keys );
             if ( $student_id != $prev_student_id )
             {
-                /* If there is a student to append to the list of failed students, do so. */
-                if ( $prev_student_id != NULL ) $failedStudents[] = $sr;
+                /* If there is a student to append to the list of bookings, do so. */
+                if ( $prev_student_id != NULL ) $bookings[] = $sr;
                 /* Remember the new student's id. */
                 $prev_student_id = $student_id;
                 /* This should create $sr containing the element with keys in $student_keys. */
                 $sr = array_intersect_key( $student, $student_keys );
-                $sr['numfailures'] = 1;
-                $sr['fail'] = array ( $sf );
+                $sr['numitems'] = 1;
+                $sr['replacements'] = array ( $sf );
             }
             else
             {
                 /* We have seen the student before. */
-                $sr['numfailures']++;
-                $sr['fail'][] = $sf;
+                $sr['numitems']++;
+                $sr['replacements'][] = $sf;
             }
         }
         /* The last student has to be added here. */
-        if ( $prev_student_id != NULL ) $failedStudents[] = $sr;
+        if ( $prev_student_id != NULL ) $bookings[] = $sr;
 
+        return $bookings;
+    }
+
+    function assignStudentBookings ( $replacementList )
+    {
+        $bookedStudents = $this->getStudentBookings ( $replacementList, self::BOOKING_ALL );
+        $this->_smarty->assign ( 'bookedstudents', $bookedStudents );
+        return $bookedStudents;
+    }
+
+    function assignFailedStudents ( $replacementList )
+    {
+        $failedStudents = $this->getStudentBookings ( $replacementList, self::BOOKING_NOSHOW );
         $this->_smarty->assign ( 'failstudents', $failedStudents );
-        return $failedList;
+        return $failedStudents;
     }
 
     /**
@@ -399,12 +441,13 @@ class ExcersiseRepBookingBean extends DatabaseBean
         assignPostIfExists ( $this->replstatus, $this->rs, 'replstatus' );
     }
     /**
-     * Process parameters supplied as POST part of the request.
+     * Process parameters supplied as GET part of the request.
      */
     function processGetVars ()
     {
-        assignGetIfExists ( $this->replId,    $this->rs, 'replid' );
-        assignGetIfExists ( $this->datefrom,  $this->rs, 'datefrom' );
+        assignGetIfExists ( $this->replId,       $this->rs, 'replid' );
+        assignGetIfExists ( $this->datefrom,     $this->rs, 'datefrom' );
+        assignGetIfExists ( $this->bookingtype,  $this->rs, 'bookingtype' );
     }
 
 
@@ -582,14 +625,17 @@ class ExcersiseRepBookingBean extends DatabaseBean
                     $student = $studentList[$student_id];
                     switch ( $status )
                     {
-                        case self::PRESENT :
-                            $this->dbReplace ( $this->replId, $student_id, $student['datefrom'], 'NULL', 1 );
+                        case self::PASSED :
+                            $this->dbReplace ( $this->replId, $student_id, $student['datefrom'], 'NULL', true, false );
                             break;
                         case self::EXCUSED :
-                            $this->dbReplace ( $this->replId, $student_id, $student['datefrom'], 'NOW()', 0 );
+                            $this->dbReplace ( $this->replId, $student_id, $student['datefrom'], 'NOW()', false, false );
                             break;
                         case self::FAILED :
-                            $this->dbReplace ( $this->replId, $student_id, $student['datefrom'], 'NULL', 0 );
+                            $this->dbReplace ( $this->replId, $student_id, $student['datefrom'], 'NULL', false, true );
+                            break;
+                        case self::NOSHOW :
+                            $this->dbReplace ( $this->replId, $student_id, $student['datefrom'], 'NULL', false, false );
                             break;
                         default :
                             die ( "Wrong status." );
@@ -632,6 +678,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
                to react to all of them. */
             switch ( $res )
             {
+                /** @noinspection PhpMissingBreakStatementInspection */
                 case MUTEX_LOCK_STOLEN_OK;
                     /* Stealing a stale lock is perfecty okay. On the other
                 hand we would better let the user know that someone
@@ -776,20 +823,37 @@ class ExcersiseRepBookingBean extends DatabaseBean
 
     function doShow()
     {
-        /* Information about the lecture we are listing excersises for ... */
-        $lectureBean = new LectureBean ( $this->id, $this->_smarty, NULL, NULL );
-        $lectureBean->assignSingle ();
+        /* Process parameters provided as a part of URL (bookingtype in this case) */
+        $this->processGetVars();
+
+        /* Information about the lecture we are listing exercises for ... */
+        $lectureBean = new LectureBean ($this->id, $this->_smarty, NULL, NULL);
+        $lectureBean->assignSingle();
 
         /* Retrieve parameters of the current term. */
-        $termDates = SchoolYearBean::getTermLimits ( $this->schoolyear, $lectureBean->getTerm() );
+        $termDates = SchoolYearBean::getTermLimits($this->schoolyear, $lectureBean->getTerm());
 
         /* Construct a database bean for accessing replacements. */
-        $replBean = new ExcersiseReplacementBean ( $this->id, $this->_smarty, NULL, NULL );
-        /* Get the list of possible replacements for this lecture. The list will possibly include replacement labs where this
- particular lab task has been reserved already. */
-        $replacementList = $replBean->getReplacements ( $termDates );
+        $replBean = new ExcersiseReplacementBean ($this->id, $this->_smarty, NULL, NULL);
+        /* Get the list of replacements exercises for this lecture.
+           @TODO Why do we need term limits instead of schoolyear? */
+        $replacementList = $replBean->getReplacements($termDates);
 
-        $this->assignFailedStudents ( $replacementList );
+        /* Fetch data for table of failed replacement exercises or data of all bookings. */
+        if ( $this->bookingtype == self::BOOKING_NOSHOW )
+        {
+            $this->assignFailedStudents ( $replacementList );
+            $this->action .= '.failed';
+        }
+        elseif ( $this->bookingtype == self::BOOKING_ALL )
+        {
+            $this->assignStudentBookings ( $replacementList );
+            $this->action .= '.all';
+        }
+        else
+        {
+            $this->action .= '.e_bookingtype';
+        }
     }
 }
 ?>

@@ -66,7 +66,7 @@ $timeStart = getmicrotime ();
 $act = $_GET['act'];
 list ( $action, $object, $stringId ) = explode ( ',', $act );
 
-/* Test the parsed values for corectness */
+/* Test the parsed values for correctness */
 $errorMsg = "";
 switch ( $object )
 {
@@ -147,7 +147,7 @@ switch ( $action )
 		break;
 	case "delete":
 		if ( $object == "login" ) break;
-        if ( $object == "repbooking" ) $studentNeeded = true; break;
+        if ( $object == "repbooking" ) { $studentNeeded = true; break; }
 		if ( $object != "comments" && $object != "order" ) $lecturerNeeded = true;
 	case "show":
         if ( $object == "stulec" ) $lecturerNeeded = true;
@@ -452,6 +452,16 @@ switch ( $object )
 		$action = "error";
 }
 
+/* Log the parameters of this controller invocation. This is necessary to easily handle claims of
+   students that they accomplished something (booking, exercise submission) while the system
+   shows otherwise. */
+if ( SessionDataBean::getUserRole() != USR_ANONYMOUS )
+{
+    /* The rest of the log entry will be composed out of the contents of
+       the globals $_GET, $_POST and $_SESSION. */
+    $smarty->dbLog($timeStart, $object, $action);
+}
+
 /* This fills in all the data needed by appropriate templates into the
    Smarty instance passed in by the constructor. */
 if ( $bean )
@@ -474,6 +484,13 @@ if ( $bean )
 			$smarty->assign ( 'exceptionMsg', $e->getMessage() );
 			$html   = "<p>Exception occured: <tt>" . $e->getMessage() . "</tt></p>";
 			logSystemError ( $html, $e->getTrace() );
+            /* Log also the information about the exception to the activity log of the current user. */
+            if ( SessionDataBean::getUserRole() != USR_ANONYMOUS )
+            {
+                /* The rest of the log entry will be composed out of the contents of
+                   the globals $_GET, $_POST and $_SESSION. */
+                $smarty->dbLogException($timeStart, $e->getMessage());
+            }
 		}
 	}
 	else

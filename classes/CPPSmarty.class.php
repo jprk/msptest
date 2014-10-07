@@ -151,8 +151,36 @@ class CPPSmarty extends Smarty
   {
     if ( $link ) mysql_close ($link);
   }
-  
-  /**
+
+    function dbLog($time_start, $object, $action)
+    {
+        $user_id = SessionDataBean::getUserId();
+        $lecture_id = SessionDataBean::getLectureId();
+        $get_data = json_encode($_GET);
+        $post_data = json_encode($_POST);
+        $ip_address = $_SERVER['REMOTE_ADDR'];
+
+        $this->dbQuery(
+            "INSERT INTO log " .
+            "(`timestamp`,time_start,lecture_id,user_id,ip_address,object,action,get_data,post_data) " .
+            "VALUES " .
+            "(NULL,'$time_start','$lecture_id','$user_id','$ip_address','$object','$action','$get_data','$post_data')");
+    }
+
+    function dbLogException($time_start, $message)
+    {
+        $user_id = SessionDataBean::getUserId();
+        $lecture_id = SessionDataBean::getLectureId();
+        $ip_address = $_SERVER['REMOTE_ADDR'];
+
+        $this->dbQuery(
+            "INSERT INTO log " .
+            "(`timestamp`,time_start,lecture_id,user_id,ip_address,object,action,get_data,post_data) " .
+            "VALUES " .
+            "(NULL,'$time_start','$lecture_id','$user_id','$ip_address','error','exception','','$message')");
+    }
+
+    /**
    * Process a database query with possible custom field as an index. 
    * Enter description here ...
    * @param string $query The query string.

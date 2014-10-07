@@ -754,9 +754,9 @@ class StudentBean extends DatabaseBean
         $sPoints = array ();
 
         $xPoints = array ();
-        foreach ( $taskList as $val )
+        foreach ( $taskList as $tval )
         {
-          $xPoints[$val['id']] = '-';
+          $xPoints[$tval['id']] = '-';
         }
         
         //$this->dumpVar ( 'taskList (in assignStudentDataFromList())', $xTaskList );
@@ -824,8 +824,8 @@ class StudentBean extends DatabaseBean
       /* ... and place the summed task points on appropriate places as taskList
          is sorted according to task position field and not according to task id
          We will also check the taks-bound limits for the evaluation. */
-      $positiveEval = TRUE;
-      $finalResult  = TRUE;
+      $positiveEval = true;
+      $finalResult  = true;
 
       $tPoints = ( $numTskLst > 0 ) ? array_fill ( 0, $numTskLst, 0 ) : array ();
       $tClass  = ( $numTskLst > 0 ) ? array_fill ( 0, $numTskLst, '' ) : array ();
@@ -853,7 +853,7 @@ class StudentBean extends DatabaseBean
           {
             /* This is not an obligatory field. This means we will be always
                positive. */
-            $positive = TRUE;            
+            $positive = true;
             /* Massage the output: we do not want to see '-' there and
                we want to be assigned positive $tClass element. */
             $gotPoints = $numPoints;
@@ -896,7 +896,7 @@ class StudentBean extends DatabaseBean
             /* As we got some dashed, this result is not final. Hence, do not
                mark the overall point gain and classification fields as positive
                or negative. */
-            $finalResult = FALSE;
+            $finalResult = false;
           }
         }
       }
@@ -947,8 +947,13 @@ class StudentBean extends DatabaseBean
             elseif ( $sumPoints >= $evaluation->pts_E ) 
                 $evalText = 'E';
             else
-                /* Positive F? This is nonsense. */
+            {
+                /* Positive F? This is nonsense, but it seems to be the nature of how the evaluation
+                   is set up: `positiveEval` needs another check, namely check of the total points
+                   that the student gets. So we will force positiveEval to be false in this case. */
                 $evalText = 'F';
+                $positiveEval = false;
+            }
         }
         else
         {

@@ -145,7 +145,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
         return $this->dbQuery (
             "SELECT replacement_id, date, @ftime:=IFNULL( rd.mfrom, ex.from ) AS `from`, IFNULL( rd.mto, ex.to ) AS `to`, " .
             "@fromtime:=ADDTIME(date,@ftime)-INTERVAL " . self::CANCEL_INTERVAL . " MINUTE AS `fromtime`, (@fromtime > NOW() AND dateto IS NULL) AS candelete, " .
-            "ex.room AS `room`, surname, firstname, datefrom, dateto, confirmed, IFNULL(group_id,'??') AS `grpid` FROM repl_stud AS rs " .
+            "ex.room AS `room`, surname, firstname, datefrom, dateto, passed, failed, IFNULL(group_id,'??') AS `grpid` FROM repl_stud AS rs " .
             "LEFT JOIN replacement_dates AS rd ON rs.replacement_id = rd.id " .
             "LEFT JOIN excersise AS ex ON rd.excersise_id = ex.id " .
             "LEFT JOIN labtask_group AS lg ON rs.lgrp_id = lg.id " .
@@ -383,7 +383,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
            distinct students and the lower level array contains the failures. Will be implemented as and array
            of associative arrays holding the resultset elements, with an added element for failures. */
         $student_keys = array_flip ( array ( 'id', 'login', 'firstname', 'surname', 'yearno', 'groupno', 'email' ));
-        $failed_keys = array_flip ( array ( 'replacement_id', 'group_id', 'lgrp_id', 'datefrom', 'date', 'fromtime', 'dateto', 'confirmed', 'finished' ));
+        $failed_keys = array_flip ( array ( 'replacement_id', 'group_id', 'lgrp_id', 'datefrom', 'date', 'fromtime', 'dateto', 'passed', 'failed', 'finished' ));
         /* This is used to identify repeating students in the $failedList. */
         $prev_student_id = NULL;
         $bookings = array();

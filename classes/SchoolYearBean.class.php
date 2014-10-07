@@ -22,22 +22,27 @@ class SchoolYearBean extends BaseBean
      */
     static function getTermDates ( $schoolyear, $term )
     {
-    	$_dates = array ( 
-    		2011 => array (
-    			self::WINTER_TERM => array ( 'from' => '2011-09-29', 'to' => '2012-01-13' ),
-    			self::SUMMER_TERM => array ( 'from' => '2012-02-27', 'to' => '2012-06-01' )
-    		),
-            2012 => array (
+      $_dates = array ( 
+        2011 => array (
+                self::WINTER_TERM => array ( 'from' => '2011-09-29', 'to' => '2012-01-13' ),
+                self::SUMMER_TERM => array ( 'from' => '2012-02-27', 'to' => '2012-06-01' )
+            ),
+        2012 => array (
                 self::WINTER_TERM => array ( 'from' => '2012-09-24', 'to' => '2013-01-08' ),
                 self::SUMMER_TERM => array ( 'from' => '2013-02-18', 'to' => '2013-05-24' )
             ),
-    		2013 => array (
+        2013 => array (
                 self::WINTER_TERM => array ( 'from' => '2013-09-30', 'to' => '2014-01-10' ),
                 self::SUMMER_TERM => array ( 'from' => '2014-02-17', 'to' => '2014-05-23' )
-	    ),
-    		2014 => array (
-                self::WINTER_TERM => array ( 'from' => '2014-09-23', 'to' => '2013-14-20' ),
-                self::SUMMER_TERM => array ( 'from' => '2015-02-17', 'to' => '2015-05-16' )
+            ),
+        2014 => array (
+                self::WINTER_TERM => array ( 'from' => '2014-09-22', 'to' => '2015-01-09' ),
+                self::SUMMER_TERM => array ( 'from' => '2015-02-16', 'to' => '2015-05-22' )
+            ),
+        /* Not official */
+        2015 => array (
+                self::WINTER_TERM => array ( 'from' => '2015-09-23', 'to' => '2016-01-10' ),
+                self::SUMMER_TERM => array ( 'from' => '2016-02-17', 'to' => '2016-05-16' )
             ));
 
         if ( array_key_exists ( $schoolyear, $_dates ))

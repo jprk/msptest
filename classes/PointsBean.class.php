@@ -504,13 +504,24 @@ class PointsBean extends DatabaseBean
                 $this->_smarty->assign ( 'islocked', 0 );
                 /* Prepare the student list and points for this lecture. */
                 $slBean = new StudentLectureBean ( $this->id, $this->_smarty, NULL, NULL );
-                /* The function returns 0 on success, or a nonzero error status. */
-                $ret = $slBean->prepareStudentLectureData ( $this->order );
-                if ( $ret )
+                try
                 {
-                	/* Identifier of the lecture is invalid. */
-                    $this->action = 'e_inval';
-                    return;
+                    /* The function returns the student  lecture data. */
+                    $data = $slBean->prepareStudentLectureData($this->order);
+                    $this->assign('studentList', $data[0]);
+                    $this->assign('statData', $data[1]);
+                }
+                catch (Exception $e)
+                {
+                    switch ($e->getCode())
+                    {
+                        case self::E_INIT_FAILED:
+                            $this->action = 'e_init'; break;
+                        case self::E_NO_SUBTASKS:
+                            $this->action = 'e_subtasks'; break;
+                        default:
+                            throw $e;
+                    }
                 }
                 break;
                 

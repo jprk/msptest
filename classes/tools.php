@@ -5,13 +5,6 @@
 //   Utility functions that do not deserve their own class.
 // -----------------------------------------------------------------------
 
-// Return current time in microseconds as a floating point number.
-function getmicrotime()
-{
-    list($usec, $sec) = explode(" ",microtime()); 
-    return ((float)$usec + (float)$sec); 
-}
-
 // Remove HTML entities.
 function unhtmlentities ($string)
 {
@@ -55,23 +48,26 @@ function trimStrip ( $field, $entities = "" )
 
 /* Determine MIME type of the file represented by $filename first by trying
    PHP internal mime_content_type() function and then by checking our own
-   list of filename extensions. */
+   list of filename extensions.
+   TODO: Call mime_content_type or finfo after using the harcoded extension-based type assigment. We have problems
+   with new MS Office format being identified as application/zip.
+*/
 function mimetype ( $filename )
 {
 	$type = '';
-	
-	$ext = strtolower ( substr ( $filename, -3 ));
 
-	if ( function_exists ("mime_content_type"))
+    $ext = strtolower ( pathinfo ( $filename, PATHINFO_EXTENSION ));
+
+    if ( function_exists ("mime_content_type"))
 	{
 		$type = mime_content_type ( $filename );
 	}
 	
-	if ( $type == '' || $type == 'unknown/unknown' )
+	if ( $type == '' || $type == 'unknown/unknown' || $type == 'application/zip' )
 	{
 		switch ( $ext )
 		{
-			case "pdf" : $type = "application/pdf";              break;
+			case "pdf" : $type = "application/pdf";               break;
 			case "doc" : $type = "application/vnd.ms-word";       break;
 			case "xls" : $type = "application/vnd.ms-excel";      break;
 			case "ppt" : $type = "application/vnd.ms-powerpoint"; break;
@@ -80,7 +76,18 @@ function mimetype ( $filename )
 			case "png" : $type = "image/x-png"; break;
 			case "jpg" : $type = "image/jpeg";  break;
 			case "dwg" : $type = "application/dwg";  break;
-			case "mdl" : $type = "application/vnd.matlab";       break;
+			case "mdl" : $type = "application/vnd.matlab";        break;
+            /* See http://stackoverflow.com/questions/4212861/ for the following */
+            case "xlsx" : $type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";  break;
+            case "xltx" : $type = "application/vnd.openxmlformats-officedocument.spreadsheetml.template";  break;
+            case "potx" : $type = "application/vnd.openxmlformats-officedocument.presentationml.template";  break;
+            case "ppsx" : $type = "application/vnd.openxmlformats-officedocument.presentationml.slideshow";  break;
+            case "pptx" : $type = "application/vnd.openxmlformats-officedocument.presentationml.presentation";  break;
+            case "sldx" : $type = "application/vnd.openxmlformats-officedocument.presentationml.slide";  break;
+            case "docx" : $type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";  break;
+            case "dotx" : $type = "application/vnd.openxmlformats-officedocument.wordprocessingml.template";  break;
+            case "xlam" : $type = "application/vnd.ms-excel.addin.macroEnabled.12";  break;
+            case "xlsb" : $type = "application/vnd.ms-excel.sheet.binary.macroEnabled.12";  break;
 			default:     $type = "unknown/unknown";
 		}
 	}

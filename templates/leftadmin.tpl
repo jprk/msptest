@@ -103,7 +103,7 @@
         <td>-&nbsp;</td>
         <td><a href="?act=admin,note,{$lecture.id}">Správa poznámek</a> pro učitele {$lecture.code}.</td>
     </tr>
-{* Excersises *}
+{* Exercises *}
     <tr>
         <td>&nbsp;</td>
         <td>&nbsp;</td>
@@ -143,7 +143,11 @@
     </tr>
     <tr class="mlevel1">
         <td valign="top">-&nbsp;</td>
-        <td>{condlink act="show" obj="repbooking" id=$lecture.id condition=$lecture.do_replacements text="Seznam nepřítomných"}</td>
+        <td>{condlink act="show" obj="repbooking" id=$lecture.id condition=$lecture.do_replacements text="Seznam docvičujících"}</td>
+    </tr>
+    <tr class="mlevel1">
+        <td valign="top">-&nbsp;</td>
+        <td>{condlink act="show" obj="repbooking" id=$lecture.id getstr="&bookingtype=1" condition=$lecture.do_replacements text="Seznam propadlých docvičení"}</td>
     </tr>
 {* Task and subtasks *}
     <tr>

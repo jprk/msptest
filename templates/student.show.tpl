@@ -224,7 +224,8 @@
         <td><small>
             rez. {$bookings[bk].datefrom|date_format:"%d.%m.%Y %H:%M"}<br/>
             {if $bookings[bk].dateto}odhl. {$bookings[bk].dateto|date_format:"%d.%m.%Y %H:%M"}<br/>{/if}
-            {if $bookings[bk].confirmed}potvrzeno{/if}
+            {if $bookings[bk].failed}neúspěch v&nbsp;testu{/if}
+            {if $bookings[bk].passed}docvičeno{/if}
         </small></td>
         <td width="16" class="smaller" valign="middle"
                 >{if $bookings[bk].candelete}<a href="?act=delete,repbooking,{$lecture.id}&replid={$bookings[bk].replacement_id}&datefrom={$bookings[bk].datefrom|escape:"url"}"

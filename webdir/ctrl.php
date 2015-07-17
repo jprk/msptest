@@ -7,6 +7,9 @@
  * Version: $Id: ctrl.php 92 2013-03-22 11:24:32Z prikryl $ 
  */
 
+/* Performance counter needs to know the initial time of invocation. */
+$timeStart = microtime(true);
+
 /* Global configuration */
 require ( 'config.php' );
 
@@ -57,10 +60,6 @@ require ( REQUIRE_DIR . 'UserBean.class.php');
 
 /* Smarty plugins. */
 //require ( REQUIRE_DIR . 'function.throt.php');
-
-/* Performance counter needs function getmicrotime which is defined in
-   the process of requiring 'tools.php' in 'CPPSmarty.class.php'.*/
-$timeStart = getmicrotime ();
 
 /* Parse command ... it shall have the form of <object>,<action>,<id> */
 $act = $_GET['act'];
@@ -153,7 +152,7 @@ switch ( $action )
         if ( $object == "stulec" ) $lecturerNeeded = true;
 		break;
 	case "verify":
-		if ( $object == 'login' || $object == 'article' ) break;
+		if ( $object == 'login' || $object == 'article' || $object == 'formsolution' ) break;
 	default:
     $errorMsg .= "action not allowed / nepovolený typ akce<br>";
     $object = "error";
@@ -271,7 +270,7 @@ else if ( $loginNeeded )
 	{
 		$errorMsg .= "<p>\n";
 		$errorMsg .= "Pro přístup na tuto stránku musíte být přihlášeni do systému.\n";
-		$errorMsg .= "Přihlašte se jako uživatel s administrátoským opravněním a zkuste to prosím znovu.<br>\n";
+		$errorMsg .= "Přihlašte se a zkuste to prosím znovu.<br>\n";
 		$errorMsg .= "</p>\n";
 		$errorMsg .= "<p><em>\n";
 		$errorMsg .= "(session is '" . dumpToString ( $_SESSION ) . "')<br/>\n";
@@ -455,7 +454,7 @@ switch ( $object )
 /* Log the parameters of this controller invocation. This is necessary to easily handle claims of
    students that they accomplished something (booking, exercise submission) while the system
    shows otherwise. */
-if ( SessionDataBean::getUserRole() != USR_ANONYMOUS )
+if ( SessionDataBean::getUserRole() != USR_ANONYMOUS || $object == 'login' )
 {
     /* The rest of the log entry will be composed out of the contents of
        the globals $_GET, $_POST and $_SESSION. */
@@ -630,7 +629,7 @@ $maincolumntitle = $object.".".$action.".tit";
 $smarty->assign ('maincolumntitle', $maincolumntitle);
 
 /* This is an approximate time of execution of this script. */
-$time = sprintf ( "%7.4f", getmicrotime() - $timeStart );
+$time = sprintf ( "%7.4f", microtime(true) - $timeStart );
 $smarty->assign ( 'exectime', $time );
 
 /* This is an approximate time of execution of this script. */
@@ -663,7 +662,7 @@ $smarty->dbClose ($smlink);
 if ( $smarty->debug )
 {
   /* This is an approximate time of execution of the whole page. */
-  $time = getmicrotime() - $timeStart;
+  $time = microtime(true) - $timeStart;
   echo "<!-- Total ".$time." sec -->\n";
   echo "<!-- SMARTY \n";
   print_r ($smarty);

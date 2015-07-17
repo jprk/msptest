@@ -5,8 +5,8 @@ var presPrahaChecked = false;
 var presDecinChecked = false;
 var distChecked      = false;
 
-var presElemsPraha = [ {section name=sId loop=$studentList}{if $studentList[sId].groupno < 90}'student{$studentList[sId].id}',{/if}{/section}null];
-var presElemsDecin = [ {section name=sId loop=$studentList}{if $studentList[sId].groupno == 99}'student{$studentList[sId].id}',{/if}{/section}null];
+var presElemsPraha = [ {section name=sId loop=$studentList}{if $studentList[sId].groupno >= 20 and $studentList[sId].groupno < 90}'student{$studentList[sId].id}',{/if}{/section}null];
+var presElemsDecin = [ {section name=sId loop=$studentList}{if $studentList[sId].groupno >= 10 and $studentList[sId].groupno < 20}'student{$studentList[sId].id}',{/if}{/section}null];
 var distElems = [];
 
 {literal}

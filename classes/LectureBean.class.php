@@ -181,24 +181,32 @@ class LectureBean extends DatabaseBean
 	{
 		/* Query the data of this lecture (ID has been already specified) */
 		DatabaseBean::dbQuerySingle ();
-		/* Initialize the internal variables with the data queried from the
-		   database. */
-		$this->code            = vlnka ( stripslashes ( $this->rs['code'] ));
-		$this->title           = vlnka ( stripslashes ( $this->rs['title'] ));
-        $this->alert           = vlnka ( stripslashes ( $this->rs['alert'] ));
-        $this->thanks          = vlnka ( stripslashes ( $this->rs['thanks'] ));
-		$this->syllabus        = vlnka ( stripslashes ( $this->rs['syllabus'] ));
-        $this->locale          = $this->rs['locale'];
-        $this->term            = $this->rs['term'] = SchoolYearBean::enumToTerm($this->rs['term']);
-        $this->repl_students   = $this->rs['replacement_students'];
-        $this->repl_count      = $this->rs['replacement_count'];
-        $this->do_replacements = ( $this->repl_students > 0 );
-        $this->rootsection     = $this->rs['rootsection'];
-        /* Update the value of $this->rs. This will make the lecture data
-           * available to the templating engine. */
-		$this->_update_rs();
-
-        //$this->dumpThis();
+        /* Non-existent `id` will result in empty resultset. */
+        if (empty($this->rs))
+        {
+            /* Assign default values to everything. */
+            $this->_setDefaults();
+        }
+        else
+        {
+            /* Initialize the internal variables with the data queried from the
+               database. */
+            $this->code            = vlnka ( stripslashes ( $this->rs['code'] ));
+            $this->title           = vlnka ( stripslashes ( $this->rs['title'] ));
+            $this->alert           = vlnka ( stripslashes ( $this->rs['alert'] ));
+            $this->thanks          = vlnka ( stripslashes ( $this->rs['thanks'] ));
+            $this->syllabus        = vlnka ( stripslashes ( $this->rs['syllabus'] ));
+            $this->locale          = $this->rs['locale'];
+            $this->term            = $this->rs['term'] = SchoolYearBean::enumToTerm($this->rs['term']);
+            $this->repl_students   = $this->rs['replacement_students'];
+            $this->repl_count      = $this->rs['replacement_count'];
+            $this->do_replacements = ( $this->repl_students > 0 );
+            $this->rootsection     = $this->rs['rootsection'];
+            /* Update the value of $this->rs. This will make the lecture data
+               * available to the templating engine. */
+            $this->_update_rs();
+            //$this->dumpThis();
+        }
 	}
 	
 	/* Assign POST variables to internal variables of this class and

@@ -8,8 +8,12 @@ class SubtaskBean extends DatabaseBean
 	var $maxpts;
 	var $position;
 	var $lecture_id;
-	
-	/* Fill in reasonable defaults. */
+    var $assignment;
+    var $active;
+
+    private static $varList = array(0 => 'p', 1 => 'z', 'a' => 'p', 'b' => 'z');
+
+    /* Fill in reasonable defaults. */
 	function _setDefaults ()
 	{
 		$this->title      = $this->rs['title']      = '';
@@ -19,6 +23,7 @@ class SubtaskBean extends DatabaseBean
 		$this->maxpts     = $this->rs['maxpts']     = 0;
 		$this->position   = $this->rs['position']   = 0;
 		$this->lecture_id = $this->rs['lecture_id'] = '';
+        $this->active     = $this->rs['active']     = false;
 	}
 	
 	/* Constructor */
@@ -202,7 +207,7 @@ class SubtaskBean extends DatabaseBean
                 "(sd.dateto>NOW() OR se.dateto>NOW())) AS active " .
             "FROM subtask AS su " .
             "LEFT JOIN extension AS se " .
-            "ON ( se.student_id=". $studentId . " AND su.id=se.subtask_id ) " .
+            "ON ( se.student_id=". $studentId . " AND se.year=" .$this->schoolyear . " AND su.id=se.subtask_id ) " .
             "LEFT JOIN subtaskdates AS sd " .
             "ON ( su.id=sd.subtask_id AND sd.year=" .$this->schoolyear . " ) " .
             "LEFT JOIN tsksub AS ts " .
@@ -325,7 +330,7 @@ class SubtaskBean extends DatabaseBean
                 "(sd.dateto>NOW() OR se.dateto>NOW())) AS active " .
 				"FROM subtask AS su " .
                 "LEFT JOIN extension AS se " .
-                "ON ( se.student_id=". $studentId ." AND su.id=se.subtask_id ) " .
+                "ON ( se.student_id=". $studentId ." AND se.year=" .$this->schoolyear . " AND su.id=se.subtask_id ) " .
                 "LEFT JOIN subtaskdates AS sd " .
                 "ON ( su.id=sd.subtask_id AND sd.year=" .$this->schoolyear . " ) " .
                 "WHERE su.id=" . $this->id  );
@@ -370,8 +375,14 @@ class SubtaskBean extends DatabaseBean
 			   task type). */
 			$this->processGetVars ();
 		}
-		
-		$this->_smarty->assign ( 'subtask', $this->rs );
+
+        if ($this->type == TT_WEEKLY_TF)
+        {
+            /* Transfer function task needs a way to encode 'p' and 'z' */
+            $this->assign('varList', self::$varList);
+        }
+
+		$this->assign('subtask', $this->rs);
 	}
 	
 	/* -------------------------------------------------------------------

@@ -2,6 +2,8 @@
 /**
  * Interface to replacement exercises and labs (used for physics labs at the moment).
  *
+ * For explanation of the logic governing the `passed` and `failed` flags, see the method getStudentList().
+ *
  * (c) Jan Prikryl, 2012,2014
  */
 class ExcersiseRepBookingBean extends DatabaseBean
@@ -309,7 +311,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
                 }
                 else
                 {
-                    /* These are student that did not attend the exercise. */
+                    /* These are students that for some reason did not attend the exercise. */
                     $studentList[$key]['failed'] = '';
                     $studentList[$key]['passed'] = '';
 

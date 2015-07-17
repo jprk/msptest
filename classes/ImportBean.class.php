@@ -415,8 +415,8 @@ class ImportBean extends DatabaseBean
                 $sb->login        = $this->login[$row];
                 $sb->email        = $this->email[$row];
                 $sb->active       = 1;
-                $sb->password     = "";
-                $sb->dbReplace();
+                $sb->password     = NULL;
+                $sb->dbReplace('(locked, logs in via USERMAP)');
                 $id = $sb->getObjectId();
 
                 /* Now that the id of the student is valid we can add it to the

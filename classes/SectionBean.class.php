@@ -293,7 +293,8 @@ class SectionBean extends DatabaseBean
 			{
 				/* $levelC is sorted correctly, we need to insert the elements of
 				   $levelN after the element of $levelC that has 'hilit' == 1. */
-				foreach ( $levelC as $val )
+				$menu = array();
+                foreach ( $levelC as $val )
 				{
 					$menu[] = $val;
 					if ( $val['hilit'] == 1 )
@@ -557,7 +558,7 @@ class SectionBean extends DatabaseBean
 	{
     	/* The `id` passed to this instance is lecture id ... we have to
        	   query the lecture to get the root section id. */
-    	$lectureBean = new LectureBean ( $lectureId, $this->_smarty, "x", "x" );
+    	$lectureBean = new LectureBean ( $lectureId, $this->_smarty, NULL, NULL );
         self::dumpVar('lectureBean',$lectureBean);
     	$lectureBean->assignSingle();
         $rootsection = $lectureBean->getRootSection();

@@ -12,6 +12,7 @@ class StudentLectureBean extends DatabaseBean
     private $firstLetter;
     private $fromCount;
     private $student_id;      // Student that will be added to the lecture
+    private $relation;
   
 	function _setDefaults ()
 	{
@@ -111,7 +112,7 @@ class StudentLectureBean extends DatabaseBean
     	$studentList = array();
 		if ( isset ( $rs ))
 		{
-			foreach ( $rs as $key => $val )
+			foreach ( $rs as $val )
 			{
 				$studentList[] = $val['student_id'];
 			}
@@ -141,7 +142,7 @@ class StudentLectureBean extends DatabaseBean
      */
     function prepareStudentLectureData ( $sortType = SB_SORT_BY_NAME )
     {
-        /* Get the list of students for this excersise. The list will contain
+        /* Get the list of students for this exercise. The list will contain
            only student IDs. */
         $studentList = $this->getStudentListForLecture ();
         
@@ -159,7 +160,8 @@ class StudentLectureBean extends DatabaseBean
         {
             echo "<!-- EvaluationBean: initialisation failed -->\n";
             /* Nope, the id references a nonexistent evaluation scheme. */
-            return self::E_INIT_FAILED;
+            throw new Exception("The evaluation scheme for the given lecture and year does not exist.",
+                self::E_INIT_FAILED);
         }
 
         /* Get the list of tasks for evaluation of this excersise. The list will
@@ -171,12 +173,10 @@ class StudentLectureBean extends DatabaseBean
         $taskBean = new TaskBean (0, $this->_smarty, "x", "x");
 
         /* This will both create a full list of tasks corresponding to the
-           evaluation scheme and assing this list to the Smarty variable
+           evaluation scheme and assign this list to the Smarty variable
            'taskList'. */
         $fullTaskList = $taskBean->assignFullTaskList ( $taskList );
 
-        /* Fetch a verbose list of subtasks. */
-        $subtaskBean = new SubtaskBean (0, $this->_smarty, "x", "x");
         /* This will both create a full list of subtasks corresponding to the
            tasks of the chosen evaluation scheme and assign this list to the
            Smarty variable 'subtaskList'. */
@@ -185,7 +185,8 @@ class StudentLectureBean extends DatabaseBean
         $this->dumpVar('subtaskMap',$subtaskMap);
         if ( empty ( $subtaskMap ))
         {
-        	return self::E_NO_SUBTASKS;
+        	throw new Exception("Subtask map for the current task list and evaluation year is empty.",
+                                self::E_NO_SUBTASKS);
         }
         $subtaskList = $tsBean->getSubtaskListFromSubtaskMap ( $subtaskMap );
         $this->dumpVar('subtaskList',$subtaskList);
@@ -193,6 +194,8 @@ class StudentLectureBean extends DatabaseBean
         $subtaskBean = new SubtaskBean (0, $this->_smarty, "x", "x");
         $fullSubtaskList = $subtaskBean->assignFullSubtaskList ( $subtaskList );
 
+        /* Initialise the returned value as empty. */
+        $data = array(NULL,NULL);
         /* If there are any students in $studentList, get their points. */
         if ( count ( $studentList ) > 0 )
         {
@@ -203,14 +206,18 @@ class StudentLectureBean extends DatabaseBean
                the ID list we got above. Combine this list with the points students
                achieved. */
             $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-            $studentBean->assignStudentDataFromList (
-              $studentList, $points, $evalBean, $subtaskMap,
-              $fullSubtaskList, $fullTaskList,
-              $this->resType, $sortType,
-              $this->id );
+            $data = $studentBean->getStudentDataFromList (
+                $studentList, $points, $evalBean, $subtaskMap,
+                $fullSubtaskList, $fullTaskList,
+                $this->resType, $sortType,
+                $this->id );
+            $data[] = $fullSubtaskList;
+            $data[] = $fullTaskList;
         }
-        
-        return 0; 	
+
+        $this->dumpVar('prepared data', $data);
+
+        return $data;
     }
 
     function createSQLFilter ()
@@ -241,13 +248,24 @@ class StudentLectureBean extends DatabaseBean
 		/* Get lecture data */
 		$lectureBean = new LectureBean ( $this->id, $this->_smarty, "x", "x" );
 		$lectureBean->assignSingle ();
-		
-        switch ( $this->prepareStudentLectureData())
+
+        try
         {
-        	case self::E_INIT_FAILED:
-        		$this->action = 'e_init'; break;
-        	case self::E_NO_SUBTASKS:
-        		$this->action = 'e_subtasks'; break;
+            $data = $this->prepareStudentLectureData();
+            $this->assign('studentList', $data[0]);
+            $this->assign('statData', $data[1]);
+        }
+        catch (Exception $e)
+        {
+            switch ($e->getCode())
+            {
+                case self::E_INIT_FAILED:
+                    $this->action = 'e_init'; break;
+                case self::E_NO_SUBTASKS:
+                    $this->action = 'e_subtasks'; break;
+                default:
+                    throw $e;
+            }
         }
 	}
 	

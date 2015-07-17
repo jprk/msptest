@@ -156,9 +156,9 @@ class CPPSmarty extends Smarty
     {
         $user_id = SessionDataBean::getUserId();
         $lecture_id = SessionDataBean::getLectureId();
-        $get_data = json_encode($_GET);
-        $post_data = json_encode($_POST);
-        $ip_address = $_SERVER['REMOTE_ADDR'];
+        $get_data = mysql_escape_string(json_encode($_GET));
+        $post_data = mysql_escape_string(json_encode($_POST));
+        $ip_address = mysql_escape_string($_SERVER['REMOTE_ADDR']);
 
         $this->dbQuery(
             "INSERT INTO log " .
@@ -171,7 +171,8 @@ class CPPSmarty extends Smarty
     {
         $user_id = SessionDataBean::getUserId();
         $lecture_id = SessionDataBean::getLectureId();
-        $ip_address = $_SERVER['REMOTE_ADDR'];
+        $ip_address = mysql_escape_string($_SERVER['REMOTE_ADDR']);
+        $message = mysql_escape_string($message);
 
         $this->dbQuery(
             "INSERT INTO log " .

@@ -15,6 +15,7 @@ define ( 'FT_LAB_THUMB', 8 ); // Physics - thumbnail of the experiment photo
 define ( 'FT_S_IMAGE',   9 ); // Image for use within section text
 
 /* Private file types */
+define ( 'FT_X_LECTUREDATA', 253 ); // Private file that is available only to logged in students of the lecture
 define ( 'FT_X_ASSIGNMENT', 254 ); // Assignment for students
 define ( 'FT_X_SOLUTION', 255 ); // Solution to a subtask submitted by a student
 
@@ -42,11 +43,14 @@ class FileBean extends DatabaseBean
 	var $origfname;
 	var $description;
 	var $position;
-	var $dozip;
-    var $doall;
     var $timestamp;
-	
-	/* Fill in reasonable defaults. */
+
+    private $dozip;
+    private $doall;
+    private $stulec;
+    private $finfo; // file info for determining MIME type
+
+    /* Fill in reasonable defaults. */
 	function _setDefaults ()
 	{
 		$this->type           = $this->rs['type']        = 0;
@@ -105,6 +109,9 @@ class FileBean extends DatabaseBean
 		$this->DEFAULT_FILE_ID [ FT_S_IMAGE_R ] = 403;
 		$this->DEFAULT_FILE_ID [ FT_A_DATA ]    = 0;
 		$this->DEFAULT_FILE_ID [ FT_A_IMAGE ]   = 0;
+
+        /* FINFO does not work with the new XML MS OWffice files ...
+           $this->finfo = finfo_open(FILEINFO_MIME_TYPE); */
 	}
 	
 	function dbReplace ()
@@ -187,10 +194,11 @@ class FileBean extends DatabaseBean
 	   hopefully none of them may open a security hole. */
 	function processGetVars ()
 	{
-		assignGetIfExists ( $this->objid, $this->rs, 'objid' );
-		assignGetIfExists ( $this->type,  $this->rs, 'type'  );
-        assignGetIfExists ( $this->dozip, $this->rs, 'zip'   );
-        assignGetIfExists ( $this->doall, $this->rs, 'all'  );
+		assignGetIfExists ( $this->objid,  $this->rs, 'objid'  );
+		assignGetIfExists ( $this->type,   $this->rs, 'type'   );
+        assignGetIfExists ( $this->dozip,  $this->rs, 'zip'    );
+        assignGetIfExists ( $this->doall,  $this->rs, 'all'    );
+        assignGetIfExists ( $this->stulec, $this->rs, 'stulec' );
 		/* Process 'returntoparent' directive */
 		$this->processReturnToParent ();
 		/* And return a modified 'rs' to the caller function. */
@@ -201,16 +209,19 @@ class FileBean extends DatabaseBean
 	{
 		$type = 'bin';
 		
-		$ext = strtolower ( substr ( $filename, -3 ));
+		$ext = strtolower ( pathinfo ( $filename, PATHINFO_EXTENSION ));
 		switch ( $ext )
 		{
 			case "rtf" :
-				$ext = "doc";
+				$type = "doc"; break;
 			case "avi" :
-				$ext = "mov";
-			case "doc" :
-			case "xls" :
-			case "ppt" :
+				$type = "mov"; break;
+            case "doc" :
+            case "docx" :
+            case "xls" :
+            case "xlsx" :
+            case "ppt" :
+            case "pptx" :
 			case "pdf" :
 			case "zip" :
 			case "jpg" :
@@ -249,8 +260,8 @@ class FileBean extends DatabaseBean
       DatabaseBean::dbQuery ( "DELETE FROM file " . $where );
     }
   }
-  
-	/** 
+
+	/**
 	 * Add a new file record to the database.
 	 *
      * File has been uploaded already and we have to just store the parameters
@@ -258,15 +269,15 @@ class FileBean extends DatabaseBean
      * existing database entry, the database entry will get overwritten with the
      * information provided by parameters of this call.
      *
-     * @param enum    $type     File type.
-	 * @param integer $ibjid    Identifier of the object that this file is bound to.
-	 * @param integer $uid      User id of the file owner.
-	 * @param string  $filename Full path to the local copy of the file.
-	 * @param string  $origname Original filename of the uploaded file.
-	 * @param string  $desc     Description of the file.
-	 * @param integer $position Position of the file in case it will be listed.
+     * @param integer $type        File type.
+	 * @param integer $objid       Identifier of the object that this file is bound to.
+	 * @param integer $uid         User id of the file owner.
+	 * @param string  $filename    Full path to the local copy of the file.
+	 * @param string  $origname    Original filename of the uploaded file.
+	 * @param string  $description Description of the file.
+	 * @param integer $position    Position of the file in case it will be listed.
 	 * @return integer File id.
-	 */      	
+	 */
 	function addFile ( $type, $objid, $uid, $filename, $origname, $description, $position = 0 )
 	{
 		
@@ -300,6 +311,7 @@ class FileBean extends DatabaseBean
 	 * Returns an id of an existing file record with `fname` value that
 	 * corresponds to the parameter, or 0.
 	 * @param string $fname File name as used in the system.
+     * @return integer File id.
 	 */
 	function dbQueryFname ( $fname )
 	{
@@ -526,7 +538,7 @@ class FileBean extends DatabaseBean
 	 * that are bound to sections and articles of some lecture, or a complete
 	 * list of files if the lecture id has been omitted.
 	 * 
-	 * @param $lectureId Identifier of the lecture, defaults to 0.
+	 * @param $lectureId int Identifier of the lecture, defaults to 0.
 	 */
 	function assignSectionArticleFiles ( $lectureId = 0 )
 	{
@@ -660,7 +672,6 @@ class FileBean extends DatabaseBean
         		 $this->uid != SessionDataBean::getUserId() ))
       		{
         		/* Acess to assigments of other students is not allowed. */
-        		$doServeFile = false;
         		$this->action = "err_03";
         		return false;
       		} 
@@ -674,7 +685,8 @@ class FileBean extends DatabaseBean
   			/* But first check if the file exists. */
   			if ( is_file ( $fn ))
   			{
-	  	  		$type = mimetype ($fn);
+                /* does not work $type = finfo_file($this->finfo, $fn); */
+                $type = mimetype ($fn);
   				$length = filesize ($fn);
   				/* MSIE has troubles with decoding the answer, even if it is RFC compliant.
   				   Hence, we add the following headers, it should help. */
@@ -686,7 +698,7 @@ class FileBean extends DatabaseBean
 	  			header ("X-Filename: " . $this->origfname );
   				if ( $type != 'application/pdf')
   				{
-  					header ("Content-Disposition: inline;filename=" . $this->origfname);
+  					header ("Content-Disposition: inline;filename=\"" . $this->origfname . "\"");
 	  			}
   				else
   				{
@@ -699,6 +711,7 @@ class FileBean extends DatabaseBean
   			{
   				/* Nope. Flag an error. */
   				$this->action = "err_04";
+                error_log(__FUNCTION__." in ".__FILE__.":".__LINE__." - File ".$fn." does not exist.");
   				return false;
   			}
     	}
@@ -787,7 +800,60 @@ class FileBean extends DatabaseBean
         
         return true;
     }
-    
+
+    function showStudentResultsCSV()
+    {
+        $studentLectureBean = new StudentLectureBean($this->id, $this->_smarty, NULL, NULL);
+        try
+        {
+            $data = $studentLectureBean->prepareStudentLectureData();
+            $lecture_data = SessionDataBean::getLecture();
+            $file_name = "results_".$lecture_data['code']."_".date("Ymd_His").".csv";
+
+            header ("Content-Type: text/csv; charset=utf-8");
+            header ("Content-Disposition: attachment;filename=\"".$file_name."\"");
+
+            echo "\xEF\xBB\xBF"; // UTF-8 BOM
+
+            /* Loop over all students */
+            echo 'Příjmení;Jméno;ID;ČVUT ID;Ročník;Skupina;Login;';
+            foreach($data[2] as $sub_task)
+            {
+                echo $sub_task['ttitle'].';';
+            }
+            echo PHP_EOL;
+            foreach ($data[0] as $student_data)
+            {
+                echo $student_data['surname'].';';
+                echo $student_data['firstname'].';';
+                echo $student_data['id'].';';
+                printf("%010u;", $student_data['dbid']);
+                echo $student_data['yearno'].';';
+                echo $student_data['groupno'].';';
+                echo $student_data['login'].';';
+                foreach ($student_data['subpoints'] as $elem)
+                {
+                    echo strtr($elem['points'], '.', ',').';';
+                }
+                echo PHP_EOL;
+            }
+            //var_dump($data[1]);
+            exit();
+        }
+        catch (Exception $e)
+        {
+            switch ($e->getCode())
+            {
+                case self::E_INIT_FAILED:
+                    $this->action = 'e_init'; break;
+                case self::E_NO_SUBTASKS:
+                    $this->action = 'e_subtasks'; break;
+                default:
+                    throw $e;
+            }
+        }
+        return false;
+    }
     /**
      * Serve a full PDF with assignments and solutions to subtask with the given ID.
      */
@@ -1004,7 +1070,11 @@ class FileBean extends DatabaseBean
 		{
 			$ret = $this->showZipFiles();
 		}
-		elseif ( $this->doall )
+        elseif ( $this->stulec )
+        {
+            $ret = $this->showStudentResultsCSV();
+        }
+        elseif ( $this->doall )
         {
             $ret = $this->showAllSolutions();
         }

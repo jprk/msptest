@@ -201,7 +201,8 @@ class DeadlineExtensionBean extends DatabaseBean
             'SELECT id,type,title,ttitle,position,dateto ' .
             'FROM subtask LEFT JOIN extension AS ex ' .
         	'ON ( id=ex.subtask_id AND ' .
-        	     'ex.student_id=' . $this->studentId . ' )' .
+        	     'ex.year=' . $this->schoolyear . ' AND '.
+                 'ex.student_id=' . $this->studentId . ' )' .
             'WHERE id IN (' . $subtaskIds . ') ' .
             'ORDER BY position,title' );
             

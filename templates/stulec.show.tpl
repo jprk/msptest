@@ -31,6 +31,11 @@ function rollback ( elem )
     tooltip s <em>dbid</em> studenta (většinou ČVUT ID, pouze pro studenty z Děčína to neodpovídá) respektive numerickým
     <em>id</em> studenta (to je to maskované id, jež se zobrazuje ve veřejných seznamech).
 </p>
+<p>
+    Tabulku si můžete stáhnout jako CSV <a href="?act=show,file,{$lecture.id}&stulec=true">zde</a>. CSV soubor používá
+    jako oddělovače polí středník a český zápis desetinných čísel. Vzhledem k tomu, jak MS Excel přistupuje k otevírání
+    CSV souborů, je dost možné, že v jiné, než české verzi Excelu budete mít s importem problémy.
+</p>
 <table class="admintable" style="border: 1px solid black;" border="0" cellpadding="4" cellspacing="1">
 <thead class="rowA">
 <th style="width: 6em; text-align: left; border-bottom: 1px solid black;">Příjmení</th>
@@ -65,7 +70,7 @@ function rollback ( elem )
 <tr class="rowB" onmouseover="roll(this);" onmouseout="rollback(this);">
 {/if}
 <td title="dbid {$studentList[studentPos].dbid}"><strong>{$studentList[studentPos].surname}</strong></td>
-<td title="id {$studentList[studentPos].id}"><strong>{$studentList[studentPos].firstname}</strong></td>
+<td title="id {$studentList[studentPos].id|string_format:"%010u"}"><strong>{$studentList[studentPos].firstname}</strong></td>
 <td class="center">{$studentList[studentPos].yearno}/{$studentList[studentPos].groupno}</td>
 {section name=subtaskPos loop=$subtaskList}
 {if $smarty.section.studentPos.iteration is even}<td class="subtskA">{else}<td class="subtskB">{/if}<span title="{$studentList[studentPos].subpoints[subtaskPos].comment}">{$studentList[studentPos].subpoints[subtaskPos].points}</span></td>

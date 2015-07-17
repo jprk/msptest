@@ -39,10 +39,10 @@ class ArticleBean extends DatabaseBean
 	function _getArticleTypes ()
 	{
 		return array (
-			AT_S_NORMAL     => "Norm�ln� �l�nek",
-			AT_S_LITERATURE => "Seznam literatury k p�edm�tu",
-			AT_S_LECTURERS  => "Seznam vyu�uj�c�ch p�edm�tu",
-			AT_S_EXERCISE   => "Bodovan� p��klad"
+			AT_S_NORMAL     => "Normální článek",
+			AT_S_LITERATURE => "Seznam literatury k předmětu",
+			AT_S_LECTURERS  => "Seznam vyučujících předmětu",
+			AT_S_EXERCISE   => "Bodovaný příklad"
 		);
 	}
 	
@@ -303,7 +303,7 @@ class ArticleBean extends DatabaseBean
 		$parents = array ();
 		if ( isset ($resultset))
 		{
-    		foreach ( $resultset as $key => $val )
+    		foreach ( $resultset as $val )
 	    	{
 		        $parents[$val['id']] = stripslashes ( $val['title'] );
 		    }

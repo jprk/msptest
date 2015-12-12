@@ -4,24 +4,24 @@
    If you modify this list, please, add the entry to the array in _getFileTypes()
    and visit template 'file.edit.tpl' to make sure proper parent will be selected.
  */
-define ( 'FT_S_DATA',    1 ); // Section - data
-define ( 'FT_S_IMAGE_L', 2 ); // Section - left header
-define ( 'FT_S_IMAGE_R', 3 ); // Section - right header
-define ( 'FT_A_IMAGE',   4 ); // Article - image within text
-define ( 'FT_A_DATA',    5 ); // Article - data
-define ( 'FT_P_IMAGE',   6 ); // Person - image
-define ( 'FT_LAB_IMAGE', 7 ); // Physics - experiment photo
-define ( 'FT_LAB_THUMB', 8 ); // Physics - thumbnail of the experiment photo
-define ( 'FT_S_IMAGE',   9 ); // Image for use within section text
+define ( 'FT_S_DATA',       1 ); // Section - data
+define ( 'FT_S_IMAGE_L',    2 ); // Section - left header
+define ( 'FT_S_IMAGE_R',    3 ); // Section - right header
+define ( 'FT_A_IMAGE',      4 ); // Article - image within text
+define ( 'FT_A_DATA',       5 ); // Article - data
+define ( 'FT_P_IMAGE',      6 ); // Person - image
+define ( 'FT_LAB_IMAGE',    7 ); // Physics - experiment photo
+define ( 'FT_LAB_THUMB',    8 ); // Physics - thumbnail of the experiment photo
+define ( 'FT_S_IMAGE',      9 ); // Image for use within section text
 
 /* Private file types */
 define ( 'FT_X_LECTUREDATA', 253 ); // Private file that is available only to logged in students of the lecture
-define ( 'FT_X_ASSIGNMENT', 254 ); // Assignment for students
-define ( 'FT_X_SOLUTION', 255 ); // Solution to a subtask submitted by a student
+define ( 'FT_X_ASSIGNMENT',  254 ); // Assignment for students
+define ( 'FT_X_SOLUTION',    255 ); // Solution to a subtask submitted by a student
 
 /* File type lists for use in the SQL 'type IN (...)' excpressions */
 define ( 'ARTICLE_FILE_TYPES', FT_A_IMAGE.",".FT_A_DATA.",".FT_P_IMAGE.",".FT_LAB_IMAGE.",".FT_LAB_THUMB );
-define ( 'SECTION_FILE_TYPES', FT_S_DATA );
+define ( 'SECTION_FILE_TYPES', FT_S_DATA.",".FT_X_LECTUREDATA );
 define ( 'SECTION_FILE_TYPES_ALL', FT_S_DATA.",".FT_S_IMAGE_L.",".FT_S_IMAGE_R.",".FT_S_IMAGE );
 define ( 'ARTICLE_FILE_LAB_THUMB', FT_LAB_THUMB );
 define ( 'ARTICLE_FILE_LAB_IMAGE', FT_LAB_IMAGE );
@@ -53,24 +53,29 @@ class FileBean extends DatabaseBean
     /* Fill in reasonable defaults. */
 	function _setDefaults ()
 	{
-		$this->type           = $this->rs['type']        = 0;
-		$this->objid          = $this->rs['objid']       = 0;
-		$this->uid            = $this->rs['uid']         = 0;
-		$this->fname          = $this->rs['fname']       = "";
-		$this->origfname      = $this->rs['origfname']   = "";
-		$this->description    = $this->rs['description'] = "";
-		$this->position       = $this->rs['position']    = 0;
+		$this->type           = $this->rs['type']           = 0;
+		$this->objid          = $this->rs['objid']          = 0;
+		$this->uid            = $this->rs['uid']            = 0;
+		$this->fname          = $this->rs['fname']          = "";
+		$this->origfname      = $this->rs['origfname']      = "";
+		$this->description    = $this->rs['description']    = "";
+		$this->position       = $this->rs['position']       = 0;
 		$this->returntoparent = $this->rs['returntoparent'] = 0;
 	}
 	
-	/* Return a list of available section types. */
+	/**
+	 * Return a list of available file types.
+	 * The list contains everything that is displayed in file creation dialog.
+	 * File types that are automatically created or assigned by the application are not listed here.
+	 */
 	function _getFileTypes ()
 	{
 		return array (
-			FT_S_DATA    => "Soubor k sekci",
-			FT_A_IMAGE   => "Obrázek ke článku",
-			FT_A_DATA    => "Soubor ke článku",
-			FT_S_IMAGE   => "Obrázek k sekci",
+			FT_S_DATA        => "Soubor k sekci",
+			FT_X_LECTUREDATA => "Soubor přístupný po přihlášení do předmětu",
+			FT_A_IMAGE       => "Obrázek ke článku",
+			FT_A_DATA        => "Soubor ke článku",
+			FT_S_IMAGE       => "Obrázek k sekci",
 			);
 	}
 	
@@ -80,6 +85,7 @@ class FileBean extends DatabaseBean
 		switch ( $this->type )
 		{
 			case FT_S_DATA:
+			case FT_X_LECTUREDATA:
 			case FT_S_IMAGE:
 			case FT_S_IMAGE_L:
 			case FT_S_IMAGE_R:
@@ -659,23 +665,50 @@ class FileBean extends DatabaseBean
 		/* Query data of this file */
 		$this->dbQuerySingle ();
 
+		/* We have to check a) user role, b) if user is assigned to lecture. */
+		$role = SessionDataBean::getUserRole();
+		$userId = SessionDataBean::getUserId();
+		$lectureId = SessionDataBean::getLectureId();
+
 		/* In case that this is an assignment file, check that the file UID
        	   corresponds to the user UID. */
         $doServeFile = true;
         if ( $this->type == FT_X_ASSIGNMENT || $this->type == FT_X_SOLUTION )
         {
-        	/* Do not allow access to anonymous users and to students with
-        	   different uids. */
-        	$role = SessionDataBean::getUserRole();
-        	if ( $role == USR_ANONYMOUS ||
-        	   ( $role == USR_STUDENT &&
-        		 $this->uid != SessionDataBean::getUserId() ))
+			/* Do not allow access to anonymous users. */
+			if ( $role == USR_ANONYMOUS )
+			{
+				$this->action = "e_anonymous";
+				return false;
+			}
+        	/* Do not allow access to students with different uids. */
+        	if ( $role == USR_STUDENT && $this->uid != $userId )
       		{
-        		/* Acess to assigments of other students is not allowed. */
-        		$this->action = "err_03";
+        		/* Access to assignment files of other students is not allowed. */
+				$this->action = "e_owner";
         		return false;
       		} 
     	}
+
+		/* In case that this file contains private lecture data, refuse to show it
+		   to people that are not logged in. */
+		if ( $this->type == FT_X_LECTUREDATA )
+		{
+			/* Do not allow access to anonymous users. */
+			if ( $role == USR_ANONYMOUS )
+			{
+				$this->action = "e_anonymous";
+				return false;
+			}
+			 /* Do not allow access to students that do not attend this lecture. */
+            $slb = new StudentLectureBean(null, $this->_smarty, null, null);
+            $isStudentListed = $slb->studentIsListed($userId, $lectureId, $this->schoolyear);
+			if ( $role == USR_STUDENT && ! $isStudentListed )
+			{
+				$this->action = "e_nolecture";
+				return false;
+			}
+		}
 
 		/* All other files are public. */
 		if ( $doServeFile )

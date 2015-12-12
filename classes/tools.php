@@ -257,26 +257,43 @@ function numToDayString ( $num )
 }
 
 /**
- * Convert day enumerator to time offset string.
- * 
- * Used to determine all dates of excersises during a schoolyear term.
- * 
- * @param date Date of the Monday when the event sequence begins.
- * @param enum $num Day of occurence of the event.
- * @return array Offsets Time shift string needed for 
+ * Convert day enumerator as defined by CPPSmarty::_assignDayMap() to time offset string.
+ *
+ * Used to determine all dates of exercises during a schoolyear term.
+ *
+ * @param int $date Date of the Monday when the event sequence begins.
+ * @param int $num Day of occurrence of the event.
+ * @return array Offsets Time shift string needed for
  */
 function daynumToOffsets ( $date, $num )
 {
 	/* Is the first week odd or even? If the week is even, $firstWeek will
 	   be 0, otherwise it will be 1. */
 	$firstWeek = intval ( date ( 'W', $date )) % 2;
-	
-	/* Offset of the first occurence of the event in days. Zero offset
-	   means that the event occurs right on $date. Offset greater than
-	   6 is used for events that occur every odd or even week, dependent
-	   on which week has stared on $date. */
-	$weekdayOffset = ( $num - 1 ) % 10;
+
+	/* The $date is usually a Monday, but not always. We have to account for that.
+	   We will use `0` for Monday and `6` for Sunday. */
+	$dateWeekdayOffset = ( intval ( date ( 'w', $date )) + 6 ) % 7;
+
+	/* Some events occur every week (days represented by 1 to 5), some event occur
+	   on odd (11-15) or even (21-25) weeks. */
 	$eventSpacing  = ( $num < 10 ) ? 7 : 14;
+
+	/* Offset of the first occurrence of the event in days. Zero offset means that
+	   the event occurs right on $date. Offset greater than 6 is used for events
+	   that occur every odd (11-15) or even (21-25) week, dependent
+	   on which week has stared on $date. */
+	$eventWeekdayOffset = ( $num - 1 ) % 10;
+	/* Now we have to compute the number of days since $date when the first event
+	   that starts on $eventWeekdayOffset. */
+	$weekdayOffset = $eventWeekdayOffset - $dateWeekdayOffset;
+	/* In rare cases when $dateWeekdayOffset is not `0` (i.e. Monday) the value of
+	   $weekdayOffset may be negative. If this happens, we will have to move the
+	   first occurrence by 7 or 14 days. */
+	if ( $weekdayOffset < 0 ) $weekdayOffset += $eventSpacing;
+
+	/* The odd/even week event have to be further manipulated in order to account
+	   for $date representing an odd or event week number. */
 	if ( $eventSpacing == 14 )
 	{
 		/* The event occurs on odd or even weeks, we have to modify the
@@ -357,8 +374,10 @@ function timestampToSQL ( $timestamp )
         return NULL;
 }
 
-/* Givent the timestamp, returns another timestamp corresponding to the
-   last second of a Sunday of the preceeding week. */
+/**
+ * Given the timestamp, return another timestamp corresponding to the
+ * last second of a Sunday of the preceding week.
+ */
 function previousWeekEnd ( $timestamp )
 {
     $a = getdate ( $timestamp );

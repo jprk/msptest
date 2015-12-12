@@ -102,11 +102,20 @@ class ExcersiseReplacementBean extends DatabaseBean
         $excersiseBean->assignSingle ();
     }
 	
-	function getReplacementsForExcList ( $excersiseList, $termDates )
+	/**
+     * Get all possibilities to visit a replacement exercise.
+     * Will list all replacement records that are bound to a given set of exercises and occur within the given
+     * time limit.
+     */
+    function getReplacementsForExcList ( $excersiseList, $termDates )
 	{
 		/* Convert the excersise list to an `id` array. */
 		$idStr = array2ToDBString ( $excersiseList, 'id' );
-		/* Query a list of replacements. */
+		/* Query a list of replacements.
+		   ADDTIME has to be used to combine the `rd.date` (which is just the day) with the hour when the
+		   exercise really starts. Without this the 00:00:00 of `rd.date` is used for calculation, effectively
+		   skipping all exercises during the actual day -- given that $termDates['from'] contains the actual
+		   time, which it under certain circumstances does. */
 		$rs = $this->dbQuery (
             "SELECT rd.id AS `id`, excersise_id, date, " .
             "IFNULL(rd.mfrom,ex.from) AS `from`, " .
@@ -114,15 +123,22 @@ class ExcersiseReplacementBean extends DatabaseBean
             "avail_count FROM replacement_dates AS rd " .
             "LEFT JOIN excersise AS ex ON rd.excersise_id=ex.id " .
             "WHERE ex.id IN (" . $idStr . ") AND " .
-            "rd.date>='" . $termDates['from'] . "' AND " .
+            "ADDTIME(rd.date,IFNULL(rd.mfrom,ex.from))>='" . $termDates['from'] . "' AND " .
             "rd.date<='" . $termDates['to'] . "' ORDER BY rd.date,`from`" );
         $this->dumpVar ( 'rs', $rs );
 		return $rs; //resultsetToIndexKey ( $rs, 'id' );
 	}
-	
-	function getReplDatesForExclist ( $excersiseList, $termDates )
+
+    /**
+     * Return a list of replacement candidate dates for given exercises and term limits.
+     *
+     * @param $exerciseList
+     * @param $termDates
+     * @return array
+     */
+	function getReplDatesForExclist ( $exerciseList, $termDates )
 	{
-		$repls = $this->getReplacementsForExcList ( $excersiseList, $termDates );
+		$repls = $this->getReplacementsForExcList ( $exerciseList, $termDates );
 		$ret = array();
 		if ( ! empty ( $repls ))
 		{
@@ -189,12 +205,12 @@ class ExcersiseReplacementBean extends DatabaseBean
 		
 		/* Get the list of all excersises for the given lecture id and the
 		   current school year. */
-        $excersiseBean = new ExcersiseBean ( NULL, $this->_smarty, NULL, NULL );
-        $excersiseList = $excersiseBean->getFull ( $this->id, $this->schoolyear );
+        $exerciseBean = new ExcersiseBean ( NULL, $this->_smarty, NULL, NULL );
+        $exerciseList = $exerciseBean->getFull ( $this->id, $this->schoolyear );
 
-        /* Excersise list is now indexed by row position, we would like to
-           have it indexed by excersise id. */
-        $excersiseList = resultsetToIndexKey ( $excersiseList, 'id' );
+        /* Exercise list is now indexed by row position, we would like to
+           have it indexed by exercise id. */
+        $exerciseList = resultsetToIndexKey ( $exerciseList, 'id' );
 		//$this->dumpVar('excersiseList',$excersiseList);
 
 		/* Retrieve parameters of the current term. */
@@ -206,20 +222,23 @@ class ExcersiseReplacementBean extends DatabaseBean
 		$dateTo    = strtotime ( $termDates['to']   );
 		
 		/* Get a list of already defined replacement dates for this term
-		 * and the given list of excersise ids. The list is indexed by date and
-		 * it may contain dates that were entered manually (like excersises
+		 * and the given list of exercise ids. The list is indexed by date and
+		 * it may contain dates that were entered manually (like exercises
 		 * that were moved from their scheduled occurrence due to holidays,
 		 * technical problems etc.).   */
-		$reps = $this->getReplDatesForExcList ( $excersiseList, $termLimits );
+		$reps = $this->getReplDatesForExcList ( $exerciseList, $termLimits );
 		
-		/* Loop over all excersises and generate possible dates for subscription
-		   to replacement excersises. */
+		/* Loop over all exercises and generate possible dates for subscription
+		   to replacement exercises. */
 		$replacementList = array();
 		//$this->dumpVar('excersiseList', $excersiseList);
-		foreach ( $excersiseList as $key => $val )
+		foreach ( $exerciseList as $key => $val )
 		{
 			//$this->dumpVar('val', $val);
+            /* This is the date when the term begins. */
 			$currentDate = $dateFrom;
+            /* Determine the offset of the first exercise counted from $dateFrom and the `spacing` - the number
+               of days between exercises. */
 			$tmpoff  = daynumToOffsets ( $currentDate, $val['day']['num'] );
 			$offset  = $tmpoff['offset'];
 			$spacing = $tmpoff['spacing'];
@@ -275,7 +294,7 @@ class ExcersiseReplacementBean extends DatabaseBean
 		{
 			foreach ( $singleDay as $from => $excersiseId )
 			{
-				$tmpRec = $excersiseList[$excersiseId];
+				$tmpRec = $exerciseList[$excersiseId];
                 /* The `id` property denotes the id of an existing replacement
                    term. The existing replacements are handled by the if clause
                    below, here we assume the default, unselected replacement

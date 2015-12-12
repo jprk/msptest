@@ -391,23 +391,26 @@ class FormAssignmentBean extends DatabaseBean {
         //system ( 'rm -f *.tex *.log *.aux');
     }
 
-    /** 
-	 *  In case of an error, this will generate new files for the given
-	 *  subtask using already generated assignment ids.
+	/**
+	 * Generate a new set of PDF files for existing assignments.
+     * This can be used for example in case of an error in assignment text, as it will generate new assignment files
+     * for the given subtask using already generated assignment ids. The files will be placed in a directory
+     * `<subtask_code>r` and no cleaning of intermediate TeX files will occur.
+	 * @param $subtaskId  integer Identifier of the subtask we will operate on
 	 */
 	function regenerateAssignments($subtaskId)
 	{
 		/* Get the code of the subtask id. */
-		$subtaskBean = new SubtaskBean(0, $this->_smarty, "", "");
+		$subtaskBean = new SubtaskBean(0, $this->_smarty, null, null);
 		$sCode = $subtaskBean->getSubtaskCode($subtaskId);
 
 		/* Construct the file bean that implements also all operations on 
 		   assignment files. */
-		$fileBean = new FileBean(0, $this->_smarty, "", "");
+		// $fileBean = new FileBean(0, $this->_smarty, null, null);
 
 		/* Construct the assignments bean that interconnects the subtask
 		   and studetna dn dile data. */
-		$assignmentsBean = new AssignmentsBean(0, $this->_smarty, "", "");
+		// $assignmentsBean = new AssignmentsBean(0, $this->_smarty, null, null);
 
 		/* Select the assignments for this subtask and the current year from
 		   the database. */
@@ -417,8 +420,8 @@ class FormAssignmentBean extends DatabaseBean {
             );
 
 		/* Read the template. */
-		$tBaseDir = CMSFILES . "/assignments/" . $sCode . "/";
-		$tGeneBase = "generated/" . $sCode . "r/";
+		$tBaseDir = CMSFILES . "/assignments/" . $sCode . "r/";
+		$tGeneBase = "generated/" . $sCode . "/" . $this->schoolyear . "/";
 		$tFileName = $tBaseDir . $sCode . ".tex";
 		$handle = fopen($tFileName, "r");
 		$templatestr = fread($handle, filesize($tFileName));
@@ -446,6 +449,7 @@ class FormAssignmentBean extends DatabaseBean {
             /* Returned result set is an array, therefore we have to copy
                its first (and only) element out. */
             $sval = $rs[0];
+
 			/* Prepare translation table. */
 			$codes = array (
 				"@DATE@",
@@ -468,8 +472,11 @@ class FormAssignmentBean extends DatabaseBean {
 			/* Transform the template into assignment file. */
 			$texstr = str_replace($codes, $replc, $templatestr);
 
-			/* Write the template tex file. */
-			$cmsFileBase = $tGeneBase . $sCode . "_" . $id;
+			/* Write the template tex file. The file name has to contain the student id
+			   because there is possibility of duplicated `assignment_id` values in case
+			   when the number of students is higher than the number of assignments.*/
+			$cmsFileName = $sval['login'] . "_" . $sCode . "_" . $id;
+			$cmsFileBase = $tGeneBase . $cmsFileName;
 			$filename = CMSFILES . "/" . $cmsFileBase . ".tex";
 			$handle = fopen($filename, "w");
 			fwrite($handle, $texstr);

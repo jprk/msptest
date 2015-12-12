@@ -80,6 +80,8 @@ class ImportBean extends DatabaseBean
         }
         /* If a valid evaluation scheme exists, this action only displays a
            static page template. */
+
+        return RET_OK;
     }
 
     /* -------------------------------------------------------------------
@@ -98,6 +100,12 @@ class ImportBean extends DatabaseBean
 
         /* Open an LDAP connection. */
         $ldap = new LDAPConnection ( $this->_smarty );
+
+        /* The LDAP server does not provide anonymous binds anymore. We have to log in using a proxy user and
+           passwords that is stored in configuration files of the application. */
+        $proxy_cn = $this->_smarty->_config['ldap_proxy_cn'];
+        $proxy_pw = $this->_smarty->_config['ldap_proxy_pw'];
+        $ldap->bind ( $proxy_cn, $proxy_pw );
 
         /* Initialise the list of students that will be imported. */
         $studentList = array();
@@ -366,8 +374,8 @@ class ImportBean extends DatabaseBean
 
             $num = count ( $this->firstname );
 
-            $urole  = SessionDataBean::getUserRole();
-            $ulogin = SessionDataBean::getUserLogin();
+            //$urole  = SessionDataBean::getUserRole();
+            //$ulogin = SessionDataBean::getUserLogin();
 
             /* Get the list of tasks for evaluation of this excersise. The list
                will contain only task IDs and we will have to fetch task and
@@ -377,7 +385,7 @@ class ImportBean extends DatabaseBean
             /* This will both create a full list of subtasks corresponding to
                the tasks of the chosen evaluation scheme and assign this list
                to the Smarty variable 'subtaskList'. */
-            $tsbean = new TaskSubtasksBean ( 0, $this->_smarty, "x", "x" );
+            $tsbean = new TaskSubtasksBean ( 0, $this->_smarty, null, null );
             $subtaskMap  = $tsbean->getSubtaskMapForTaskList ( $taskList, $evaluationBean->eval_year );
             $subtasks = array_keys ( $subtaskMap );
 
@@ -389,10 +397,10 @@ class ImportBean extends DatabaseBean
             $groups = array_flip ( $this->groups );
 
             $row = 0;
-            $date = getdate ();
+            //$date = getdate ();
             $stlist = array();
 
-            $ptbean = new PointsBean ( 0, $this->_smarty, NULL, NULL );
+            $ptbean = new PointsBean ( 0, $this->_smarty, null, null );
             while ( $row < $num )
             {
                 /* Get the numeric group number. */
@@ -452,6 +460,8 @@ class ImportBean extends DatabaseBean
             $this->assign ( 'errormsg', $errstr );
             return ERR_ADMIN_MODE;
         }
+
+        return RET_OK;
     }
 
     /* -------------------------------------------------------------------

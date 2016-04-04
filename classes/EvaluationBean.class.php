@@ -106,7 +106,7 @@ class EvaluationBean extends DatabaseBean
 	function getTaskList ()
 	{
 	    $evaluationTasksBean = 
-            new EvaluationTasksBean ( $this->id, $this->_smarty, "x", "x");
+            new EvaluationTasksBean ( $this->id, $this->_smarty, null, null);
 	    return $evaluationTasksBean->getTaskList ();
 	}
 	

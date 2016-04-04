@@ -169,16 +169,17 @@ function arrayToDBString ( &$list, $defRet=true )
 
 /**
  * Convert a two-level dictionary into a comma-separated list of elements.
- * 
- * This function will transforma a two level list of entities indexed by
+ *
+ * This function will transform a two level list of entities indexed by
  * $index at the second level into a string containing a comma-separated list
  * of characters. It is meant to be used for transformation of integer `id`
  * lists into a set that can be used in SQL WHERE `id` IN(...) clause.
  * No checking is done to verify the type of operands.
- * 
+ *
  * @param array $list Two-dimensional list of elements.
  * @param mixed $index Index of the `id` element in the second level.
- * @return string String containing a comma-separeted list of `id` values.
+ * @param bool $defRet
+ * @return string String containing a comma-separated list of `id` values.
  */
 function array2ToDBString ( &$list, $index, $defRet=true )
 {
@@ -220,8 +221,9 @@ function resultsetToIndexKey ( &$rs, $index )
 }
 
 /**
- * 
- * @param unknown_type $num
+ * Get textual description of a day in a week for odd-week, even-week and every-week actions.
+ * TODO: Better have an array (initialised from XML for different languages) for this.
+ * @param $num int Number id of the given day of the week.
  * @return string
  */
 
@@ -334,26 +336,34 @@ function dumpToString ( $mixed = null )
 	return $content;
 }
 
-/* Converts Czech date format 'DD.MM.YYYY HH:MM:SS' into classical SQL
-   format 'YYYY-MM-DD HH:MM:SS' . Time portion of the dateTime is optional.
-   DateTime is supposed to be trimmed. */
-function czechToSQLDateTime ( $dateTime )
+/**
+ * Convert Czech date format 'DD.MM.YYYY HH:MM:SS' into classical SQL   format 'YYYY-MM-DD HH:MM:SS'.
+ * Time portion of the dateTime is optional. DateTime is supposed to be trimmed.
+ * @param string $dateTime
+ * @param string $defaultTimePart
+ * @return string
+ */
+function czechToSQLDateTime ( $dateTime, $defaultTimePart = '' )
 {
 	/* Default date. */
 	$date = '0000-00-00 00:00:00';
 	
 	if ( strlen ( $dateTime ) > 0 )
 	{
-		$dateArray = explode ( ".", $dateTime );
+		$dateArray = explode ( '.', $dateTime );
 		
 		$year = $dateArray[2];
-		$yearArray = explode ( " ", $year );
+		$yearArray = explode ( ' ', $year );
 		
-		$date = $yearArray[0] . "-" . $dateArray[1] . "-" . $dateArray[0];
+		$date = $yearArray[0] . '-' . $dateArray[1] . '-' . $dateArray[0];
 		
 		if ( count ( $yearArray ) > 1 )
 		{
-			$date = $date . " " . $yearArray[1];
+			$date = $date . ' ' . $yearArray[1];
+		}
+		else
+		{
+			$date = $date . ' ' . $defaultTimePart;
 		}
 	}
 	
@@ -377,6 +387,8 @@ function timestampToSQL ( $timestamp )
 /**
  * Given the timestamp, return another timestamp corresponding to the
  * last second of a Sunday of the preceding week.
+ * @param $timestamp int PHP timestamp value.
+ * @return int Timestamp of the end of the previous week.
  */
 function previousWeekEnd ( $timestamp )
 {
@@ -498,11 +510,14 @@ function isLoggedIn ()
 	return ( SessionDataBean::getUserRole() !== USR_ANONYMOUS );
 }
 
-/** 
+/**
  * Return a default value if the first parameter is an empty string.
  * Used to give a meaningful value to student responses.
+ * @param string $var Parameter that shall be subject of default if empty
+ * @param string $default Default value to return
+ * @return string Updated value of $var
  */
-function returnDefault ( $var, $default = 0 )
+function returnDefault ( $var, $default = '0' )
 {
     $var = strtr ( $var, ',', '.' );
     return ( trim($var) === '' ? $default : $var );
@@ -620,6 +635,11 @@ define ( 'MUTEX_LOCK_STOLEN_OK', 1 );
 
 /**
  * Get the lock file name.
+ * The parameters are in fact arbitrary, but keeping proper values of $className and $resourceId
+ * will help you in identifying what and why has been locked.
+ * @param $className string Class that the lock will be acquired for.
+ * @param $resourceId string Resource within the class that shall be locked.
+ * @return string Lock file name.
  */
 function lockFileName ( $className, $resourceId )
 {

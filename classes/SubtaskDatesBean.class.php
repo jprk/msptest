@@ -26,8 +26,8 @@ class SubtaskDatesBean extends DatabaseBean
         /* Update defaults. */
     	$this->subtask_id = $this->id;
         $this->year       = SessionDataBean::getSchoolYear();
-        $this->datefrom   = date('d.m.Y');
-        $this->dateto     = date('d.m.Y');
+        $this->datefrom   = date('d.m.Y') . " 12:00";
+        $this->dateto     = date('d.m.Y', strtotime('-7 days')) . " 12:00";
         /* And reflect these changes in $this->rs */
         $this->_update_rs();
     }
@@ -63,7 +63,7 @@ class SubtaskDatesBean extends DatabaseBean
     }
 
     /**
-     * Process properties updatev via HTTP POST request.
+     * Process properties updated via HTTP POST request.
      */    
     function processPostVars()
     {
@@ -72,12 +72,10 @@ class SubtaskDatesBean extends DatabaseBean
 
         $this->datefrom = $this->rs['datefrom'] 
                         = czechToSQLDateTime ( 
-                            trimStrip ( $_POST['datefrom'] )) . 
-                            " " . self::SUBTASK_LIMIT_TIME;
+                            trimStrip ( $_POST['datefrom'] ), self::SUBTASK_LIMIT_TIME );
         $this->dateto   = $this->rs['dateto']
                         = czechToSQLDateTime ( 
-                            trimStrip ( $_POST['dateto'] )) . 
-                            " " . self::SUBTASK_LIMIT_TIME;
+                            trimStrip ( $_POST['dateto'] ),   self::SUBTASK_LIMIT_TIME );
     }
 
     /**
@@ -170,7 +168,7 @@ class SubtaskDatesBean extends DatabaseBean
     function doSave()
     {
         /* Update the attributes of this object from data passed to us in
-           a POST request. */
+            POST request. */
         $this->processPostVars();
         /* Save the sumbitted data. */
         $this->dbReplace();

@@ -494,15 +494,20 @@ class FormAssignmentBean extends DatabaseBean {
 	/**
      * Create PDF files with individual assignments.
      *
-	 * Typesets PDF documents with assignment text, one document for each student
-     * in `$studentList`, wiping out all existing files in the corresponding
-     * directory identified by a subtask code of `$subtaskId`. In case that
-     * `$isUpdate` is `true`, assignments will be generated but already existing
-     * files will not be deleted. The assignment ids are selected randomly from the
-     * predefined set of assignments, unless `$fromSubtask` is nonzero - in such
-     * a case the assignment ids are copied from those of subtask id `$fromSubtask`
-     * (this might make sense if we have a sequence of assignments where students 
-	 * work on the same problem from different viewpoints).
+	 * Usually typesets PDF documents with assignment text, one document for each student in `$studentList`,
+     * wiping out all existing files in the corresponding directory identified by a subtask code of `$subtaskId`.
+     * In case that `$isUpdate` is `true`, assignments will be generated but already existing files will not be
+     * deleted.
+     *
+     * The assignment ids are selected randomly from the predefined set of assignments, unless `$fromSubtask`
+     * is nonzero - in such a case the assignment ids are copied from those of subtask id `$fromSubtask`
+     * (this might make sense if we have a sequence of assignments where students work on the same problem from
+     * different viewpoints).
+     *
+     * In case that `$copy_from_subtask` is nonzero and the template file is missing, the reference to
+     * the generated files is replaced by the reference to files of the `$copy_from_subtask`. This is used to
+     * provide students with identical assignment files in case that the assignment has different phases and
+     * files have been imported from outside (i.e. we have no template to generate assignment PDFs from).
      *
 	 * @param $id_subtask   integer Identifier of the subtask we will operate on
      * @param $id_list array   List of student/group identifiers
@@ -525,41 +530,52 @@ class FormAssignmentBean extends DatabaseBean {
 		$num_assignments = count($id_list);
 
 		/* Check the mode of new assignment selection. */
+        $assignments_from_subtask = array();
+        $new_assignment_ids = array();
 		if ( $copy_from_subtask > 0 )
 		{
 			/* Copy records from assignments of another task. */
-			$rs = $assignmentsBean->getAssignmentList ( $copy_from_subtask );
-			/* We have to transform the list into a list indexed by student
-			   id. */
-			$studentAssignments = array();
-			foreach ( $rs as $val )
+			$assignment_list = $assignmentsBean->getAssignmentList ( $copy_from_subtask );
+			/* We have to transform the list into a list indexed by student id. */
+			foreach ( $assignment_list as $val )
 			{
-				$studentAssignments[$val['student_id']] = $val['assignmnt_id'];
+				$assignments_from_subtask[$val['student_id']] = $val;
 			}
-			self::dumpVar ( 'studentAssignments', $studentAssignments );
+			self::dumpVar ( 'studentAssignments', $assignments_from_subtask );
 		}
 		else
 		{
 			/* Randomly select a number of records from the database. */
-			$rs = DatabaseBean :: dbQuery("SELECT DISTINCT(assignmnt_id) FROM formassignmnt WHERE " .
+			$new_assignment_ids = DatabaseBean :: dbQuery("SELECT DISTINCT(assignmnt_id) FROM formassignmnt WHERE " .
 				  "subtask_id=" . $id_subtask . " ORDER BY count,RAND() " .
 			      "LIMIT " . $num_assignments);
-			self::dumpVar ( "assignment ids", $rs );
+			self::dumpVar ( "assignment ids", $new_assignment_ids );
 		}
 
-		/* Read the template. */
 		$template_base_dir = CMSFILES . "/assignments/" . $subtask_code . "/";
 		$generated_dir_path = "generated/" . $subtask_code . "/" . $this->schoolyear . "/";
 		$template_file_name = $template_base_dir . $subtask_code . ".tex";
-		$handle = fopen($template_file_name, "r");
-		$template_as_string = fread($handle, filesize($template_file_name));
-		fclose($handle);
 
-		/* Change to the directory where files shall be generated. */
-		$generated_base_dir = CMSFILES . "/" . $generated_dir_path;
-		if (!is_dir ($generated_base_dir)) mkdir ($generated_base_dir, 0775, true);
-		chdir($generated_base_dir);
+        /* Check the presence of the template file. */
+        if (is_file($template_file_name))
+        {
+            /* Read the template. */
+            $handle = fopen($template_file_name, "r");
+            $template_as_string = fread($handle, filesize($template_file_name));
+            fclose($handle);
+        }
+        else
+        {
+            /* Signal missing template by setting the template string to null. */
+            $template_as_string = null;
+        }
 
+        /* Change to the directory where files shall be generated, possibly creating it. */
+        $generated_base_dir = CMSFILES . "/" . $generated_dir_path;
+        if (!is_dir($generated_base_dir)) mkdir($generated_base_dir, 0775, true);
+        chdir($generated_base_dir);
+
+        /* Are we updating the existing set of assignments (for example due to typo or an error in the template)? */
 		if ( ! $isUpdate )
         {
             /* Erase all file records for this task. */
@@ -569,16 +585,12 @@ class FormAssignmentBean extends DatabaseBean {
 		  	system('rm -f *');
         }
         
-		$pos = 0;
+        /* Make a list of students that were ignored during the copy_from_subtask operation due to non-existent
+           original assignment. */
+        $ignored_students = array();
+        $pos = 0;
 		foreach ( $id_list as $key => $val )
         {
-			$codes = array (
-				"@DATE@",
-				"@NAME@",
-				"@GROUP@",
-				"@ID@"
-			);
-
             /* Remember the student id and login. */
             $studentId = $val['id'];
             $studentLogin = $val['login'];
@@ -591,68 +603,109 @@ class FormAssignmentBean extends DatabaseBean {
 			/* Allow copying assignment ids from other subtasks. */
 			if ( $copy_from_subtask > 0 )
 			{
-				$id = $studentAssignments[$studentId];
+                /* It could happen that a student that is still in the list of students does not have an
+                   assignment - this is quite frequent in lectures in the first and second year of study, where
+                   students tend to drop off the faculty after enrolling for the current semester. */
+                if (array_key_exists($studentId, $assignments_from_subtask))
+                {
+                    $student_assignment = $assignments_from_subtask[$studentId];
+                    $id = $student_assignment['assignmnt_id'];
+                }
+                else
+                {
+                    $ignored_students[] = $val;
+                    continue;
+                }
 			}
 			else
 			{
-				$id = $rs[$pos]['assignmnt_id'];
+                $student_assignment = null; // so that the code analyzer does not complain
+				$id = $new_assignment_ids[$pos]['assignmnt_id'];
 			}
-			$replc = array (
-				$date,
-				$name,
-				$group,
-				$id
-			);
 
-            /* Transform the template into assignment file. */
-			$texstr = str_replace($codes, $replc, $template_as_string);
+            /* Now check whether the template really exists and if so, use it to generate the subtask PDF. */
+            if ($template_as_string)
+            {
+                /* Yep, we have a template. We will use batch replace using `str_replace` and for this we need
+                   an array of replacement codes and array of strings that will replace them. */
+                $template_codes = array(
+                    "@DATE@",
+                    "@NAME@",
+                    "@GROUP@",
+                    "@ID@"
+                );
+                $replacement_texts = array(
+                    $date,
+                    $name,
+                    $group,
+                    $id
+                );
 
-			/* Record the assignment id for this student. */
-			$id_list[$key]['assignmnt_id'] = $id;
+                /* Transform the template into assignment file. */
+                $latex_src_string = str_replace($template_codes, $replacement_texts, $template_as_string);
 
-			/* Write the template tex file. The file name has to contain the student id
-			   because there is possibility of duplicated `assignment_id` values in case
-			   when the number of students is higher than the number of assignments.*/
-			$cmsFileName = $studentLogin . "_" . $subtask_code . "_" . $id;
-            $cmsFileBase = $generated_dir_path . $cmsFileName;
-			$filename = CMSFILES . "/" . $cmsFileBase . ".tex";
-			$handle = fopen($filename, "w");
-			fwrite($handle, $texstr);
-			fclose($handle);
+                /* Record the assignment id for this student. */
+                $id_list[$key]['assignmnt_id'] = $id;
 
-			/* And LaTeX it. */
-			$ret = system("TEXINPUTS=`kpsexpand -p tex`:$template_base_dir pdflatex -interaction=batchmode " . $filename . " > /dev/null ");
-			//$ret = system ( "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex ".$filename." " );
-			//echo "<!-- ".$ret."-->";
-			system('rm -f *.tex *.log *.aux');
-            
-			/* Store information about the generated file in file table. */
-            $cmsFileName = $cmsFileName . ".pdf";
-            $cmsFileBase = $cmsFileBase . ".pdf";
-            $fileId = $fileBean->addFile ( FT_X_ASSIGNMENT, $id_subtask, $studentId, $cmsFileBase, $cmsFileName, "Úloha " .
-			$subtask_code . ", příklad " . $id . ", student " . $u8name);
+                /* Write the template tex file. The file name has to contain the student id
+                   because there is possibility of duplicated `assignment_id` values in case
+                   when the number of students is higher than the number of assignments.*/
+                $cmsFileName = $studentLogin . "_" . $subtask_code . "_" . $id;
+                $cmsFileBase = $generated_dir_path . $cmsFileName;
+                $filename = CMSFILES . "/" . $cmsFileBase . ".tex";
+                $handle = fopen($filename, "w");
+                fwrite($handle, $latex_src_string);
+                fclose($handle);
 
-			/* And finally update information about this assignment in the
-			   assignment mapping table. */
+                /* And LaTeX it. */
+                $ret = system("TEXINPUTS=`kpsexpand -p tex`:$template_base_dir pdflatex -interaction=batchmode " . $filename . " > /dev/null ");
+                //$ret = system ( "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex ".$filename." " );
+                //echo "<!-- ".$ret."-->";
+                system('rm -f *.tex *.log *.aux');
+
+                /* Store information about the generated file in file table. */
+                $cmsFileName = $cmsFileName . ".pdf";
+                $cmsFileBase = $cmsFileBase . ".pdf";
+                $fileId = $fileBean->addFile(FT_X_ASSIGNMENT, $id_subtask, $studentId, $cmsFileBase, $cmsFileName,
+                                             "Úloha " . $subtask_code . ", příklad " . $id . ", student " . $u8name);
+            }
+            else
+            {
+                /* No template. We will replace the reference to a generated file of this assignment with a reference
+                   to an existing file of another assignment. */
+                $fileId = $student_assignment['file_id'];
+            }
+
+			/* And finally update information about this assignment in the assignment mapping table. */
 			$assignmentsBean->setAssignment ( $studentId, $id_subtask, $id, $fileId );
 
-			/* The last step is counter update - we have to increase the counter for
-			   all records in `formassignmnt` table with the given `$subtaskId` and
-			   `$assignment_id`.
+			/* The last step is counter update - we have to increase the counter for all records in `formassignmnt`
+			   table with the given `$subtaskId` and `$assignment_id`.
 			   @fixme Shouldn't the `forassignmnt` table be update in all cases? */
 			if ( $copy_from_subtask == 0 )
 			{
 				$this->dbQuery(
-                "UPDATE formassignmnt SET count=count+1 " .
-                "WHERE subtask_id=" . $id_subtask . " " .
-                "AND assignmnt_id=" . $id
+                    "UPDATE formassignmnt SET count=count+1 " .
+                    "WHERE subtask_id=" . $id_subtask . " " .
+                    "AND assignmnt_id=" . $id
                 );
 			}
                 
-			/* Move to the next assigment record in the `$rs` array. */
+			/* Move to the next assignment record in the `$new_assignment_ids` array. */
 			$pos++;
 		}
 
+        /* Pass information about non-existent template to Smarty so that we can react on it in presentation
+           layer. */
+        $this->assign('template_found', $template_as_string !== null);
+        $this->assign('ignored_students', $ignored_students);
+
+        if ($copy_from_subtask > 0)
+        {
+            $sb = new SubtaskBean($copy_from_subtask, $this->_smarty, null, null);
+            $sb->dbQuerySingle();
+            $this->assign('copysub', $sb->rs);
+        }
 	}
 	
 	function assignFull()
@@ -683,11 +736,8 @@ class FormAssignmentBean extends DatabaseBean {
 		   of a GET query. */
 		$this->processGetVars();
 
-        /* Get the lecture description, just to fill in some more-or-less
-           useful pieces of information. */
-        $lectureId   = SessionDataBean::getLectureId();
-        $lectureBean = new LectureBean ( $lectureId, $this->_smarty, NULL, NULL );
-        $lectureBean->assignSingle();
+        /* Get the lecture id. Lecture description is loaded automatically. */
+        $lectureId = SessionDataBean::getLectureId();
 
         /* Load information of the subtask. */
 		$subtaskBean = new SubtaskBean ( $this->id, $this->_smarty, NULL, NULL );
@@ -697,8 +747,8 @@ class FormAssignmentBean extends DatabaseBean {
 		/* Get the list of all exercises, assign it to the Smarty variable
 		   'excersiseList' and return it to us as well, we will need it later.
 		   $this->id will point to the lecture_id in this case. */
-		$excersiseBean = new ExcersiseBean ( NULL, $this->_smarty, NULL, NULL );
-		$excersiseList = $excersiseBean->assignFull ( $lectureId );
+		//$excersiseBean = new ExcersiseBean ( NULL, $this->_smarty, NULL, NULL );
+		//$excersiseList = $excersiseBean->assignFull ( $lectureId );
 
         if ( ! empty ( $this->catalogue ))
         {
@@ -736,18 +786,18 @@ class FormAssignmentBean extends DatabaseBean {
                 $studentList = $studentBean->dbQueryStudentListForLecture ( $lectureId );
             }
             
-            /* Create the files with assignment text (one for each student),
-               possibly generating only assignments for new students (in case
-               that $isUpdate is true) and possibly not generating a new random
-               set of assignments, but copying the ids of assignments from
-               another assignment (this might make sense if we have a sequence
-               of assignments where students work on the same problem from
-               different viewpoints). */
+            /* Create the files with assignment text (one for each student, but note below), possibly generating
+               only assignments for new students (in case that $isUpdate is true) and possibly not generating
+               a new random set of assignments, but copying the ids of assignments from another
+               assignment (this might make sense if we have a sequence of assignments where students work
+               on the same problem from different viewpoints).
+               Note: In some cases the `copysub` will just duplicate links to existing files, in fact not generating
+               anything. This is controlled by the absence of the template file for the given subtask. */
 			$this->generateAssignments( $this->id, $studentList, $isUpdate, 
 									    $this->copysub );
 		}
 
-		$this->_smarty->assign('formassignment', $this->rs);
+		$this->assign('formassignment', $this->rs);
 	}
 
 	/* -------------------------------------------------------------------
@@ -779,17 +829,16 @@ class FormAssignmentBean extends DatabaseBean {
 	/* -------------------------------------------------------------------
 	   HANDLER: EDIT
 	   ------------------------------------------------------------------- */
-	function doEdit() {
+	function doEdit()
+	{
 		/* There is no edit for this type of object. User may just import
 		another set of subtasks. */
-		/* Get a lecture that this subtask is related to. */
-		$lectureBean = new LectureBean(1, $this->_smarty, "", "");
-		$lectureBean->assignSingle();
+
 		/* Get a list of subtask types. */
 		$subtaskBean = new SubtaskBean($this->id, $this->_smarty, "", "");
 		$subtaskBean->assignSingle();
 
-		/* Process and assign additional varibles that we submitted as a part
+		/* Process and assign additional variables that we submitted as a part
 		   of a GET query. */
 		$this->processGetVars();
 		
@@ -801,7 +850,7 @@ class FormAssignmentBean extends DatabaseBean {
 			$subtaskBean->assignStudentSubtaskList();
 		}
 
-		$this->_smarty->assign('formassignment', $this->rs);
+		$this->assign('formassignment', $this->rs);
 	}
 
 	/* -------------------------------------------------------------------

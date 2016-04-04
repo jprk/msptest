@@ -681,13 +681,35 @@ class FileBean extends DatabaseBean
 				$this->action = "e_anonymous";
 				return false;
 			}
-        	/* Do not allow access to students with different uids. */
-        	if ( $role == USR_STUDENT && $this->uid != $userId )
-      		{
-        		/* Access to assignment files of other students is not allowed. */
-				$this->action = "e_owner";
-        		return false;
-      		} 
+            /* Lecturers and administrators have all access rights. For students, we have certain limitations
+               on what they are allowed to see. */
+            if ( $role = USR_STUDENT )
+            {
+                /* If the lecture student group mode is on, check that the student is a member of the student group that
+                   owns the file. */
+                if (SessionDataBean::getLectureGroupFlag())
+                {
+                    /* Group mode on. Check the student group ids. */
+                    $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+                    $group_id = $sgb->getGroupIdForStudent($userId);
+                    if ($this->uid != $group_id)
+                    {
+                        /* Access to assignment files of other student group is not allowed. */
+                        $this->action = "e_group";
+                        return false;
+                    }
+                }
+                else
+                {
+                    /* Do not allow access to students with different uids. */
+                    if ($this->uid != $userId)
+                    {
+                        /* Access to assignment files of other students is not allowed. */
+                        $this->action = "e_owner";
+                        return false;
+                    }
+                }
+            }
     	}
 
 		/* In case that this file contains private lecture data, refuse to show it

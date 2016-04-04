@@ -158,7 +158,19 @@ class AssignmentsBean extends DatabaseBean
         if ( ! empty ( $subtaskList ))
         {
             /* This instance will be used to access solutions submitted by the student. */
-            $fsBean = new FormSolutionsBean ( 0, $this->_smarty, "", "" );
+            $fsBean = new FormSolutionsBean ( null, $this->_smarty, null, null );
+
+            /* Query the group mode flag of the lecture. The flag influences the computation of `haveSolution`
+               flag in the code below. */
+            if (SessionDataBean::getLectureGroupFlag())
+            {
+                $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+                $students = $sgb->getGroupStudentsOfStudent($studentId);
+            }
+            else
+            {
+                $students = StudentGroupBean::getDefaultGroupStudents($studentId);
+            }
       
             foreach ( $subtaskList as $key => $val )
             {
@@ -176,18 +188,16 @@ class AssignmentsBean extends DatabaseBean
                    for this student and subtask id. */
                 $assignmntId = $this->getAssignmentId ( $studentId, $subtaskId, $subtaskType );
                 
-                /* If the assignmentId is not valid, skip checking for
-                   a submitted solution of individual assignments - 
-                   the assignment has not been generated yet. However, do the
-                   check in case of a subtask that does not define
-                   assignmentIds. */
+                /* If the assignmentId is not valid, skip checking for a submitted solution of individual
+                   or group assignments -- the assignment has not been generated yet. However, do the
+                   check in case of a subtask that does not define assignmentIds. */
                 if ( $assignmntId >= self::ID_UNDEFINED )
                 {
                     /* Set up FormSolutionBean to this subtask. */
                     $fsBean->id = $subtaskId;
                     /* Query the presence of a solution submitted by this student. */
                     $subtaskList[$key]['haveSolution'] = 
-                    	$fsBean->haveSolution ( $subtaskId, $studentId, $assignmntId );
+                    	$fsBean->haveSolution ( $subtaskId, $students, $assignmntId );
                 }
             }
         }
@@ -202,8 +212,8 @@ class AssignmentsBean extends DatabaseBean
 	function doShow ()
 	{
         /* Get information about this subtask. */
-        $subtaskBean = new SubtaskBean ( $this->id, $this->_smarty, "", "" );
-        $tubtaskBean->assignSingle();
+        $subtaskBean = new SubtaskBean ( $this->id, $this->_smarty, null, null );
+        $subtaskBean->assignSingle();
         /* Get information about the assignment for this particular student. */
 	}
 	

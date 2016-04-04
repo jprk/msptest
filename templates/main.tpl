@@ -57,11 +57,16 @@ var ON_LOAD = [];
         ><img src="ex/{$lecture.id}/i5.gif" width="180" height="72" alt="" border="0"
         ></div></div></td>
   </tr>
-  {if $lecture.alert}
-  <tr>
-      <td class="lecalert">{$lecture.alert}</td>
-  </tr>
-  {/if}
+{if $global_alert}
+    <tr>
+        <td class="lecalert">{include file=$global_alert}</td>
+    </tr>
+{/if}
+{if $lecture.alert}
+    <tr>
+        <td class="lecalert">{$lecture.alert}</td>
+    </tr>
+{/if}
   <tr>
     <td><!-- zacatek aktivni podtabulky s menu a obsahem -->
       <table border="0" cellspacing="0" cellpadding="0">

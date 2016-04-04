@@ -85,6 +85,7 @@ class CPPSmarty extends Smarty
         $this->assign ( 'yearSelect', $this->_yearMap );
         $this->assign ( 'basedir', BASE_DIR );
         $this->assign ( 'BASE_DIR', BASE_DIR );
+        $this->assign ( 'global_alert', GLOBAL_ALERT_FILE );
     
         $this->_config       = $config;
         $this->compile_check = $this->_config['compile_check'];

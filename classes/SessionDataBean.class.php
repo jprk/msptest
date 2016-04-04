@@ -86,6 +86,22 @@ class SessionDataBean {
     }
 
     /**
+     * Return the group mode flag for the current lecture.
+     */
+    static function getLectureGroupFlag()
+    {
+        return LectureBean::getGroupFlag ( $_SESSION[self::SDB_LECTURE_DATA] );
+    }
+
+    /**
+     * Return the deadline grace period for the current lecture.
+     */
+    static function getLectureGraceMinutes()
+    {
+        return LectureBean::getGraceMinutes ( $_SESSION[self::SDB_LECTURE_DATA] );
+    }
+
+    /**
      * Return the identifier of the root section of the currently selected lecture. 
      */
 	static function getRootSection()

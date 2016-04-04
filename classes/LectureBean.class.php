@@ -2,6 +2,8 @@
 
 class LectureBean extends DatabaseBean
 {
+	const DEFAULT_GRACE_MINUTES = 15;
+
 	protected $code;
 	protected $title;
 	protected $thanks;
@@ -12,6 +14,11 @@ class LectureBean extends DatabaseBean
     protected $repl_count;
     protected $repl_students;
     protected $do_replacements;
+	protected $group_limit;
+    protected $group_type;
+    protected $do_groups;
+	protected $grace_minutes;
+	protected $lecture_manager;
     protected $rootsection;
 
 	function _setDefaults ()
@@ -23,10 +30,14 @@ class LectureBean extends DatabaseBean
         $this->alert           = "";
         $this->syllabus        = "";
         $this->locale          = "cs";
-        $this->term            = SchoolYearBean::WINTER_TERM;
+        $this->term            = SchoolYearBean::TERMTYPE_NONE;
         $this->repl_count      = 0;
         $this->repl_students   = 0;
-        $this->do_replacements = false;
+		$this->do_replacements = false;
+		$this->group_limit     = 0;
+		$this->group_type      = StudentGroupBean::GRPTYPE_NONE;
+		$this->do_groups       = false;
+		$this->grace_minutes   = self::DEFAULT_GRACE_MINUTES;
         $this->rootsection     = 0;
         /* Update the value of $this->rs. */
         $this->_update_rs();
@@ -67,7 +78,33 @@ class LectureBean extends DatabaseBean
         return NULL;
     }
 
-    /**
+	/**
+	 * Getter method for SessionDataBean
+	 */
+	static function getGroupFlag ( &$rsData )
+	{
+		if ( ! empty ( $rsData ))
+		{
+			if ( array_key_exists ( 'do_groups', $rsData ))
+				return $rsData['do_groups'];
+		}
+		return NULL;
+	}
+
+	/**
+	 * Getter method for SessionDataBean
+	 */
+	static function getGraceMinutes ( &$rsData )
+	{
+		if ( ! empty ( $rsData ))
+		{
+			if ( array_key_exists ( 'grace_minutes', $rsData ))
+				return $rsData['grace_minutes'];
+		}
+		return self::DEFAULT_GRACE_MINUTES;
+	}
+
+	/**
 	 * Getter function for lecture code.
 	 */
 	function getCode ()
@@ -171,6 +208,8 @@ class LectureBean extends DatabaseBean
           . mysql_escape_string ( SchoolYearBean::termToEnum ( $this->term )) . "',"
           . $this->repl_students . ","
           . $this->repl_count . ","
+          . $this->group_limit . ","
+          . $this->group_type . ","
           . $this->rootsection  . ")"
 		  );
 
@@ -201,6 +240,9 @@ class LectureBean extends DatabaseBean
             $this->repl_students   = $this->rs['replacement_students'];
             $this->repl_count      = $this->rs['replacement_count'];
             $this->do_replacements = ( $this->repl_students > 0 );
+            $this->group_limit     = $this->rs['group_limit'];
+            $this->group_type      = $this->rs['group_type'];
+            $this->do_groups       = ( $this->group_limit > 0 );
             $this->rootsection     = $this->rs['rootsection'];
             /* Update the value of $this->rs. This will make the lecture data
                * available to the templating engine. */
@@ -224,6 +266,8 @@ class LectureBean extends DatabaseBean
         $this->term          = intval ( $_POST['term'] );
         $this->repl_students = intval ( $_POST['repl_students'] );
         $this->repl_count    = intval ( $_POST['repl_count'] );
+        $this->group_limit   = intval ( $_POST['group_limit'] );
+        $this->group_type    = intval ( $_POST['group_type'] );
         $this->rootsection   = intval ( $_POST['rootsection'] );
     }
 	
@@ -417,6 +461,9 @@ class LectureBean extends DatabaseBean
 		   fetch the lecture data from database. The result will be
 		   assigned to template variable 'lectureInfo'. */
 		$this->assignSingle ();
-	}
+        /* Fetch selectors for term type and group type. */
+        $this->assign('select_term', SchoolYearBean::TERMTYPE_LIST());
+        $this->assign('select_group', StudentGroupBean::GRPTYPE_LIST());
+    }
 }
 ?>

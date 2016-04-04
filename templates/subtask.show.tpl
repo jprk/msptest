@@ -28,7 +28,7 @@ Při odevzdání PDF souboru postupujte následujícím způsobem:
 <ol>
     <li>Vytvořte ve Vašem oblíbeném textovém procesoru soubor odpovídající
         požadavkům zadání.
-    <li>Tento soubor zkonvertujte do PDF (OpenOffice nebo Lyx to umí rovnou,
+    <li>Tento soubor zkonvertujte do PDF (MS Word 2007 a novější, OpenOffice nebo LyX to umí rovnou,
         jinak použijte virtuální tiskárnu do PDF, jako je například PDFCreator).
     <li>Tento soubor nahrajte pomocí formuláře pod tímto textem.
 </ol>

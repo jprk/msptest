@@ -1,12 +1,12 @@
 <p>
-»l·nek s n·zvem <i>{$article.title}</i> byl z datab·ze vymaz·n.
+ƒål√°nek s n√°zvem <i>"{$article.title}"</i> byl z datab√°ze vymaz√°n.
 </p>
 {if $article.returntoparent}
 <form action="?act=show,section,{$article.parent}" method="post">
-<input type="submit" value="ZpÏt na sekci">
+<input type="submit" value="Zpƒõt na sekci">
 </form>
 {else}
 <form action="?act=admin,article,42" method="post">
-<input type="submit" value="PokraËovat v administraci Ël·nk˘">
+<input type="submit" value="Pokraƒçovat v administraci ƒçl√°nk≈Ø">
 </form>
 {/if}

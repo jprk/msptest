@@ -4,7 +4,7 @@
 <table class="admintable" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <th>Task title</th>
-<th colspan="2" style="width: 32ex;">Hand in from-to</th>
+<th colspan="2" style="width: 34ex;">Hand in from-to</th>
 <th>Is active?</th>
 </tr>
 {section name=aId loop=$studentSubtaskList}

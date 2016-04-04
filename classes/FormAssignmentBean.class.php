@@ -504,34 +504,31 @@ class FormAssignmentBean extends DatabaseBean {
      * (this might make sense if we have a sequence of assignments where students 
 	 * work on the same problem from different viewpoints).
      *
-	 * @param $subtaskId   integer Identifier of the subtask we will operate on
-     * @param $studentList array   List of student identifiers
+	 * @param $id_subtask   integer Identifier of the subtask we will operate on
+     * @param $id_list array   List of student/group identifiers
      * @param $isUpdate    boolean Do not erase older assignment files
-     * @param $fromSubtask integer Copy assignment ids from this subtask
+     * @param $copy_from_subtask integer Copy assignment ids from this subtask
 	 */
-	function generateAssignments ( $subtaskId, $studentList, $isUpdate, $fromSubtask )
+	function generateAssignments ( $id_subtask, $id_list, $isUpdate, $copy_from_subtask )
     {
 		/* Get the code of the subtask id. */
-		$subtaskBean = new SubtaskBean ( NULL, $this->_smarty, NULL, NULL );
-		$sCode = $subtaskBean->getSubtaskCode($subtaskId);
+		$subtaskBean = new SubtaskBean ( $id_subtask, $this->_smarty, NULL, NULL );
+		$subtask_code = $subtaskBean->getSubtaskCode($id_subtask);
 
-		/* Construct the file bean that implements also all operations on 
-		   assignment files. */
+		/* Construct the file DAO that implements also all operations on assignment files. */
 		$fileBean = new FileBean ( NULL, $this->_smarty, NULL, NULL );
 
-		/* Construct the assignments bean that interconnects the subtask,
-		   the student, and the file data. */
+		/* Construct DAO that interconnects the subtask, the student, and the file data. */
         $assignmentsBean = new AssignmentsBean ( NULL, $this->_smarty, NULL, NULL );
 
-		/* The number of assignments to generate is given by the number of
-		 students in the studentList. */
-		$numAssignments = count($studentList);
+		/* The number of assignments to generate is given by the number of ids in the id_list. */
+		$num_assignments = count($id_list);
 
 		/* Check the mode of new assignment selection. */
-		if ( $fromSubtask > 0 )
+		if ( $copy_from_subtask > 0 )
 		{
 			/* Copy records from assignments of another task. */
-			$rs = $assignmentsBean->getAssignmentList ( $fromSubtask );
+			$rs = $assignmentsBean->getAssignmentList ( $copy_from_subtask );
 			/* We have to transform the list into a list indexed by student
 			   id. */
 			$studentAssignments = array();
@@ -545,35 +542,35 @@ class FormAssignmentBean extends DatabaseBean {
 		{
 			/* Randomly select a number of records from the database. */
 			$rs = DatabaseBean :: dbQuery("SELECT DISTINCT(assignmnt_id) FROM formassignmnt WHERE " .
-				  "subtask_id=" . $subtaskId . " ORDER BY count,RAND() " .
-			      "LIMIT " . $numAssignments);
+				  "subtask_id=" . $id_subtask . " ORDER BY count,RAND() " .
+			      "LIMIT " . $num_assignments);
 			self::dumpVar ( "assignment ids", $rs );
 		}
 
 		/* Read the template. */
-		$tBaseDir = CMSFILES . "/assignments/" . $sCode . "/";
-		$tGeneBase = "generated/" . $sCode . "/" . $this->schoolyear . "/";
-		$tFileName = $tBaseDir . $sCode . ".tex";
-		$handle = fopen($tFileName, "r");
-		$templatestr = fread($handle, filesize($tFileName));
+		$template_base_dir = CMSFILES . "/assignments/" . $subtask_code . "/";
+		$generated_dir_path = "generated/" . $subtask_code . "/" . $this->schoolyear . "/";
+		$template_file_name = $template_base_dir . $subtask_code . ".tex";
+		$handle = fopen($template_file_name, "r");
+		$template_as_string = fread($handle, filesize($template_file_name));
 		fclose($handle);
 
 		/* Change to the directory where files shall be generated. */
-		$base = CMSFILES . "/" . $tGeneBase;
-		if ( ! is_dir ( $base )) mkdir ( $base, 0775, true );
-		chdir ( $base );
+		$generated_base_dir = CMSFILES . "/" . $generated_dir_path;
+		if (!is_dir ($generated_base_dir)) mkdir ($generated_base_dir, 0775, true);
+		chdir($generated_base_dir);
 
 		if ( ! $isUpdate )
         {
             /* Erase all file records for this task. */
-    		$fileBean->clearAssignmentFiles($subtaskId);
+    		$fileBean->clearAssignmentFiles($id_subtask);
 
 	   	   	/* Erase all remaining files in the directory. */
 		  	system('rm -f *');
         }
         
 		$pos = 0;
-		foreach ( $studentList as $key => $val )
+		foreach ( $id_list as $key => $val )
         {
 			$codes = array (
 				"@DATE@",
@@ -592,7 +589,7 @@ class FormAssignmentBean extends DatabaseBean {
 			$group = $val['yearno'] . "/" . $val['groupno'];
 
 			/* Allow copying assignment ids from other subtasks. */
-			if ( $fromSubtask > 0 )
+			if ( $copy_from_subtask > 0 )
 			{
 				$id = $studentAssignments[$studentId];
 			}
@@ -608,23 +605,23 @@ class FormAssignmentBean extends DatabaseBean {
 			);
 
             /* Transform the template into assignment file. */
-			$texstr = str_replace($codes, $replc, $templatestr);
+			$texstr = str_replace($codes, $replc, $template_as_string);
 
 			/* Record the assignment id for this student. */
-			$studentList[$key]['assignmnt_id'] = $id;
+			$id_list[$key]['assignmnt_id'] = $id;
 
 			/* Write the template tex file. The file name has to contain the student id
 			   because there is possibility of duplicated `assignment_id` values in case
 			   when the number of students is higher than the number of assignments.*/
-			$cmsFileName = $studentLogin . "_" . $sCode . "_" . $id;
-            $cmsFileBase = $tGeneBase . $cmsFileName;
+			$cmsFileName = $studentLogin . "_" . $subtask_code . "_" . $id;
+            $cmsFileBase = $generated_dir_path . $cmsFileName;
 			$filename = CMSFILES . "/" . $cmsFileBase . ".tex";
 			$handle = fopen($filename, "w");
 			fwrite($handle, $texstr);
 			fclose($handle);
 
 			/* And LaTeX it. */
-			$ret = system("TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex -interaction=batchmode " . $filename . " > /dev/null ");
+			$ret = system("TEXINPUTS=`kpsexpand -p tex`:$template_base_dir pdflatex -interaction=batchmode " . $filename . " > /dev/null ");
 			//$ret = system ( "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex ".$filename." " );
 			//echo "<!-- ".$ret."-->";
 			system('rm -f *.tex *.log *.aux');
@@ -632,22 +629,22 @@ class FormAssignmentBean extends DatabaseBean {
 			/* Store information about the generated file in file table. */
             $cmsFileName = $cmsFileName . ".pdf";
             $cmsFileBase = $cmsFileBase . ".pdf";
-            $fileId = $fileBean->addFile ( FT_X_ASSIGNMENT, $subtaskId, $studentId, $cmsFileBase, $cmsFileName, "Úloha " .
-			$sCode . ", příklad " . $id . ", student " . $u8name);
+            $fileId = $fileBean->addFile ( FT_X_ASSIGNMENT, $id_subtask, $studentId, $cmsFileBase, $cmsFileName, "Úloha " .
+			$subtask_code . ", příklad " . $id . ", student " . $u8name);
 
 			/* And finally update information about this assignment in the
 			   assignment mapping table. */
-			$assignmentsBean->setAssignment ( $studentId, $subtaskId, $id, $fileId );
+			$assignmentsBean->setAssignment ( $studentId, $id_subtask, $id, $fileId );
 
 			/* The last step is counter update - we have to increase the counter for
 			   all records in `formassignmnt` table with the given `$subtaskId` and
 			   `$assignment_id`.
 			   @fixme Shouldn't the `forassignmnt` table be update in all cases? */
-			if ( $fromSubtask == 0 )
+			if ( $copy_from_subtask == 0 )
 			{
 				$this->dbQuery(
                 "UPDATE formassignmnt SET count=count+1 " .
-                "WHERE subtask_id=" . $subtaskId . " " .
+                "WHERE subtask_id=" . $id_subtask . " " .
                 "AND assignmnt_id=" . $id
                 );
 			}
@@ -692,7 +689,7 @@ class FormAssignmentBean extends DatabaseBean {
         $lectureBean = new LectureBean ( $lectureId, $this->_smarty, NULL, NULL );
         $lectureBean->assignSingle();
 
-        /* Load information of the substask. */
+        /* Load information of the subtask. */
 		$subtaskBean = new SubtaskBean ( $this->id, $this->_smarty, NULL, NULL );
 		$subtaskBean->assignSingle();
 
@@ -767,7 +764,8 @@ class FormAssignmentBean extends DatabaseBean {
 			TT_WEEKLY_SIMU,
             TT_WEEKLY_PDF,
             TT_WEEKLY_ZIP,
-            TT_WEEKLY_TF
+			TT_WEEKLY_TF,
+            TT_SEMESTRAL_IND
             ));
 		/* Add count and publish it. */
 		$subtaskList = $this->updateSubtaskList($subtaskList);

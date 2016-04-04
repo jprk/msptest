@@ -48,6 +48,7 @@ require ( REQUIRE_DIR . 'SessionDataBean.class.php');
 require ( REQUIRE_DIR . 'SolutionBean.class.php');
 require ( REQUIRE_DIR . 'StudentBean.class.php');
 require ( REQUIRE_DIR . 'StudentExcersiseBean.class.php');
+require ( REQUIRE_DIR . 'StudentGroupBean.class.php');
 require ( REQUIRE_DIR . 'StudentLectureBean.class.php');
 require ( REQUIRE_DIR . 'StudentPassGenBean.class.php');
 require ( REQUIRE_DIR . 'SubtaskBean.class.php');
@@ -187,7 +188,7 @@ if ( $isPageOutput )
 }
 
 /* Fetch / initialize session.
-   In order to prevent mixing of sessions for differens base URLS (live
+   In order to prevent mixing of sessions for different base URLS (live
    and testing web applications on the same machine, or different applications
    on the same machine), we will use a named session. The name of the
    session will be identical to the base directory of the application. */
@@ -307,7 +308,7 @@ $smarty->assign ( 'errormsg', $errorMsg );
    adding or editing data. */
 if ( $action == 'add' || $action == 'edit' )
 {
-	$smarty->assign ('htmlareaheader', "htmlarea.header.tpl");
+	$smarty->assign ('htmlareaheader', "tinymce.header.tpl");
 	$smarty->assign ('calendarheader', "calendar.header.tpl");
 	$smarty->assign ('calendarfooter', "calendar.footer.tpl");
 }

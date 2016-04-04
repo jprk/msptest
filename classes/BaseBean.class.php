@@ -11,6 +11,7 @@ define ( 'TT_WEEKLY_PDF',  103 );
 define ( 'TT_WEEKLY_TF',   104 );
 define ( 'TT_LECTURE_PDF', 105 );
 define ( 'TT_SEMESTRAL',   200 );
+define ( 'TT_SEMESTRAL_IND',   201 );
 define ( 'TT_ACTIVITY',    300 );
 define ( 'TT_WRITTEN',     400 );
 
@@ -62,7 +63,8 @@ class BaseBean
             TT_WEEKLY_PDF  => "Individuální týdenní úloha (jeden soubor *.pdf)",
             TT_LECTURE_PDF => "Hromadná týdenní úloha (jeden soubor *.pdf)",
             TT_WEEKLY_TF   => "Povinná týdenní úloha (formulář s přenosovou fcí)",
-            TT_SEMESTRAL   => "Semestrální úloha"
+			TT_SEMESTRAL   => "Semestrální úloha",
+            TT_SEMESTRAL_IND  => "Semestrální úloha s individuálním zadáním"
 		);
 	}
 	
@@ -100,7 +102,21 @@ class BaseBean
 	{
 		return $this->errmsg;
 	}
-	
+
+	/* -------------------------------------------------------------------
+	   SETTERS
+	   ------------------------------------------------------------------- */
+    /**
+     * Set the CPPSmarty instance used for database queries and template rendering.
+     * Useful e.g. in case that a BaseBean child instance is fetched from session and its internal
+     * instalce of CPP smarty is no longer valid.
+     * TODO: Think about means for serialization of BaseBean instances.
+     * @param $smarty CPPSmarty Smarty instance that shall be used for class-internal operations.
+     */
+    function setSmarty( &$smarty )
+    {
+        $this->_smarty = &$smarty;
+    }
 	/* -------------------------------------------------------------------
 	   HANDLERS
 	   ------------------------------------------------------------------- */

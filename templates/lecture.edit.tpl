@@ -12,7 +12,7 @@
         </tr>
         <tr class="rowA">
             <td class="itemtitle">Semestr</td>
-            <td><input type="text" name="term" maxlength="1" size="1" value="{$lectureInfo.term}"></td>
+            <td>{html_options name="term" options=$select_term selected=$lectureInfo.term}</td>
         </tr>
         <tr class="rowB">
             <td class="itemtitle">Jazyk</td>
@@ -29,6 +29,16 @@
                 (pro jednoho studenta)</td>
         </tr>
         <tr class="rowA">
+            <td class="itemtitle">Max studentů ve skupině</td>
+            <td><input type="text" name="group_limit" maxlength="1" size="1" value="{$lectureInfo.group_limit}">
+                (0 pokud každý student jede na sebe)</td>
+        </tr>
+        <tr class="rowB">
+            <td class="itemtitle">Typ studentských skupin</td>
+            <td>{html_options name="group_type" options=$select_group selected=$lectureInfo.group_type}
+                (po cvičeních je třeba FY1+FY2, po předmětu třeba MAMY nebo TEDL)</td>
+        </tr>
+        <tr class="rowA">
             <td class="itemtitle">Sylabus</td>
             <td>
                 <textarea id="edcTextArea" name="syllabus" style="width: 100%; height: 420px;">
@@ -39,6 +49,10 @@
         <tr class="rowB">
             <td class="itemtitle">Poděkování</td>
             <td><input type="text" name="thanks" maxlength="255" size="50" value="{$lectureInfo.thanks}"></td>
+        </tr>
+        <tr class="rowA">
+            <td class="itemtitle">Varování</td>
+            <td><input type="text" name="alert" maxlength="255" size="50" value="{$lectureInfo.alert}"></td>
         </tr>
         <tr class="rowA">
             <td>&nbsp;</td>

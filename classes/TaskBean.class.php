@@ -5,15 +5,16 @@ class TaskBean extends DatabaseBean
 	const NULL_TASK_ID = 0;
 
 	/* Task types */
-	const TT_WEEKLY_FORM = 100;
-	const TT_WEEKLY_SIMU = 101;
-	const TT_WEEKLY_ZIP  = 102;
-	const TT_WEEKLY_PDF  = 103;
-	const TT_WEEKLY_TF   = 104;
-	const TT_LECTURE_PDF = 105;
-	const TT_SEMESTRAL   = 200;
-	const TT_ACTIVITY    = 300;
-	const TT_WRITTEN     = 400;
+	const TT_WEEKLY_FORM   = 100;
+	const TT_WEEKLY_SIMU   = 101;
+	const TT_WEEKLY_ZIP    = 102;
+	const TT_WEEKLY_PDF    = 103;
+	const TT_WEEKLY_TF     = 104;
+	const TT_LECTURE_PDF   = 105;
+	const TT_SEMESTRAL     = 200;
+	const TT_SEMESTRAL_IND = 201; /* TODO: rename to TT_SEMEESTRAL_INDIV_PDF */
+	const TT_ACTIVITY      = 300;
+	const TT_WRITTEN       = 400;
 	
 	var $type;
 	var $title;
@@ -43,7 +44,8 @@ class TaskBean extends DatabaseBean
             self::TT_WEEKLY_PDF  => "Individuální týdenní úloha (jeden soubor *.pdf)",
             self::TT_LECTURE_PDF => "Hromadná týdenní úloha (jeden soubor *.pdf)",
             self::TT_WEEKLY_TF   => "Povinná týdenní úloha (formulář s přenosovou fcí)",
-            self::TT_SEMESTRAL   => "Semestrální úloha"
+			self::TT_SEMESTRAL   => "Semestrální úloha",
+            self::TT_SEMESTRAL_IND => "Semestrální úloha s individuálním zadáním"
 		);
 	}
 	
@@ -140,7 +142,7 @@ class TaskBean extends DatabaseBean
 	
 	static function assignTypeSelect ()
 	{
-		$this->_smarty->assign ( 'taskTypeSelect', self::getTaskTypes());
+		self::assign( 'taskTypeSelect', self::getTaskTypes());
 	}
 	
 	function assignFullTaskList ( $taskList )

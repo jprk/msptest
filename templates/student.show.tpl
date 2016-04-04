@@ -35,6 +35,12 @@
     {czech}uživatelské jméno{/czech}{english}user name{/english}: {$student.login}<br>
     {czech}jméno a příjmení{/czech}{english}given name and surname{/english}: {$student.firstname} {$student.surname}<br>
     email: {$student.email}
+{if $lecture.do_groups}
+    <br>{czech}studentská skupina v tomto předmětu{/czech}{english}student group id in this lecture{/english}:
+    {if $group_data}{$group_data.name}{else}{czech}nepřiřazena{/czech}{english}not yet assigned{/english}{/if}
+    <br>{czech}studenti ve skupině{/czech}{english}members of your group{/english}:
+    {foreach from=$group_students item=grps name=grp_students}{$grps.firstname} {$grps.surname}{if not $smarty.foreach.grp_students.last}, {/if}{/foreach}
+{/if}
 </p>
 <h2>{czech}Samostatné úlohy{/czech}{english}Assignments{/english}</h2>
 {if $studentSubtaskList}

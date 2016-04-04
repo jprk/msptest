@@ -27,7 +27,7 @@ class SubtaskBean extends DatabaseBean
 	}
 	
 	/* Constructor */
-	function SubtaskBean ( $id, &$smarty, $action, $object )
+	function __construct ( $id, &$smarty, $action, $object )
 	{
 		/* Call parent's constructor first */
 		parent::__construct ( $id, $smarty, "subtask", $action, $object );
@@ -71,8 +71,10 @@ class SubtaskBean extends DatabaseBean
   
   function dbQuerySingle ()
 	{
-		/* Query the data of this section (ID has been already specified) */
+		/* Query the data of this subtask (`id` has been already specified). */
 		DatabaseBean::dbQuerySingle ();
+        /* This query does not provide the `active` field. */
+        $this->rs['active'] = null;
 		/* Initialize the internal variables with the data queried from the
 		   database. */
 		$this->_updateFromResultSet ();
@@ -218,8 +220,9 @@ class SubtaskBean extends DatabaseBean
                 TT_WEEKLY_TF   . "," .
                 TT_WEEKLY_ZIP  . "," .
                 TT_WEEKLY_PDF  . "," .
-                TT_LECTURE_PDF . "," .
-                TT_SEMESTRAL . ") " .
+				TT_LECTURE_PDF . "," .
+				TT_SEMESTRAL . "," .
+                TT_SEMESTRAL_IND . ") " .
             "AND lecture_id=" . $lectureId . " " .
  			"AND ts.year=" . $this->schoolyear . " " .
             "ORDER BY position,title" );
@@ -282,8 +285,9 @@ class SubtaskBean extends DatabaseBean
                      $type != TT_WEEKLY_ZIP  && 
                      $type != TT_WEEKLY_PDF  && 
                      $type != TT_WEEKLY_TF   && 
-                     $type != TT_LECTURE_PDF && 
-                     $type != TT_SEMESTRAL )
+                     $type != TT_LECTURE_PDF &&
+					 $type != TT_SEMESTRAL    &&
+					 $type != TT_SEMESTRAL_IND )
                 {
                     $rs[$key]['datefrom'] = '-';
                     $rs[$key]['dateto']   = '-';
@@ -312,76 +316,83 @@ class SubtaskBean extends DatabaseBean
 	function assignSingle ( $newId = NULL )
 	{
 		/* Change the id of the bean, if requested. */
-		if ( $newId != NULL )
+		if ($newId != NULL)
 		{
 			$this->id = $newId;
 		}
-		
+
 		/* If id == 0, we shall create a new record. */
-		if ( $this->id )
+		if ($this->id)
 		{
-            /* Get the id of the student so that we can additionally
+			/* Get the id of the student so that we can additionally
                request information about subtask extension. */
 			$studentId = SessionDataBean::getUserId();
-            /* Query data of this subtask. */
-			$this->rs = $this->dbQuery ( 
+			$grace_minutes = SessionDataBean::getLectureGraceMinutes();
+			/* Query data of this subtask. */
+			$this->rs = $this->dbQuery(
 				"SELECT *," .
-                "(sd.datefrom<=NOW() AND " .
-                "(sd.dateto>NOW() OR se.dateto>NOW())) AS active " .
+				"(sd.datefrom<=NOW() AND " .
+				"(sd.dateto>(NOW()+INTERVAL " . $grace_minutes . " MINUTE) OR " .
+				" se.dateto>(NOW()+INTERVAL " . $grace_minutes . " MINUTE))) AS active " .
 				"FROM subtask AS su " .
-                "LEFT JOIN extension AS se " .
-                "ON ( se.student_id=". $studentId ." AND se.year=" .$this->schoolyear . " AND su.id=se.subtask_id ) " .
-                "LEFT JOIN subtaskdates AS sd " .
-                "ON ( su.id=sd.subtask_id AND sd.year=" .$this->schoolyear . " ) " .
-                "WHERE su.id=" . $this->id  );
-			
-            $this->rs = $this->rs[0];
-			$this->_updateFromResultSet ();
-      
-      		if ( $this->type == TT_WEEKLY_FORM || $this->type == TT_WEEKLY_TF  )
-      		{
-        		$this->rs['isformassignment'] = true;
-      		}
-            else if  ( $this->type == TT_WEEKLY_SIMU )
-            {
-                $this->rs['issimuassignment'] = true;
-            }
-            else if  ( $this->type == TT_WEEKLY_PDF )
-            {
-                $this->rs['ispdfassignment'] = true;
-            }
-            else if  ( $this->type == TT_LECTURE_PDF )
-            {
-                $this->rs['islpdfassignment'] = true;
-            }
-            else if  ( $this->type == TT_WEEKLY_ZIP )
-            {
-                $this->rs['iszipassignment'] = true;
-            }
-      
+				"LEFT JOIN extension AS se " .
+				"ON ( se.student_id=" . $studentId . " AND se.year=" . $this->schoolyear . " AND su.id=se.subtask_id ) " .
+				"LEFT JOIN subtaskdates AS sd " .
+				"ON ( su.id=sd.subtask_id AND sd.year=" . $this->schoolyear . " ) " .
+				"WHERE su.id=" . $this->id);
+
+			$this->rs = $this->rs[0];
+			$this->_updateFromResultSet();
+
+			if ($this->type == TT_WEEKLY_FORM || $this->type == TT_WEEKLY_TF)
+			{
+				$this->rs['isformassignment'] = true;
+			}
+			else if ($this->type == TT_WEEKLY_SIMU)
+			{
+				$this->rs['issimuassignment'] = true;
+			}
+			else if ($this->type == TT_WEEKLY_PDF)
+			{
+				$this->rs['ispdfassignment'] = true;
+			}
+			else if ($this->type == TT_LECTURE_PDF || $this->type == TT_SEMESTRAL_IND)
+			{
+				$this->rs['islpdfassignment'] = true;
+			}
+			else if ($this->type == TT_WEEKLY_ZIP || $this->type == TT_SEMESTRAL)
+			{
+				$this->rs['iszipassignment'] = true;
+			}
+
 			//$this->dumpVar ( 'rs1', $this->rs );
-			
+
 			/* Get a lecture that this subtask is related to. */
 			$lectureBean = new LectureBean (
-                $this->lecture_id, $this->_smarty, NULL, NULL );
-			$lectureBean->assignSingle ();
+				$this->lecture_id, $this->_smarty, NULL, NULL);
+			$lectureBean->assignSingle();
 		}
 		else
 		{
 			/* Initialize default values. */
-			$this->_setDefaults ();
+			$this->_setDefaults();
 			/* Have a look at HTTP GET parameters if there is some
 			   additional information we could use ( lecture id or
 			   task type). */
-			$this->processGetVars ();
+			$this->processGetVars();
 		}
 
-        if ($this->type == TT_WEEKLY_TF)
-        {
-            /* Transfer function task needs a way to encode 'p' and 'z' */
-            $this->assign('varList', self::$varList);
-        }
+		if ($this->type == TT_WEEKLY_TF)
+		{
+			/* Transfer function task needs a way to encode 'p' and 'z' */
+			$this->assign('varList', self::$varList);
+		}
 
+		$this->assign_rs();
+	}
+
+	function assign_rs()
+	{
 		$this->assign('subtask', $this->rs);
 	}
 	
@@ -393,7 +404,7 @@ class SubtaskBean extends DatabaseBean
         /* Get the subtask data. */
         $this->assignSingle ();
         /* Get the assignment information. */
-        $assignmentBean = new AssignmentsBean ( $this->id, $this->_smarty, "", "" );
+        $assignmentBean = new AssignmentsBean ( $this->id, $this->_smarty, null, null );
         $assignmentBean->assignSingle();	  
 	}
 	

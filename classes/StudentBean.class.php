@@ -1168,6 +1168,14 @@ class StudentBean extends DatabaseBean
         return $rs;
     }
 
+    /**
+     * Pass the data from internal variable `rs` to Smarty.
+     */
+    function assign_rs()
+    {
+        $this->assign('student', $this->rs);
+    }
+
     /* Assign a single student record. */
     function assignSingle()
     {
@@ -1187,7 +1195,7 @@ class StudentBean extends DatabaseBean
                 $this->id = $this->rs['id'] = $rs[0]['id'];
             }
         }
-        $this->_smarty->assign('student', $this->rs);
+        $this->assign_rs();
     }
 
     /**
@@ -1197,7 +1205,7 @@ class StudentBean extends DatabaseBean
      * logging into the application - the `LoginBean` instance calls the
      * password checker provided by this class first and immediately after the
      * process of password verification the information about the user is queried
-     * (otherwise the date of last succesful login and the number of unsuccessful
+     * (otherwise the date of last successful login and the number of unsuccessful
      * logins would be lost).
      */
     function doShowWithoutQuery()
@@ -1227,7 +1235,14 @@ class StudentBean extends DatabaseBean
             return;
         }
 
-        /* Check the replacement excersises. */
+        /* Check for possible student group mode. */
+        if (SessionDataBean::getLectureGroupFlag())
+        {
+            $grpb = new StudentGroupBean(null, $this->_smarty, null, null);
+            $grpb->assignGroupAndGroupStudentsOfStudent($this->id);
+        }
+
+        /* Check the replacement exercises. */
         if (SessionDataBean::getLectureReplacements())
         {
             $termLimits = SchoolYearBean::getTermLimits($this->schoolyear, SessionDataBean::getLectureTerm());

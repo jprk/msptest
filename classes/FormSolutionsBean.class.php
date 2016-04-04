@@ -103,16 +103,18 @@ class FormSolutionsBean extends DatabaseBean
         assignPostIfExists($this->confirmed, $this->rs, 'confirmed');
     }
 
-    function haveSolution($subtaskId, $studentId, $assignmentId)
+    function haveSolution($subtaskId, $students, $assignmentId)
     {
         /* Limit the solution check to solutions submitted within the
            limits of the actual school year.
            TODO: possibly extend `formsolutions` table with schoolyear column. */
+        $this->dumpVar('students',$students);
+        $student_id_list = array2ToDBString($students, 'id');
         $limits = SchoolYearBean::getTermLimits($this->schoolyear, SessionDataBean::getLectureTerm());
         $rs = DatabaseBean::dbQuery(
             "SELECT * FROM formsolutions WHERE "
             . "subtask_id=" . $subtaskId . " AND "
-            . "student_id=" . $studentId . " AND "
+            . "student_id IN (" . $student_id_list . ") AND "
             . "assignmnt_id=" . $assignmentId . " AND "
             . "timestamp>='" . $limits['from'] . "' AND "
             . "timestamp<='" . $limits['to'] . "'"
@@ -121,6 +123,8 @@ class FormSolutionsBean extends DatabaseBean
         if (!empty ($rs))
         {
             $this->assign('timestamp', $rs[0]['timestamp']);
+            $student_id = $rs[0]['student_id'];
+            $this->assign('uploader', $students[$student_id]);
         }
 
         $this->dumpVar('haveSolution', $rs);
@@ -287,6 +291,8 @@ class FormSolutionsBean extends DatabaseBean
         $stLogin = $studentBean->login;
         $stFullName = UserBean::getFullName($studentBean->rs);
 
+        $finfo = finfo_open(FILEINFO_MIME_TYPE); // return mime type ala mimetype extension
+
         /* Loop over all uploaded files for this subtask. */
         foreach ($_FILES[$fieldName]['name'][$suId] as $part => $val)
         {
@@ -294,6 +300,14 @@ class FormSolutionsBean extends DatabaseBean
             $fn = $_FILES[$fieldName]['tmp_name'][$suId][$part];
             /* Original file name is actually $val. */
             $nn = $val;
+            /* Check for MIME type */
+            $file_mime = finfo_file($finfo, $nn);
+            if ($file_mime != 'application/pdf')
+            {
+                $this->dumpVar('file_mime', $file_mime);
+                $this->action = 'e_no_pdf';
+                break;
+            }
             if (is_uploaded_file($fn))
             {
                 /* Upload ok, copy it. */
@@ -347,6 +361,47 @@ class FormSolutionsBean extends DatabaseBean
                 break;
             }
         }
+    }
+
+    /**
+     * @param $stb SubtaskBean
+     * @param %students Array
+     */
+    function sendConfirmationEmail($stb, $students)
+    {
+        /* Send an e-mail to the user saying that the password has been changed. */
+
+        $header = "From: " . SENDER_FULL . "\r\n";
+        // $header  .= "To: <" . $this->email . ">\r\n";
+        $header .= "Content-Type: text/plain; charset=\"utf-8\"\r\n";
+        $header .= "Errors-To: " . ADMIN_FULL . "\r\n";
+        $header .= "Reply-To: " . ADMIN_FULL . "\r\n";
+        $header .= "X-Mailer: PHP";
+
+        $userLogin = SessionDataBean::getUserLogin();
+        $userName = SessionDataBean::getUserFullName();
+
+        $message = "Uživatel '" . $userLogin . "' (" . $userName . ") nahrál za vaši skupinu řešení úlohy\r\n";
+        $message .= $stb->ttitle . " (" . $stb->title . ")\r\n";
+        $message .= "\r\n";
+        $message .= "Řešení tímto považujeme za odevzdané.\r\n";
+        $message .= "\r\n";
+
+        $lecture_data = SessionDataBean::getLecture();
+        $message_title = '[' . $lecture_data['code'] . '] Student `' . $userLogin . '` odevzdal úlohu ' . $stb->ttitle;
+        $subject = "=?utf-8?B?" . base64_encode($message_title) . "?=";
+
+        /* Now send the notification to the student ... */
+        if (SEND_MAIL)
+        {
+            foreach ($students as $val)
+            {
+                mail($val['email'], $subject, $message, $header);
+            }
+        }
+
+        /* ... and send a copy to the administrator. */
+        mail(ADMIN_EMAIL, $subject, $message, $header);
     }
 
     /**
@@ -443,7 +498,7 @@ class FormSolutionsBean extends DatabaseBean
 
         /* Construct the deadline extenion bean and prepare data for
            querying the extension status. */
-        $de = new DeadlineExtensionBean ($this->id, $this->_smarty, NULL, NULL);
+        $deadextBean = new DeadlineExtensionBean ($this->id, $this->_smarty, NULL, NULL);
 
         /* Determine the number of parts this assignment has got. */
         $faBean = new FormAssignmentBean ($this->id, $this->_smarty, "", "");
@@ -457,13 +512,25 @@ class FormSolutionsBean extends DatabaseBean
         $ce = array();
         $cf = array();
 
+        /* Get student group */
+        if (SessionDataBean::getLectureGroupFlag())
+        {
+            $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+            $students = $sgb->getGroupStudentsOfStudent($studentId);
+        }
+        else
+        {
+            $students = StudentGroupBean::getDefaultGroupStudents($studentId);
+        }
+
         /* Check that the assignment has not been submitted already by this student. */
-        if ($this->haveSolution($this->id, $studentId, $assignmentId))
+        if ($this->haveSolution($this->id, $students, $assignmentId))
         {
             /* Refuse to overwrite existing assignment submission. */
             $this->action = "err01";
-        } /* Check that the assignment still can be submitted. */
-        else if (!$subtaskBean->active && !$de->isActive())
+        }
+        /* Check that the assignment still can be submitted. */
+        else if (!$subtaskBean->active && !$deadextBean->isActive())
         {
             /* Refuse to submit a subtask that is not active. */
             $this->action = "err02";
@@ -609,9 +676,10 @@ class FormSolutionsBean extends DatabaseBean
 
                 case TT_WEEKLY_PDF:
                 case TT_LECTURE_PDF:
+                case TT_SEMESTRAL_IND:
                     /* Construct the file bean that implements also all operations on 
                        assigment files. */
-                    $fileBean = new FileBean(0, $this->_smarty, "", "");
+                    $fileBean = new FileBean(null, $this->_smarty, null, null);
 
                     /* Student name and login is stored in the session. */
                     $u8name = SessionDataBean::getUserFullName();
@@ -692,6 +760,12 @@ class FormSolutionsBean extends DatabaseBean
                                 $this->student_id = SessionDataBean::getUserId();
                                 /* And store the data. */
                                 $this->dbReplace();
+
+                                if ($subtaskBean->type == TT_SEMESTRAL_IND && SessionDataBean::getLectureGroupFlag())
+                                {
+                                    /* Send a confirmation e-mail to the whole group */
+                                    $this->sendConfirmationEmail($subtaskBean, $students);
+                                }
 
                                 /* Slightly different output. */
                                 $this->object = 'formsolution.pdf';

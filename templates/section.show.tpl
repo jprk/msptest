@@ -31,8 +31,7 @@
         {section name=filePos loop=$sectionFileList}
             <li class="{$sectionFileList[filePos].icon} ui-state-default" id="file_{$sectionFileList[filePos].id}">
                 <p class="atitle"><a href="?act=show,file,{$sectionFileList[filePos].id}"
-                        >{$sectionFileList[filePos].origfname}</a>{include file="admin.sec.fil.tpl"}</p>
-
+                        >{$sectionFileList[filePos].origfname}</a>{lockicon file=$sectionFileList[filePos]}{include file="admin.sec.fil.tpl"}</p>
                 <p class="aabstract">{$sectionFileList[filePos].description}</p>
             </li>
         {/section}

@@ -8,41 +8,54 @@
 class SchoolYearBean extends BaseBean
 {
 	/* Winter and summer terms */
-	const WINTER_TERM = 1;
-	const SUMMER_TERM = 2;
+    const TERMTYPE_NONE   = 0;
+    const TERMTYPE_WINTER = 1;
+	const TERMTYPE_SUMMER = 2;
 	
     protected $schoolyear_start = -1;
-    
+
+    static function TERMTYPE_LIST()
+    {
+        return array(
+            self::TERMTYPE_NONE   => 'Vyberte ze seznamu...',
+            self::TERMTYPE_WINTER => 'Zimní',
+            self::TERMTYPE_SUMMER => 'Letní' );
+    }
+
     /**
      * Return beginning and end date of a schoolyear term.
      * 
      * @param int $schoolyear Year when the school year starts. 
-     * @param int $term SchoolYearBean::WINTER_TERM or SchoolYearBean::SUMMER_TERM.
+     * @param int $term SchoolYearBean::TERMTYPE_WINTER or SchoolYearBean::TERMTYPE_SUMMER.
      * @return array Dictionary indexed by 'from' and 'to' or NULL.
      */
     static function getTermDates ( $schoolyear, $term )
     {
       $_dates = array ( 
         2011 => array (
-                self::WINTER_TERM => array ( 'from' => '2011-09-29', 'to' => '2012-01-13' ),
-                self::SUMMER_TERM => array ( 'from' => '2012-02-27', 'to' => '2012-06-01' )
+                self::TERMTYPE_WINTER => array ( 'from' => '2011-09-29', 'to' => '2012-01-13' ),
+                self::TERMTYPE_SUMMER => array ( 'from' => '2012-02-27', 'to' => '2012-06-01' )
             ),
         2012 => array (
-                self::WINTER_TERM => array ( 'from' => '2012-09-24', 'to' => '2013-01-08' ),
-                self::SUMMER_TERM => array ( 'from' => '2013-02-18', 'to' => '2013-05-24' )
+                self::TERMTYPE_WINTER => array ( 'from' => '2012-09-24', 'to' => '2013-01-08' ),
+                self::TERMTYPE_SUMMER => array ( 'from' => '2013-02-18', 'to' => '2013-05-24' )
             ),
         2013 => array (
-                self::WINTER_TERM => array ( 'from' => '2013-09-30', 'to' => '2014-01-10' ),
-                self::SUMMER_TERM => array ( 'from' => '2014-02-17', 'to' => '2014-05-23' )
+                self::TERMTYPE_WINTER => array ( 'from' => '2013-09-30', 'to' => '2014-01-10' ),
+                self::TERMTYPE_SUMMER => array ( 'from' => '2014-02-17', 'to' => '2014-05-23' )
             ),
         2014 => array (
-                self::WINTER_TERM => array ( 'from' => '2014-09-22', 'to' => '2015-01-09' ),
-                self::SUMMER_TERM => array ( 'from' => '2015-02-16', 'to' => '2015-05-22' )
+                self::TERMTYPE_WINTER => array ( 'from' => '2014-09-22', 'to' => '2015-01-09' ),
+                self::TERMTYPE_SUMMER => array ( 'from' => '2015-02-16', 'to' => '2015-05-22' )
             ),
-        /* Not official */
         2015 => array (
-                self::WINTER_TERM => array ( 'from' => '2015-09-23', 'to' => '2016-01-10' ),
-                self::SUMMER_TERM => array ( 'from' => '2016-02-17', 'to' => '2016-05-16' )
+                self::TERMTYPE_WINTER => array ( 'from' => '2015-10-01', 'to' => '2016-01-15' ),
+                self::TERMTYPE_SUMMER => array ( 'from' => '2016-02-22', 'to' => '2016-05-29' )
+            ),
+        /* Dummy, there is no official info yet. */
+        2016 => array (
+                self::TERMTYPE_WINTER => array ( 'from' => '2016-09-23', 'to' => '2017-01-10' ),
+                self::TERMTYPE_SUMMER => array ( 'from' => '2017-02-17', 'to' => '2017-05-16' )
             ));
 
         if ( array_key_exists ( $schoolyear, $_dates ))
@@ -60,10 +73,10 @@ class SchoolYearBean extends BaseBean
     {
         switch ( $term )
         {
-            case self::WINTER_TERM :
+            case self::TERMTYPE_WINTER :
                 /* Winter term end limit is the beginning of the next winter term. */
-                $termBegin = self::getTermDates ( $schoolyear,   self::WINTER_TERM );
-                $termEnd   = self::getTermDates ( $schoolyear+1, self::WINTER_TERM );
+                $termBegin = self::getTermDates ( $schoolyear,   self::TERMTYPE_WINTER );
+                $termEnd   = self::getTermDates ( $schoolyear+1, self::TERMTYPE_WINTER );
                 /* It could happen that the information about next school year is
                    not available yet. In such a case we will raise an exception. */
                 if ( ! isset ( $termEnd ))
@@ -73,10 +86,10 @@ class SchoolYearBean extends BaseBean
                             $schoolyear + 1 . '/' . $schoolyear + 2 );
                 }
                 return array ( 'from' => $termBegin['from'], 'to' => $termEnd['from'] );
-            case self::SUMMER_TERM :
+            case self::TERMTYPE_SUMMER :
                 /* Summer term end limit is the beginning of the next summer term. */
-                $termBegin = self::getTermDates ( $schoolyear,   self::SUMMER_TERM );
-                $termEnd   = self::getTermDates ( $schoolyear+1, self::SUMMER_TERM );
+                $termBegin = self::getTermDates ( $schoolyear,   self::TERMTYPE_SUMMER );
+                $termEnd   = self::getTermDates ( $schoolyear+1, self::TERMTYPE_SUMMER );
                 /* It could happen that the information about next school year is
                    not available yet. In such a case we will raise an exception. */
                 if ( ! isset ( $termEnd ))
@@ -97,14 +110,14 @@ class SchoolYearBean extends BaseBean
      */
     static function getSchoolYearStart ( )
     {
-    	return self::getSchoolYearStartForTerm ( self::WINTER_TERM );
+    	return self::getSchoolYearStartForTerm ( self::TERMTYPE_WINTER );
     }
 
     /**
      * Return the starting year of the current school year for lecture that is
      * lecture in term $term.
      *
-     * @param int $term SchoolYearBean::WINTER_TERM or SchoolYearBean::SUMMER_TERM.
+     * @param int $term SchoolYearBean::TERMTYPE_WINTER or SchoolYearBean::TERMTYPE_SUMMER.
      * @return int Starting year of the current schoolyear (2010 for 2010/2011).
      */
     static function getSchoolYearStartForTerm ( $term )
@@ -124,9 +137,9 @@ class SchoolYearBean extends BaseBean
            summer term) and $year-2 (otherwise).
 
            This means that we shall decrease the current value of $year by one
-           for $term == SUMMER_TERM to get the correct date of the start of
+           for $term == TERMTYPE_SUMMER to get the correct date of the start of
            the summer term. */
-        if ( $term == self::SUMMER_TERM ) $year--;
+        if ( $term == self::TERMTYPE_SUMMER ) $year--;
 
         /* Get the school year data assuming that $year is identical with the
            current school year (which is true only at the beginning of the
@@ -151,8 +164,8 @@ class SchoolYearBean extends BaseBean
     {
         switch ( $term )
         {
-            case self::WINTER_TERM : return 'w'; break;
-            case self::SUMMER_TERM : return 's'; break;
+            case self::TERMTYPE_WINTER : return 'w'; break;
+            case self::TERMTYPE_SUMMER : return 's'; break;
             default :
                 throw new OutOfRangeException ( 'Wrong value of term.' );
         }
@@ -168,8 +181,8 @@ class SchoolYearBean extends BaseBean
     {
         switch ( $enumVal )
         {
-            case 'w' : return self::WINTER_TERM; break;
-            case 's' : return self::SUMMER_TERM; break;
+            case 'w' : return self::TERMTYPE_WINTER; break;
+            case 's' : return self::TERMTYPE_SUMMER; break;
             default :
                 throw new OutOfRangeException ( 'Unsupported enum value for term.' );
         }

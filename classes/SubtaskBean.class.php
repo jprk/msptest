@@ -69,10 +69,10 @@ class SubtaskBean extends DatabaseBean
 		$this->rs['assignment'] = $this->assignment;
   }
   
-  function dbQuerySingle ()
+  function dbQuerySingle($alt_id=0)
 	{
 		/* Query the data of this subtask (`id` has been already specified). */
-		DatabaseBean::dbQuerySingle ();
+		DatabaseBean::dbQuerySingle($alt_id);
         /* This query does not provide the `active` field. */
         $this->rs['active'] = null;
 		/* Initialize the internal variables with the data queried from the

@@ -186,10 +186,10 @@ class UserBean extends DatabaseBean
 		return $rs;
   }
 	
-	function dbQuerySingle ()
+	function dbQuerySingle($alt_id=0)
 	{
 		/* Query the data of this section (ID has been already specified) */
-		DatabaseBean::dbQuerySingle ();
+		DatabaseBean::dbQuerySingle ($alt_id);
 		/* Initialize the internal variables with the data queried from the
 		   database. */
 		//$this->category   = $this->rs['category'];
@@ -207,16 +207,16 @@ class UserBean extends DatabaseBean
 		{
 			$this->password = $this->rs['password'];
 		}
-    $this->lastlogin  = $this->rs['lastlogin'];
+    	$this->lastlogin  = $this->rs['lastlogin'];
 		$this->failcount  = $this->rs['failcount'];
     
-    /* Publish the mangled textual data */
+    	/* Publish the mangled textual data */
 		$this->rs['firstname']  = $this->firstname;
 		$this->rs['surname']    = $this->surname;
 		
 		/* Publish the role name. */
 		$roles = $this->_getUserRoles();
-    $this->rs['roleName'] = $roles[$this->role];
+    	$this->rs['roleName'] = $roles[$this->role];
 	}
 	
 	/* Assign POST variables to internal variables of this class and

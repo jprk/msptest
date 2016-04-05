@@ -56,10 +56,10 @@ class NoteBean extends DatabaseBean
         $this->updateId ();
     }
 
-    function dbQuerySingle ()
+    function dbQuerySingle($allt_id=0)
     {
         /* Query the data of this section (ID has been already specified) */
-        DatabaseBean::dbQuerySingle ();
+        DatabaseBean::dbQuerySingle($alt_id);
         /* Initialize the internal variables with the data queried from the
            database. */
         $this->text      = vlnka ( stripslashes ( $this->rs['text'] ));

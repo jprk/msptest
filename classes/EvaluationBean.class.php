@@ -76,10 +76,10 @@ class EvaluationBean extends DatabaseBean
 		$this->rs['schoolyearstr'] = $this->eval_year . "/" . ($this->eval_year+1);
 	}
 	
-	function dbQuerySingle ()
+	function dbQuerySingle($alt_id=0)
 	{
 		/* Query the data of this section (ID has been already specified) */
-		DatabaseBean::dbQuerySingle ();
+		DatabaseBean::dbQuerySingle($alt_id);
 		/* Initialize the internal variables with the data queried from the
 		   database. */
 		$this->_initFromResultSet();

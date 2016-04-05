@@ -58,10 +58,9 @@ class ExcersiseReplacementBean extends DatabaseBean
 		);
 	}
 
-    function dbQuerySingle ()
+    function dbQuerySingle($alt_id=0)
     {
-        DatabaseBean::dbQuerySingle ();
-
+        DatabaseBean::dbQuerySingle($alt_id);
         $this->excersise_id = $this->rs['excersise_id'];
     }
 

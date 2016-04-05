@@ -206,10 +206,6 @@ class PointsBean extends DatabaseBean
 		// echo "<!-- replace ok -->\n";
 	}
 	
-	function dbQuerySingle ()
-	{
-	}
-	
 	function updatePoints (
 		$studentId, $subtaskId, $schoolYear, $numPts, $comment,
 		$convert=true

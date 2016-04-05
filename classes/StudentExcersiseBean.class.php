@@ -44,10 +44,6 @@ class StudentExcersiseBean extends DatabaseBean
 		// echo "<!-- replace ok -->\n";
 	}
 	
-	function dbQuerySingle ()
-	{
-	}
-	
 	/* Assign POST variables to internal variables of this class and
 	   remove evil tags where applicable. We shall probably also remove
 	   evil attributes et cetera, but this will be done later if ever. */

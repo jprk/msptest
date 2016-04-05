@@ -367,10 +367,10 @@ class StudentBean extends DatabaseBean
         return $rs;
     }
 
-    function dbQuerySingle()
+    function dbQuerySingle($alt_id=0)
     {
         /* Query the data of this student (ID has been already specified) */
-        DatabaseBean::dbQuerySingle();
+        DatabaseBean::dbQuerySingle($alt_id);
         /* Initialize the internal variables with the data queried from the
            database. */
         $this->firstname = vlnka(stripslashes($this->rs['firstname']));

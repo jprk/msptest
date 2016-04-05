@@ -59,7 +59,11 @@ class DatabaseBean extends BaseBean
 	{
 		return $this->_smarty->dbQuery ( $query, $idx );
 	}
-	
+
+	/**
+	 * @param int $alt_id
+	 * @throws Exception
+     */
 	function dbQuerySingle ( $alt_id=0 )
 	{
         if ( $alt_id == 0 ) $alt_id = $this->id;
@@ -90,15 +94,32 @@ class DatabaseBean extends BaseBean
 		/* Increment access counter */
 		$this->dbQuery ('UPDATE counter SET count=count+1 WHERE Id='.$this->id);
 	}
-	
-	/* Returns SQL WHERE clause limiting queries only to records that are
-	   related to the given lecture id.
-	   @TODO@ the same piece as in EvaluationBean. */
-	function _lectureIdToWhereClause ( $lectureId )
+
+	/**
+	 * Returns SQL WHERE clause limiting queries only to records that are related to the given lecture id.
+	 * Can also limit the query to given school year, if applicable. In that case $schoolYear represents the
+	 * starting year of the school year, i.e. 2010 for 2010/2011.
+	 * @param int $lectureId Lecture ID to generate the SQL WHERE for.
+	 * @param int $schoolYear Optional additional limit on given school year.
+	 * @return string The generated where clause. May be empty if $lectureId=0 and $schoolyear is not given or equal to zero.
+	 */
+	function _lectureIdToWhereClause ( $lectureId, $schoolYear=0 )
 	{
-		return ( $lectureId > 0 ) ? " WHERE lecture_id=" . $lectureId : '' ;
+		if ( $lectureId > 0 )
+			$ret = "lecture_id=" . $lectureId;
+		else
+			$ret = "";
+
+		if ( $schoolYear > 0 )
+		{
+			if ( ! empty($ret)) $ret = $ret . " AND ";
+			$ret = $ret . "year=" . $schoolYear ;
+		}
+		if ( ! empty($ret))
+			$ret = " WHERE " . $ret;
+
+		return $ret;
 	}
-	
 	
 }
 

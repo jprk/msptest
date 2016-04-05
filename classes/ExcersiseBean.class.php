@@ -44,9 +44,9 @@ class ExcersiseBean extends DatabaseBean
 		  );
 	}
 	
-	function dbQuerySingle ()
+	function dbQuerySingle($alt_id=0)
 	{
-		DatabaseBean::dbQuerySingle ();
+		DatabaseBean::dbQuerySingle($alt_id);
 		
 		$this->day         = $this->rs['day'] = numToDay ( $this->rs['day'] );
 		$this->from        = $this->rs['from'];
@@ -101,28 +101,7 @@ class ExcersiseBean extends DatabaseBean
 		}
 		return $rs;
 	}
-	
-	/* Returns SQL WHERE clause limiting queries only to records that are
-	   related to the given lecture id.
-	   @TODO@ the same piece as in EvaluationBean. */
-	function _lectureIdToWhereClause ( $lectureId, $schoolYear )
-	{
-        if ( $lectureId > 0 )
-        	$ret = "lecture_id=" . $lectureId;
-        else
-        	$ret = "";
-        	
-        if ( $schoolYear > 0 )
-        {
-            if ( ! empty($ret)) $ret = $ret . " AND ";
-            $ret = $ret . "year=" . $schoolYear ;
-        }
-        if ( ! empty($ret))
-        	$ret = " WHERE " . $ret;
-        	
-        return $ret;
-	}
-	
+
 	function getSelectMap ( $lectureId = 0, $schoolYear = 0 )
 	{
 		$where = $this->_lectureIdToWhereClause ( $lectureId, $schoolYear );

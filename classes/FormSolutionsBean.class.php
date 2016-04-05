@@ -83,10 +83,6 @@ class FormSolutionsBean extends DatabaseBean
         );
     }
 
-    function dbQuerySingle()
-    {
-    }
-
     /**
      * Update POST variables.
      */

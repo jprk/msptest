@@ -42,10 +42,10 @@ class LabtaskGroupBean extends DatabaseBean
         $this->updateId();
 	}
 	
-	function dbQuerySingle ()
+	function dbQuerySingle($alt_id=0)
 	{
         /* Query the data of this lecture (ID has been already specified) */
-        DatabaseBean::dbQuerySingle ();
+        DatabaseBean::dbQuerySingle($alt_id);
         /* Initialize the internal variables with the data queried from the
              database. */
         $this->lecture_id      = $this->rs['lecture_id'];

@@ -216,10 +216,10 @@ class LectureBean extends DatabaseBean
         $this->updateId();
 	}
 	
-	function dbQuerySingle ()
+	function dbQuerySingle($alt_id=0)
 	{
 		/* Query the data of this lecture (ID has been already specified) */
-		DatabaseBean::dbQuerySingle ();
+		DatabaseBean::dbQuerySingle($alt_id);
         /* Non-existent `id` will result in empty resultset. */
         if (empty($this->rs))
         {

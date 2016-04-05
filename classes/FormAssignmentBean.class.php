@@ -49,9 +49,6 @@ class FormAssignmentBean extends DatabaseBean {
 		DatabaseBean :: dbQuery("REPLACE formassignmnt VALUES (" . $this->subtask_id . "," . $this->assignment_id . ",'" . mysql_escape_string($this->part) . "'," . $this->count . "," . $this->a . "," . $this->b . "," . $this->c . "," . $this->d . "," . $this->e . "," . $this->f . ")");
 	}
 
-	function dbQuerySingle() {
-	}
-
 	/**
 	 * Get the full list of records corresponding to the given WHERE clause.
 	 * If `$where` is empty, returns the full list of all form assignments.

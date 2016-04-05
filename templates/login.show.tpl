@@ -1,7 +1,11 @@
 {if $isHTTPS}
 {if $loginfailed == 1}
 <p>
+{if $oldusername}
 Při pokusu o přihlášení jste udali nesprávné uživatelské jméno nebo heslo.
+{else}
+Při pokusu o přihlášení jste nezadali uživatelské jméno nebo heslo.
+{/if}
 Zadejte prosím uživatelské jméno a heslo pro přístup do neveřejné oblasti
 stránek předmětu znovu:
 </p>

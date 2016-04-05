@@ -128,42 +128,53 @@ class LoginBean extends BaseBean
 	
 	function doVerify ()
 	{
-		/* Initialise class instance of `StudentBean` class to none. */
-	  	$studentBean = NULL;
-	  
-		/* Create an instance of UserBean which will be used to verify the
-		   supplied login credentials. */
-		$userBean = new UserBean ( 0, $this->_smarty, $this->action, $this->object );
-		
-		/* Look the user up in the list of system users (not students) first.
-		   The appropriate user will match the username and passowrd. */
-		$rs = $userBean->dbCheckLogin ( $_POST['username'], $_POST['password'] );
-		
-		/* Empty result set indicates that this user is not a lecturer or administrator.
-		   But still it might be a student. */
-		if ( empty ( $rs ))
-		{
-			/* Create an instance of StudentBean which will be used to verify the
-			   supplied student login credentials. */
-			$studentBean = new StudentBean ( 0, $this->_smarty, $this->action, $this->object );
-			
-			/* Try to authenticate user against our database or against an
-			   LDAP server given in config. */
-			$rs = $studentBean->dbCheckLogin ( $_POST['username'], $_POST['password'] );
-		}
-		
-		$this->dumpVar ( 'login verification rs', $rs );
-    
+		/* Make sure that the POST request contains `username` and `password` fields. */
+        if ( array_key_exists('username', $_POST) && array_key_exists('password', $_POST) )
+        {
+            /* Initialise class instance of `StudentBean` class to none. */
+            $studentBean = null;
+
+            /* Create an instance of UserBean which will be used to verify the
+               supplied login credentials. */
+            $userBean = new UserBean (0, $this->_smarty, $this->action, $this->object);
+
+            /* Look the user up in the list of system users (not students) first.
+               The appropriate user will match the username and passowrd. */
+            $rs = $userBean->dbCheckLogin($_POST['username'], $_POST['password']);
+
+            /* Empty result set indicates that this user is not a lecturer or administrator.
+               But still it might be a student. */
+            if ( empty($rs) )
+            {
+                /* Create an instance of StudentBean which will be used to verify the
+                   supplied student login credentials. */
+                $studentBean = new StudentBean (0, $this->_smarty, $this->action, $this->object);
+
+                /* Try to authenticate user against our database or against an
+                   LDAP server given in config. */
+                $rs = $studentBean->dbCheckLogin($_POST['username'], $_POST['password']);
+            }
+
+            $this->dumpVar('login verification rs', $rs);
+        }
+        else
+        {
+            $rs = null;
+        }
+
     	/* If the result set is empty now, it would indicate a login error. A result set
 		   containing some data will mean the user has successfully logged in. */
-		if ( ! empty ( $rs ))
+		if ( !empty($rs) )
 		{
 			$this->prepareHomePage ( $rs, $userBean, $studentBean );
 		}
 		else
 		{
-			$this->_smarty->assign ('oldusername', $_POST['username']);
-			$this->_smarty->assign ('loginfailed', 1);
+			if ( array_key_exists('username', $_POST))
+            {
+                $this->assign ('oldusername', $_POST['username']);
+            }
+			$this->assign ('loginfailed', 1);
 			/* Login has failed. Display the message and show the login
 			   screen again. */
 			$this->doShow ();

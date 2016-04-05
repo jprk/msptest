@@ -169,7 +169,29 @@ if ( $stringId != (string) $id or
 	$errorMsg .= "bad object identifier / nepovolený identifikátor objektu<br>";
     $object = "error";
 	$action = "error";
-} 
+}
+
+/* Fetch / initialize session.
+   In order to prevent mixing of sessions for different base URLS (live
+   and testing web applications on the same machine, or different applications
+   on the same machine), we will use a named session. The name of the
+   session will be identical to the base directory of the application. */
+session_name ( BASE_DIR );
+session_start ();
+/* Check for a sign that we have been connected to an existing session. In case that the session does not contain
+   instance data of LectureBean as `lecture`, we will force a redirect to the home page. */
+if (!isset($_SESSION['lecture']))
+{
+    /* New or expired session. Operations on 'section' will typically result in correct display of section. */
+    if ($object != 'home' && $object != 'section' || ($object == 'section' && $action != 'show'))
+    {
+        /* Expired session that will not be . */
+        trigger_error("Session invalid, created a new session.");
+        /* Current URL */
+        $current_base = dirname($_SERVER['SCRIPT_URI']);
+        header ("Location: $current_base");
+    }
+}
 
 /* Headers. Do not send header for object 'file' and method 'show' as it is
    likely that the file is not an HTML document. Remember the output flag as we
@@ -186,14 +208,6 @@ if ( $isPageOutput )
 {
 	header ("Content-Type: text/html; charset=utf-8");
 }
-
-/* Fetch / initialize session.
-   In order to prevent mixing of sessions for different base URLS (live
-   and testing web applications on the same machine, or different applications
-   on the same machine), we will use a named session. The name of the
-   session will be identical to the base directory of the application. */
-session_name ( BASE_DIR );
-session_start ();
 
 /* Check for the forced switch to another schoolyear. */
 if ( ! empty($_GET['schoolyear']))

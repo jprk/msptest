@@ -183,7 +183,9 @@ session_start ();
 if (!isset($_SESSION['lecture']))
 {
     /* New or expired session. Operations on 'section' will typically result in correct display of section. */
-    if ($object != 'home' && $object != 'section' || ($object == 'section' && $action != 'show'))
+    if ($object != 'home' && $object != 'section' && $object != 'file' ||
+        ($object == 'section' && $action != 'show') ||
+        ($object == 'file' && $action != 'show'))
     {
         /* Expired session that will not be . */
         trigger_error("Session invalid, created a new session.");

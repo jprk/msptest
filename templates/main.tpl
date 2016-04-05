@@ -59,7 +59,7 @@ var ON_LOAD = [];
   </tr>
 {if $global_alert}
     <tr>
-        <td class="lecalert">{include file=$global_alert}</td>
+        <td style="margin: 0px; padding 0px;">{include file=$global_alert}</td>
     </tr>
 {/if}
 {if $lecture.alert}

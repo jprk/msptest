@@ -62,9 +62,10 @@ require ( REQUIRE_DIR . 'UserBean.class.php');
 /* Smarty plugins. */
 //require ( REQUIRE_DIR . 'function.throt.php');
 
-/* Parse command ... it shall have the form of <object>,<action>,<id> */
+/* Parse command ... it shall have the form of <object>,<action>,<id>. */
 $act = $_GET['act'];
-list ( $action, $object, $stringId ) = explode ( ',', $act );
+/* Using array_pad() we make sure that the array has the expected length of three elements. */
+list ( $action, $object, $stringId ) = array_pad ( explode ( ',', $act ), 3, '');
 
 /* Test the parsed values for correctness */
 $errorMsg = "";
@@ -188,7 +189,7 @@ if (!isset($_SESSION['lecture']))
         ($object == 'file' && $action != 'show'))
     {
         /* Expired session that will not be . */
-        trigger_error("Session invalid, created a new session.");
+        trigger_error("Session invalid, created a new session");
         /* Current URL */
         $current_base = dirname($_SERVER['SCRIPT_URI']);
         header ("Location: $current_base");

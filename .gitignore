@@ -1,2 +1,24 @@
+#
+# Do not attempt to store PhpStorm project data
+#
+.idea
+#
+# Do not store file that may contain sensitive information (passwords, logins)
+#
 webdir/config.php
 webdir/ldaptest.php
+webdir/ldaptest.novell.php
+#
+# Do not store lecture GUI setups (images, CSS)
+#
+webdir/ex/*
+#
+# Ignore Bootstrap and Javascript directories
+#
+webdir/bootstrap
+webdir/js
+#
+# Ignore backup files
+#
+*.attic
+*.bak

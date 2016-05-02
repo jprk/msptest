@@ -683,7 +683,7 @@ class FileBean extends DatabaseBean
 			}
             /* Lecturers and administrators have all access rights. For students, we have certain limitations
                on what they are allowed to see. */
-            if ( $role = USR_STUDENT )
+            if ( $role == USR_STUDENT )
             {
                 /* If the lecture student group mode is on, check that the student is a member of the student group that
                    owns the file. */

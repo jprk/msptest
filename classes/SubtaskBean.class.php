@@ -53,23 +53,23 @@ class SubtaskBean extends DatabaseBean
 	}
 	
 	function _updateFromResultSet ()
-  {
-		$this->type       = $this->rs['type'];
-		$this->title      = vlnka ( stripslashes ( $this->rs['title'] ));
-		$this->ttitle     = vlnka ( stripslashes ( $this->rs['ttitle'] ));
-		$this->assignment = vlnka ( stripslashes ( $this->rs['assignment'] ));
-		$this->maxpts     = $this->rs['maxpts'];
-		$this->position   = $this->rs['position'];
-		$this->lecture_id = $this->rs['lecture_id'];
-		$this->active     = $this->rs['active'];
-		
-		/* Update resultset */
-		$this->rs['title']      = $this->title;
-		$this->rs['ttitle']     = $this->ttitle;
-		$this->rs['assignment'] = $this->assignment;
-  }
+    {
+        $this->type       = $this->rs['type'];
+        $this->title      = vlnka ( stripslashes ( $this->rs['title'] ));
+        $this->ttitle     = vlnka ( stripslashes ( $this->rs['ttitle'] ));
+        $this->assignment = vlnka ( stripslashes ( $this->rs['assignment'] ));
+        $this->maxpts     = $this->rs['maxpts'];
+        $this->position   = $this->rs['position'];
+        $this->lecture_id = $this->rs['lecture_id'];
+        $this->active     = $this->rs['active'];
+
+        /* Update resultset */
+        $this->rs['title']      = $this->title;
+        $this->rs['ttitle']     = $this->ttitle;
+        $this->rs['assignment'] = $this->assignment;
+    }
   
-  function dbQuerySingle($alt_id=0)
+    function dbQuerySingle($alt_id=0)
 	{
 		/* Query the data of this subtask (`id` has been already specified). */
 		DatabaseBean::dbQuerySingle($alt_id);
@@ -155,14 +155,14 @@ class SubtaskBean extends DatabaseBean
             ' AND lecture_id=' . $lectureId . ' '
             );
 		return $rs;	
-  }
+    }
   
 	function assignForLecture ( $lectureId, $taskTypeList )
 	{
 		$rs = $this->getForLecture ( $lectureId, $taskTypeList );
 		$this->_smarty->assign ( 'subtaskList', $rs );
 		return $rs;
-  }
+    }
 	
 	/* Fetch a complete information for given subtask ids. */
 	function getFullSubtaskList ( $subtaskList )
@@ -194,19 +194,28 @@ class SubtaskBean extends DatabaseBean
 	
 		return false;
 	}
-	
-	/* Fetch a complete list of subtask that will have weekly or semestral
-     assignments to be submitted. This list contains therefore only selected
-     subtask types and it is extended with information about activity or
-     inactivity of every item.
-	   @TODO@ add support for lectures. */
+
+    /**
+     * Fetch a complete list of student's subtasks that will have weekly or semestral assignments submitted.
+     * Therefore, this list contains only selected subtask types and it is extended with information about
+     * activity or inactivity of every item. The activity honours the "grace period" that has been setup
+     * for the given lecture.
+     * TODO: add support for lectures.
+     * @param $lectureId int Lecture identifier.
+     * @param $studentId int Student identifier.
+     * @return array Associative array of subtasks.
+     */
 	function getStudentSubtaskList ( $lectureId, $studentId )
 	{
+        /* Get the information about the grace period for subtask submission. */
+        $grace_minutes = SessionDataBean::getLectureGraceMinutes();
+        /* Query the subtask list. */
         $rs = $this->dbQuery (
             "SELECT id,type,title,ttitle,maxpts,datefrom," .
                 "IF(sd.dateto<se.dateto,se.dateto,sd.dateto) AS dateto," .
                 "(sd.datefrom<=NOW() AND " .
-                "(sd.dateto>NOW() OR se.dateto>NOW())) AS active " .
+                "(sd.dateto>(NOW()-INTERVAL " . $grace_minutes . " MINUTE) OR " .
+                " se.dateto>(NOW()-INTERVAL " . $grace_minutes . " MINUTE))) AS active " .
             "FROM subtask AS su " .
             "LEFT JOIN extension AS se " .
             "ON ( se.student_id=". $studentId . " AND se.year=" .$this->schoolyear . " AND su.id=se.subtask_id ) " .
@@ -238,12 +247,16 @@ class SubtaskBean extends DatabaseBean
 		
 		return $rs;
 	}
-	
-	/**
+
+    /**
      * Assign a complete list of subtasks for current term to Smarty variable
-	   'studentSubtaskList'. In case that $studentId has not been specified,
-       make a generic list of all subtask regardles of deadline extensions
-       that might apply for particular students. */
+     * 'studentSubtaskList'. In case that $studentId has not been specified,
+     * make a generic list of all subtask regardless of deadline extensions
+     * that might apply for particular students.
+     * @param int $lectureId
+     * @param int $studentId
+     * @return array
+     */
 	function assignStudentSubtaskList ( $lectureId = 0, $studentId = 0 )
 	{
         if ( $lectureId <= 0 ) $lectureId = SessionDataBean::getLectureId();
@@ -327,13 +340,14 @@ class SubtaskBean extends DatabaseBean
 			/* Get the id of the student so that we can additionally
                request information about subtask extension. */
 			$studentId = SessionDataBean::getUserId();
+            /* Get the information about the grace period for subtask submission. */
 			$grace_minutes = SessionDataBean::getLectureGraceMinutes();
 			/* Query data of this subtask. */
 			$this->rs = $this->dbQuery(
 				"SELECT *," .
 				"(sd.datefrom<=NOW() AND " .
-				"(sd.dateto>(NOW()+INTERVAL " . $grace_minutes . " MINUTE) OR " .
-				" se.dateto>(NOW()+INTERVAL " . $grace_minutes . " MINUTE))) AS active " .
+				"(sd.dateto>(NOW()-INTERVAL " . $grace_minutes . " MINUTE) OR " .
+				" se.dateto>(NOW()-INTERVAL " . $grace_minutes . " MINUTE))) AS active " .
 				"FROM subtask AS su " .
 				"LEFT JOIN extension AS se " .
 				"ON ( se.student_id=" . $studentId . " AND se.year=" . $this->schoolyear . " AND su.id=se.subtask_id ) " .
@@ -466,7 +480,7 @@ class SubtaskBean extends DatabaseBean
 		$this->assignSingle ();
 
 		/* Get a lecture that this subtask is related to. */
-		$lectureBean = new LectureBean ( $this->id, $this->_smarty, "", "" );
+		$lectureBean = new LectureBean ( $this->id, $this->_smarty, null, null );
 		$lectureBean->assignSingle ();
 	}
 	

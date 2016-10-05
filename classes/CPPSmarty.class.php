@@ -23,7 +23,6 @@ class CPPSmarty extends Smarty
     private $_yesno;
     private $_dayMap;
     private $_yearMap;
-    private $_config;
     private $_locale;
 
     public $debug;

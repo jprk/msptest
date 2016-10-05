@@ -104,7 +104,8 @@ class LDAPConnection
                 if (isset($current_prefix) && $prefix == $current_prefix)
                 {
                     $out[$prefix][] = $data;
-                } else
+                }
+                else
                 {
                     $current_prefix = $prefix;
                     $out[$prefix][] = $data;
@@ -165,9 +166,12 @@ class LDAPConnection
     function bind($userDN, $password)
     {
         @$ldapbind = ldap_bind($this->ldap, $userDN, $password);
-        $ldapstr = var_export($ldapbind, true);
-        echo "<!-- binding with `$userDN` and password `$password` -->";
-        echo "<!-- ldapbind is $ldapstr -->";
+        if ($this->_smarty->debug)
+        {
+            $ldapstr = var_export($ldapbind, true);
+            echo "<!-- binding with `$userDN` and password `$password` -->";
+            echo "<!-- ldapbind is $ldapstr -->";
+        }
         return ($ldapbind === true);
     }
 

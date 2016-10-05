@@ -9,9 +9,9 @@
 class StudentGroupBean extends DatabaseBean
 {
     /* Types of student group. */
-    const GRPTYPE_NONE     = 0;
+    const GRPTYPE_NONE = 0;
     const GRPTYPE_EXERCISE = 1;
-    const GRPTYPE_LECTURE  = 2;
+    const GRPTYPE_LECTURE = 2;
 
     protected $lecture_id;
     protected $schoolyear;
@@ -22,10 +22,10 @@ class StudentGroupBean extends DatabaseBean
         return array(
             self::GRPTYPE_NONE => 'Vyberte ze seznamu...',
             self::GRPTYPE_EXERCISE => 'Pouze v rámci cvičení',
-            self::GRPTYPE_LECTURE => 'V rámci předmětu' );
+            self::GRPTYPE_LECTURE => 'V rámci předmětu');
     }
 
-    static function getGroupTypeString ( $group_type )
+    static function getGroupTypeString($group_type)
     {
         $group_types = self::GRPTYPE_LIST();
         return $group_types[$group_type];
@@ -35,38 +35,38 @@ class StudentGroupBean extends DatabaseBean
     {
         $this->lecture_id = SessionDataBean::getLectureId();
         $this->schoolyear = SessionDataBean::getSchoolYear();
-        $this->title      = '';
+        $this->title = '';
     }
 
     /* Constructor */
-    function __construct ( $id, &$smarty, $action, $object )
+    function __construct($id, &$smarty, $action, $object)
     {
         /* Call parent's constructor first */
-        parent::__construct ( $id, $smarty, "studentgroup", $action, $object );
+        parent::__construct($id, $smarty, "studentgroup", $action, $object);
         /* Initialise new properties to their default values. */
         $this->_setDefaults();
     }
 
 
-    function getGroupForStudent ( $student_id )
+    function getGroupForStudent($student_id)
     {
         $rs = $this->dbQuery(
             "SELECT grp.* FROM studentgroup AS grp LEFT JOIN stud_group AS sg ON grp.id=sg.group_id" .
             " WHERE grp.lecture_id=" . $this->lecture_id .
             " AND grp.year=" . $this->schoolyear .
-            " AND sg.student_id=" . $student_id );
+            " AND sg.student_id=" . $student_id);
 
-        $this->dumpVar ( 'student group', $rs );
+        $this->dumpVar('student group', $rs);
 
         /* Sanity check, the number of groups may be always only one. */
         $ngrps = count($rs);
-        if ( $ngrps > 1 )
+        if ($ngrps > 1)
         {
             trigger_error("inconsistency: we have " . $ngrps . " groups for student " . $student_id, E_WARNING);
         }
 
         /* If no group returned, probably the student is not assigned to one. */
-        if ( isset($rs))
+        if (isset($rs))
         {
             $rs = $rs[0];
         }
@@ -79,18 +79,18 @@ class StudentGroupBean extends DatabaseBean
      * @param $student_id int Student identifier.
      * @return int Group ID of the student group, null in case that the student is not a member of a student group.
      */
-    function getGroupIdForStudent ( $student_id )
+    function getGroupIdForStudent($student_id)
     {
-        $group_data = $this->getGroupForStudent( $student_id );
+        $group_data = $this->getGroupForStudent($student_id);
         return isset($group_data) ? $group_data['id'] : null;
     }
 
     static function getDefaultGroupStudents($student_id)
     {
-        return array( $student_id => array('id'=>$student_id));
+        return array($student_id => array('id' => $student_id));
     }
 
-    function getGroupStudentsOfStudent ( $student_id )
+    function getGroupStudentsOfStudent($student_id)
     {
         /* Note: if the format of $ret changes, change also self::getDefaultGroupStudents() accordingly. */
         $rs = $this->dbQuery(
@@ -100,9 +100,9 @@ class StudentGroupBean extends DatabaseBean
             " LEFT JOIN student ON (sg2.student_id=student.id)" .
             " WHERE grp.lecture_id=" . $this->lecture_id .
             " AND grp.year=" . $this->schoolyear .
-            " AND sg1.student_id=" . $student_id );
+            " AND sg1.student_id=" . $student_id);
 
-        $this->dumpVar ( 'student group of student '.$student_id, $rs );
+        $this->dumpVar('student group of student ' . $student_id, $rs);
 
         $ret = array();
         if (isset($rs))
@@ -122,7 +122,7 @@ class StudentGroupBean extends DatabaseBean
      * @param $student_id int Identifier of the student.
      * @return array Array of [$group_data, $group_students]
      */
-    function assignGroupAndGroupStudentsOfStudent ( $student_id )
+    function assignGroupAndGroupStudentsOfStudent($student_id)
     {
         $group_data = $this->getGroupForStudent($student_id);
         $this->assign('group_data', $group_data);

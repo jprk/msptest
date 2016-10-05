@@ -6,23 +6,23 @@
  * @param $smarty
  * @return string
  */
-function smarty_function_firstletter ( $params, &$smarty )
+function smarty_function_firstletter($params, &$smarty)
 {
     /* This is the list of mandatory parameters. */
-    $mparams = array ( 'obj' => NULL, 'act' => NULL, 'id' => NULL, 'name' => NULL );
+    $mparams = array('obj' => NULL, 'act' => NULL, 'id' => NULL, 'name' => NULL);
     /* Merge the parameter array with the mandatory parameters.
        Use `mparams` as the base so that any entry with an identical
        key in `params` will overwrite it. */
-    $params = array_merge ( $mparams, $params );
+    $params = array_merge($mparams, $params);
 
     //var_dump($params);
 
     /* Check that all mandatory arguments have been specified. */
-    foreach ( array_keys($mparams) as $kval )
+    foreach (array_keys($mparams) as $kval)
     {
-        if ( ! isset ( $params[$kval] ))
+        if (!isset ($params[$kval]))
         {
-            $smarty->trigger_error ( "condlink: missing '" . $kval . "' parameter" );
+            $smarty->trigger_error("condlink: missing '" . $kval . "' parameter");
             return NULL;
         }
     }
@@ -31,11 +31,13 @@ function smarty_function_firstletter ( $params, &$smarty )
     $text = '';
 
     /* Generate the selector with first letters. */
-    foreach (range('A', 'Z') as $char) {
-        if ( ! empty ( $text )) $text .= '&nbsp;';
+    foreach (range('A', 'Z') as $char)
+    {
+        if (!empty ($text)) $text .= '&nbsp;';
         $text .= '<a href="?act=' . $actStr . '&' . $params['name'] . '=' . $char . '">' . $char . '</a>';
     }
 
     return $text;
 }
+
 ?>

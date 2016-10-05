@@ -1,14 +1,14 @@
 <?php
 
 /* Result types */
-define ('SB_STUDENT_ANY', 1);
-define ('SB_STUDENT_POSITIVE', 2);
-define ('SB_STUDENT_NEGATIVE', 3);
+define('SB_STUDENT_ANY', 1);
+define('SB_STUDENT_POSITIVE', 2);
+define('SB_STUDENT_NEGATIVE', 3);
 
 /* Type of output sort */
-define ('SB_SORT_BY_ID', 1);
-define ('SB_SORT_BY_NAME', 2);
-define ('SB_SORT_BY_LOGIN', 3);
+define('SB_SORT_BY_ID', 1);
+define('SB_SORT_BY_NAME', 2);
+define('SB_SORT_BY_LOGIN', 3);
 
 function studentListIdCmp($a, $b)
 {
@@ -51,17 +51,17 @@ function studentListLoginCmp($a, $b)
 
 class StudentBean extends DatabaseBean
 {
-    var $login;
-    var $password;
-    var $hash;
-    var $surname;
-    var $firstname;
-    var $yearno;
-    var $groupno;
-    var $email;
-    var $calendaryear;
-    var $twistMatrix;
-    var $role;
+    private $login;
+    private $password;
+    private $hash;
+    private $surname;
+    private $firstname;
+    private $yearno;
+    private $groupno;
+    private $email;
+    private $calendaryear;
+    private $twistMatrix;
+    private $role;
     private $fullList;
 
     /* We will need to mangle the student ids in some deterministic way. We will
@@ -115,6 +115,124 @@ class StudentBean extends DatabaseBean
     }
 
     /**
+     * Check if the login is empty (which is the default).
+     * This is used to detect possible login attacks and user errors.
+     * @return bool True if the login name of the user is empty
+     */
+    function hasEmptyLogin()
+    {
+        return empty($this->login);
+    }
+
+    /**
+     * Get the login.
+     * @return string Login of the student.
+     */
+    public function getLogin()
+    {
+        return $this->login;
+    }
+
+    /**
+     * Get the surname of the student.
+     * @return string Surname of the student.
+     */
+    public function getSurname()
+    {
+        return $this->surname;
+    }
+
+    /**
+     * Get the first name of the student
+     * @return string First name of the student.
+     */
+    public function getFirstName()
+    {
+        return $this->firstname;
+    }
+
+    /**
+     * @param mixed $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
+     * @param mixed $login
+     */
+    public function setLogin($login)
+    {
+        $this->login = $login;
+    }
+
+    /**
+     * @param mixed $password
+     */
+    public function setPassword($password)
+    {
+        $this->password = $password;
+    }
+
+    /**
+     * @param mixed $hash
+     */
+    public function setHash($hash)
+    {
+        $this->hash = $hash;
+    }
+
+    /**
+     * @param mixed $surname
+     */
+    public function setSurname($surname)
+    {
+        $this->surname = $surname;
+    }
+
+    /**
+     * @param mixed $firstname
+     */
+    public function setFirstName($firstname)
+    {
+        $this->firstname = $firstname;
+    }
+
+    /**
+     * @param mixed $yearno
+     */
+    public function setYearNo($yearno)
+    {
+        $this->yearno = $yearno;
+    }
+
+    /**
+     * @param mixed $groupno
+     */
+    public function setGroupNo($groupno)
+    {
+        $this->groupno = $groupno;
+    }
+
+    /**
+     * @param mixed $email
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
+
+    /**
+     * @param mixed $calendaryear
+     */
+    public function setCalendarYear($calendaryear)
+    {
+        $this->calendaryear = $calendaryear;
+    }
+
+
+    /**
      * Replace or insert student entry in the database.
      * As we have to support both hash-based and id-based student identification (hashes being
      * historically the hashed values of Czech social security number (or personal id), which
@@ -156,7 +274,8 @@ class StudentBean extends DatabaseBean
             {
                 /* No password field override specified, we will encode the password given. */
                 $pw_field_text = "MD5('" . mysql_escape_string($this->password) . "')";
-            } else
+            }
+            else
             {
                 /* We shall put the text specified in $pw_field_test directly into the password field without
                    hashing it. This is used to indicate an invalid or locked password. */
@@ -183,7 +302,8 @@ class StudentBean extends DatabaseBean
                set by the database engine. We have to retrieve the 'id' back so that
                we can later use it to reference this object. */
             $this->updateId();
-        } else
+        }
+        else
         {
             /* Student exists in the database. Keep the hash intact and update
                everything else. */
@@ -239,7 +359,8 @@ class StudentBean extends DatabaseBean
             if ($ldapbind === TRUE)
             {
                 return TRUE;
-            } else
+            }
+            else
             {
                 $errno = ldap_errno($ldap);
                 $estr = ldap_err2str($errno);
@@ -288,7 +409,7 @@ class StudentBean extends DatabaseBean
         }
         else
         {
-            list($errno,$estr) = $ldap->getError();
+            list($errno, $estr) = $ldap->getError();
             $res = "errno = $errno, estr  = $estr";
             $this->dumpVar('ldap_bind_error', $res);
             error_log("LDAP bind error for $dn -- $errno: $estr", 0);
@@ -367,7 +488,7 @@ class StudentBean extends DatabaseBean
         return $rs;
     }
 
-    function dbQuerySingle($alt_id=0)
+    function dbQuerySingle($alt_id = 0)
     {
         /* Query the data of this student (ID has been already specified) */
         DatabaseBean::dbQuerySingle($alt_id);
@@ -383,7 +504,8 @@ class StudentBean extends DatabaseBean
         if (!empty ($this->rs['password']))
         {
             $this->password = $this->rs['password'] = PASSWORD_MASK;
-        } else
+        }
+        else
         {
             $this->password = $this->rs['password'];
         }
@@ -556,7 +678,8 @@ class StudentBean extends DatabaseBean
                             $studentList[$key]['surname'] . " (id " . $id . ")" .
                             $trace);
                     }
-                } else
+                }
+                else
                 {
                     $bindKey = NULL;
                 }
@@ -821,7 +944,8 @@ class StudentBean extends DatabaseBean
                             if ($xPoints[$tskId] != '-')
                             {
                                 $xPoints[$tskId] += $numPoints;
-                            } else
+                            }
+                            else
                             {
                                 $xPoints[$tskId] = 0 + $numPoints;
                             }
@@ -835,7 +959,8 @@ class StudentBean extends DatabaseBean
 
                             /* Increase the total sum of points for this student. */
                             $sumPoints += $numPoints;
-                        } else
+                        }
+                        else
                         {
                             $this->dumpVar('num[points] is not numeric', $num);
                         }
@@ -870,7 +995,8 @@ class StudentBean extends DatabaseBean
                         if ($minPts > 0)
                         {
                             $positive = (boolean)($gotPoints >= $minPts);
-                        } else
+                        }
+                        else
                         {
                             /* This is not an obligatory field. This means we will be always
                                positive. */
@@ -911,7 +1037,8 @@ class StudentBean extends DatabaseBean
                             $avgTaskData[$sKey] = $avgTaskData[$sKey] + $gotPoints;
                             /* Update the number of participants. */
                             $parTaskCount[$sKey] = $parTaskCount[$sKey] + 1;
-                        } else
+                        }
+                        else
                         {
                             /* As we got some dashed, this result is not final. Hence, do not
                                mark the overall point gain and classification fields as positive
@@ -936,14 +1063,16 @@ class StudentBean extends DatabaseBean
                         $exmPoints = $tPoints[0] + $tPoints[1] + $tPoints[3];
                         $exmPoints = $exmPoints - 6;
                         $exmPoints = ($exmPoints < 0) ? 0 : (($exmPoints > 6) ? 6 : $exmPoints);
-                    } else
+                    }
+                    else
                     {
                         $exmPoints = $tPoints[1] + $tPoints[3];
                         $exmPoints = $exmPoints - 6;
                         $exmPoints = ($exmPoints < 0) ? 0 : (($exmPoints > 6) ? 6 : $exmPoints);
                         $exmPoints = $exmPoints + $tPoints[0];
                     }
-                } else
+                }
+                else
                 {
                     $exmPoints = $sumPoints;
                 }
@@ -972,14 +1101,16 @@ class StudentBean extends DatabaseBean
                             $evalText = 'F';
                             $positiveEval = false;
                         }
-                    } else
+                    }
+                    else
                     {
                         /* Even if they have enough points to get a grade better
                            than F, there are some prerequisities missing. Therefore
                            the final grade is still F. */
                         $evalText = 'F';
                     }
-                } else
+                }
+                else
                 {
                     /* If the student was positive from all tasks, it does not necessarily
                         mean she/he has got enough points to get the credit. */
@@ -1160,7 +1291,8 @@ class StudentBean extends DatabaseBean
         if ($this->fullList)
         {
             $rs = $this->_getFullList();
-        } else
+        }
+        else
         {
             $rs = $this->dbQueryStudentListForLecture($this->id);
         }
@@ -1184,7 +1316,8 @@ class StudentBean extends DatabaseBean
         {
             /* Query data of this person. */
             $this->dbQuerySingle();
-        } else
+        }
+        else
         {
             /* Initialize default values. */
             $this->_setDefaults();
@@ -1359,7 +1492,8 @@ class StudentBean extends DatabaseBean
 
             /* The rest is taken care of by the following function. */
             $this->doShowWithoutQuery();
-        } else
+        }
+        else
         {
             /* This user is not allowed to see private data of this particular
                student. Announce it. */
@@ -1395,11 +1529,13 @@ class StudentBean extends DatabaseBean
             {
                 $this->dbUpdatePassword($pass);
                 $this->sendPassword($pass);
-            } else
+            }
+            else
             {
                 $this->action = 'error';
             }
-        } else
+        }
+        else
         {
             if (empty ($pass))
             {

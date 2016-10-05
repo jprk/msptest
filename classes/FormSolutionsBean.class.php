@@ -104,7 +104,7 @@ class FormSolutionsBean extends DatabaseBean
         /* Limit the solution check to solutions submitted within the
            limits of the actual school year.
            TODO: possibly extend `formsolutions` table with schoolyear column. */
-        $this->dumpVar('students',$students);
+        $this->dumpVar('students', $students);
         $student_id_list = array2ToDBString($students, 'id');
         $limits = SchoolYearBean::getTermLimits($this->schoolyear, SessionDataBean::getLectureTerm());
         $rs = DatabaseBean::dbQuery(
@@ -201,7 +201,7 @@ class FormSolutionsBean extends DatabaseBean
      * Assign string representation of a pole value in case it exists.
      * TODO: Move this code to Smarty plugin function.rootfactor.php and let Smarty do the formatting.
      */
-    function assignStringRep($numeric_strings, $smarty_var, $suffix='')
+    function assignStringRep($numeric_strings, $smarty_var, $suffix = '')
     {
         $str_array = array();
         foreach ($numeric_strings as $key => $num_str)
@@ -284,7 +284,7 @@ class FormSolutionsBean extends DatabaseBean
 
         /* Get the student id, login and full name. */
         $stId = $studentBean->id;
-        $stLogin = $studentBean->login;
+        $stLogin = $studentBean->getLogin();
         $stFullName = UserBean::getFullName($studentBean->rs);
 
         $finfo = finfo_open(FILEINFO_MIME_TYPE); // return mime type ala mimetype extension
@@ -332,8 +332,8 @@ class FormSolutionsBean extends DatabaseBean
                 }
                 /* Store information about the generated file in file table. */
                 $fileId = $fileBean->addFile(FT_X_SOLUTION,
-                                             $suId, $stId, $solFile,
-                                             $nn, $fileDesc);
+                    $suId, $stId, $solFile,
+                    $nn, $fileDesc);
 
                 /* Update the solution database with this solution.
                  * Subtask id and part number and assignment id. */
@@ -975,11 +975,11 @@ class FormSolutionsBean extends DatabaseBean
     function doShow()
     {
         /* Generate new task set. First get the list of students. */
-        /* Get the list of all excersises, assign it to the Smarty variable
-           'excersiseList' and return it to us as well, we will need it later.
+        /* Get the list of all exercises, assign it to the Smarty variable
+           'exerciseList' and return it to us as well, we will need it later.
            $this->id will point to the lecture_id in this case. */
-        $excersiseBean = new ExcersiseBean (0, $this->_smarty, "x", "x");
-        $excersiseList = $excersiseBean->assignFull(1);
+        $exerciseBean = new ExerciseBean (0, $this->_smarty, NULL, NULL);
+        $exerciseList = $exerciseBean->assignFull(1);
 
         /* Get the lecture description, just to fill in some more-or-less
            useful peieces of information. */
@@ -989,15 +989,15 @@ class FormSolutionsBean extends DatabaseBean
         /* Now create an array that contains student id as an key and _index_ to
            the $excersiseList as a value (that is, not the excersise ID, but the
            true index into the array. */
-        $studexcBean = new StudentExcersiseBean (0, $this->_smarty, "x", "x");
-        $exerciseBinding = $studexcBean->getExcersiseBinding($excersiseList);
+        $studexcBean = new StudentExcersiseBean (null, $this->_smarty, null, null);
+        $exerciseBinding = $studexcBean->getExcersiseBinding($exerciseList);
         $this->dumpVar('exerciseBinding', $exerciseBinding);
 
         /* Get the list of all students. Additionally, create a field 'checked'
            that contains text ' checked="checked"' on the position of the exercise
            that the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-        $studentList = $studentBean->assignStudentListWithExcersises($lectureBean->id, count($excersiseList), $exerciseBinding);
+        $studentList = $studentBean->assignStudentListWithExcersises($lectureBean->id, count($exerciseList), $exerciseBinding);
 
         $this->generateAssignments($this->id, $studentList);
     }
@@ -1035,10 +1035,10 @@ class FormSolutionsBean extends DatabaseBean
         /* Construct assignments bean and fetch data of the assignment. */
         $assignmentsBean = new AssignmentsBean ($this->id, $this->_smarty, "", "");
         /* This will query the assignment for the currently logged in student. */
-        $assignmentsBean->assignSingle();
+        $assignment = $assignmentsBean->assignSingle();
         /* Determine the number of parts this assignment has got. */
         $faBean = new FormAssignmentBean (0, $this->_smarty, "", "");
-        $faBean->assignParts($this->id);
+        $partList = $faBean->assignParts($this->id);
 
         /* This has been moved to SubtaskBean::assignSingle() */
         //if ($subtaskBean->type == TT_WEEKLY_TF)
@@ -1077,13 +1077,13 @@ class FormSolutionsBean extends DatabaseBean
         /* Update the internal data of this object from POST variables. */
         $this->processPostVars();
         /* TODO: This shall go to SubtaskBean as the class knows the task type and can act accordingly. */
-        $this->assignStringRep($this->aa,'a');
-        $this->assignStringRep($this->bb,'b', 'i');
-        $this->assignStringRep($this->cc,'c');
-        $this->assignStringRep($this->dd,'d', 'i');
-        $this->assignStringRep($this->ee,'e');
-        $this->assignStringRep($this->ff,'f', 'i');
-        $this->assignStringRepS($this->gg,'g');
+        $this->assignStringRep($this->aa, 'a');
+        $this->assignStringRep($this->bb, 'b', 'i');
+        $this->assignStringRep($this->cc, 'c');
+        $this->assignStringRep($this->dd, 'd', 'i');
+        $this->assignStringRep($this->ee, 'e');
+        $this->assignStringRep($this->ff, 'f', 'i');
+        $this->assignStringRepS($this->gg, 'g');
         /* Replicate the contents of the POST array. The data shall at the end arrive via POST request to
            the `doSave` method, hence the page we are going to display has to contain all input data
            provided by user on the edit page ... */

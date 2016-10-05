@@ -9,44 +9,45 @@
 function smarty_function_condlink($params, &$smarty)
 {
     /* This is the list of mandatory parameters. */
-    $mparams = array ( 'text' => NULL, 'condition' => NULL,
-                        'obj'=> NULL, 'act'=> NULL, 'id'=> NULL  );
+    $mparams = array('text' => NULL, 'condition' => NULL,
+        'obj' => NULL, 'act' => NULL, 'id' => NULL);
     /* Merge the parameter array with the mandatory parameters.
        Use `mparams` as the base so that any entry with an identical
        key in `params` will overwrite it. */
-    $params = array_merge ( $mparams, $params );
+    $params = array_merge($mparams, $params);
 
     //var_dump($params);
 
     /* Check that all mandatory arguments have been specified. */
-    foreach ( array_keys($mparams) as $kval )
+    foreach (array_keys($mparams) as $kval)
     {
-        if ( ! isset ( $params[$kval] ))
+        if (!isset ($params[$kval]))
         {
-            $smarty->trigger_error ( "condlink: missing '" . $kval . "' parameter" );
+            $smarty->trigger_error("condlink: missing '" . $kval . "' parameter");
             return;
         }
     }
 
     /* Check for optional parameter `getstr` holding a GET request string that will
        be added to the URL. */
-    if ( ! array_key_exists( 'getstr', $params ))
+    if (!array_key_exists('getstr', $params))
     {
         $params['getstr'] = '';
     }
 
-    if ( $params['condition'] )
+    if ($params['condition'])
     {
         $text = '<a href="?act=' .
-                $params['act'] . ',' .
-                $params['obj'] . ',' .
-                $params['id'] . $params['getstr'] . '">' . $params['text'] . '</a>';
+            $params['act'] . ',' .
+            $params['obj'] . ',' .
+            $params['id'] . $params['getstr'] . '">' . $params['text'] . '</a>';
     }
     else
     {
         $text = '<span class="inactive">' . $params['text'] . '</span>';
     }
 
-return $text;
+    return $text;
 }
+
 ?>

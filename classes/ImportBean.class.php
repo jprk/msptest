@@ -200,6 +200,14 @@ class ImportBean extends DatabaseBean
                                 $info = $ldap->searchSingle("cvutid=$cvutid");
 
                                 /* Check that the returned record has `dn` field */
+                                if (is_null($info))
+                                {
+                                    throw new Exception (
+                                        'LDAP info neobsahuje záznam pro ČVUT ID ' . $cvutid
+                                    );
+                                }
+
+                                /* Check that the returned record has `dn` field */
                                 if (!array_key_exists('dn', $info))
                                 {
                                     throw new Exception (
@@ -425,7 +433,7 @@ class ImportBean extends DatabaseBean
                 $sb->setCalendarYear($this->schoolyear);
                 $sb->setLogin($this->login[$row]);
                 $sb->setEmail($this->email[$row]);
-                $sb->setActive(true);
+                $sb->setCoeff(1.0);
                 $sb->setPassword(null);
                 $sb->dbReplace('(locked, logs in via USERMAP)');
                 $id = $sb->getObjectId();

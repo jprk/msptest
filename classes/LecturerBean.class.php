@@ -95,11 +95,34 @@ class LecturerBean extends DatabaseBean
         {
             return DatabaseBean::dbQuery(
                 "SELECT lr.id, surname, firstname, lr.room, email " .
-                "FROM lecturer AS lr LEFT JOIN excersise ON lr.id=lecturer_id " .
+                "FROM lecturer AS lr LEFT JOIN exercise ON lr.id=lecturer_id " .
                 "WHERE lecture_id=" . $lectureId . " " .
                 "GROUP BY lr.id ORDER BY surname"
             );
         }
+    }
+
+    /**
+     * Return a full list of lecturer records for given array of associative arrays.
+     * The identifiers are assumed to be 'id' elements at the second level. Returned array is
+     * indexed by lecturer id.
+     * @param $id_array array Array of lecturer ID values listing all tutors for this exercise.
+     * @return array A list of lecturers with the given ids, indexed by id.
+     */
+    function getLecturersById($id_array)
+    {
+        $id_list = arrayToDBString($id_array);
+        $rs = $this->_getFullList(" WHERE id IN($id_list)");
+        $ret = array();
+        if (!empty($rs))
+        {
+            foreach($rs as $val)
+            {
+                $id = $val['id'];
+                $ret[$id] = $val;
+            }
+        }
+        return $ret;
     }
 
     function dbQueryLecturerMap()
@@ -155,9 +178,19 @@ class LecturerBean extends DatabaseBean
     }
 
     /* Assign a full list of lecturer records. */
-    function assignFull()
+    function assignFull($activeLecturerIds = null)
     {
         $rs = $this->_getFullList();
+        if (!empty($rs) && $activeLecturerIds)
+        {
+            foreach ($rs as $key => $val)
+            {
+                if (array_key_exists($val['id'],$activeLecturerIds))
+                {
+                    $rs[$key]['checked'] = 'checked="checked"';
+                }
+            }
+        }
         $this->_smarty->assign('lecturerList', $rs);
         return $rs;
     }
@@ -184,12 +217,16 @@ class LecturerBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doAdmin()
     {
-        /* Get the list of all lecturers. */
-        $this->assignFull();
+        /* Get the id list of lecturers that are teaching in this schoolyear. */
+        $leleBean = new LectureLecturerBean(null, $this->_smarty, null, null);
+        $activeLecturers = $leleBean->getActiveIdsChecked();
+        /* Get the list of all lecturers, including information about teaching activities in this lecture. */
+        $this->assignFull($activeLecturers);
         /* It could have been that doAdmin() has been called from another
            handler. Change the action to "admin" so that ctrl.php will
            know that it shall display the scriptlet for section.admin */
         $this->action = "admin";
+
     }
 
     /* -------------------------------------------------------------------

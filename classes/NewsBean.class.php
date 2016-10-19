@@ -2,7 +2,7 @@
 
 class NewsBean extends DatabaseBean
 {
-    const NEWS_EXCERSISE = 1;
+    const NEWS_EXERCISE = 1;
     const NEWS_LECTURE = 2;
     const NEWS_LECTURER = 3;
     const NEWS_ALLLCTEX = 4;
@@ -39,7 +39,7 @@ class NewsBean extends DatabaseBean
     function _getNewsTypes()
     {
         return array(
-            self::NEWS_EXCERSISE => 'Novinka k jednotlivému cvičení',
+            self::NEWS_EXERCISE => 'Novinka k jednotlivému cvičení',
             self::NEWS_ALLLCTEX => 'Novinka ke všem cvičením předmětu',
             self::NEWS_LECTURE => 'Novinka k předmětu',
             self::NEWS_LECTURER => 'Novinka k učiteli',
@@ -49,7 +49,7 @@ class NewsBean extends DatabaseBean
     function _getNewsIcons()
     {
         return array(
-            self::NEWS_EXCERSISE => 'news-lctoneexe.gif',
+            self::NEWS_EXERCISE => 'news-lctoneexe.gif',
             self::NEWS_ALLLCTEX => 'news-lctallexe.gif',
             self::NEWS_LECTURE => 'news-lecture.gif',
             self::NEWS_LECTURER => 'news-lecturer.gif',
@@ -164,10 +164,10 @@ class NewsBean extends DatabaseBean
             $map = array();
             switch ($ok)
             {
-                case self::NEWS_EXCERSISE:
-                    $bean = new ExcersiseBean (0, $this->_smarty, "x", "x");
+                case self::NEWS_EXERCISE:
+                    $bean = new ExerciseBean (0, $this->_smarty, "x", "x");
                     $map = $bean->getSelectMap($lectureId, $this->schoolyear);
-                    $rowId = 'excersise';
+                    $rowId = 'exercise';
                     $title = 'Cvičení';
                     break;
                 case self::NEWS_LECTURE:
@@ -201,12 +201,12 @@ class NewsBean extends DatabaseBean
     }
 
     /* Assign a list of valid news of the given type. */
-    function assignNewsForTypes($lectureId = 0, $lecturerId = 0, $excersiseId = 0, $excLctId = 0)
+    function assignNewsForTypes($lectureId = 0, $lecturerId = 0, $exerciseId = 0, $excLctId = 0)
     {
         // $dbList = arrayToDBString ( $taskList );
         $this->dumpVar('lectu reId', $lectureId);
         $this->dumpVar('lecturerId', $lecturerId);
-        $this->dumpVar('excersiseId', $excersiseId);
+        $this->dumpVar('exerciseId', $exerciseId);
         $this->dumpVar('excLctId', $excLctId);
 
         $where = '';
@@ -217,10 +217,10 @@ class NewsBean extends DatabaseBean
             $where .= "( type=" . self::NEWS_LECTURE . " AND object_id=" . $lectureId . ")";
             $doOR = TRUE;
         }
-        if ($excersiseId > 0)
+        if ($exerciseId > 0)
         {
             if ($doOR) $where .= " OR ";
-            $where .= "( type=" . self::NEWS_EXCERSISE . " AND object_id=" . $excersiseId . ")";
+            $where .= "( type=" . self::NEWS_EXERCISE . " AND object_id=" . $exerciseId . ")";
             $doOR = TRUE;
         }
         if ($lecturerId > 0)
@@ -273,22 +273,22 @@ class NewsBean extends DatabaseBean
         /* WHERE string for the lecture news. */
         $where = " WHERE (type=" . self::NEWS_LECTURE .
             " AND object_id=" . $lectureId . ")";
-        /* Connect it to the string for 'all excersises for this lecture'. */
+        /* Connect it to the string for 'all exercises for this lecture'. */
         $where .= " OR (type=" . self::NEWS_ALLLCTEX .
             " AND object_id=" . $lectureId . ")";
 
-        /* Get the list of excersises for this lecture. */
-        $eb = new ExcersiseBean (0, $this->_smarty, "", "");
-        $excersiseList = $eb->getExcersisesForLecture($lectureId);
+        /* Get the list of exercises for this lecture. */
+        $eb = new ExerciseBean (0, $this->_smarty, "", "");
+        $exerciseList = $eb->getExercisesForLecture($lectureId);
 
-        $this->dumpVar('excersisteList', $excersiseList);
+        $this->dumpVar('excersisteList', $exerciseList);
 
-        $where .= " OR (type=" . self::NEWS_EXCERSISE .
+        $where .= " OR (type=" . self::NEWS_EXERCISE .
             " AND object_id IN (" .
-            array2ToDBString($excersiseList, 'id') . "))";
+            array2ToDBString($exerciseList, 'id') . "))";
 
         /* Get the list of lecturers for this lecture. */
-        $lecturerList = $eb->getExcersiseLecturersForLecture($lectureId);
+        $lecturerList = $eb->getExerciseLecturersForLecture($lectureId);
         $this->dumpVar('lecturerList', $lecturerList);
 
         $where .= " OR (type=" . self::NEWS_LECTURER .
@@ -301,7 +301,7 @@ class NewsBean extends DatabaseBean
     /**
      * Assign a full list of news records for the current lecture.
      * The list will contain all lecture-related news, all news that
-     * are bound to particular excersises for this lecture, all news
+     * are bound to particular exercises for this lecture, all news
      * that are bound to lecturers of this lecture.
      */
     function assignFull($queryAuthors = false)

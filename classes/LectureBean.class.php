@@ -142,7 +142,7 @@ class LectureBean extends DatabaseBean
 
     /**
      * Getter method for the number of students allowed as replacements
-     * for laboratory excersises. If 0, no replacements are allowed.
+     * for laboratory exercises. If 0, no replacements are allowed.
      * @return int The number of students allowed as replacements.
      */
     function getReplacementStudents()

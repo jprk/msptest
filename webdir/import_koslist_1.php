@@ -31,9 +31,9 @@ require ( REQUIRE_DIR . 'DatabaseBean.class.php');
 require ( REQUIRE_DIR . 'StudentBean.class.php');
 require ( REQUIRE_DIR . 'LectureBean.class.php');
 //require ( REQUIRE_DIR . 'LecturerBean.class.php');
-//require ( REQUIRE_DIR . 'ExcersiseBean.class.php');
-//require ( REQUIRE_DIR . 'ExcersiseListBean.class.php');
-//require ( REQUIRE_DIR . 'StudentExcersiseBean.class.php');
+//require ( REQUIRE_DIR . 'ExerciseBean.class.php');
+//require ( REQUIRE_DIR . 'ExerciseListBean.class.php');
+//require ( REQUIRE_DIR . 'StudentExerciseBean.class.php');
 //require ( REQUIRE_DIR . 'StudentLectureBean.class.php');
 require ( REQUIRE_DIR . 'SessionDataBean.class.php');
 

@@ -1,7 +1,7 @@
 <?php
 
-define('NOTE_SINGLE_EXCERSISE', 1);
-define('NOTE_ALL_EXCERSISES', 2);
+define('NOTE_SINGLE_EXERCISE', 1);
+define('NOTE_ALL_EXERCISES', 2);
 define('NOTE_LECTURE', 3);
 
 define('NOTES_DISPLAY_COUNT', 5);
@@ -26,8 +26,8 @@ class NoteBean extends DatabaseBean
     function _getNoteTypes()
     {
         return array(
-            NOTE_SINGLE_EXCERSISE => 'Poznámka k jednomu cvičení',
-            NOTE_ALL_EXCERSISES => 'Poznámka ke všem cvičením',
+            NOTE_SINGLE_EXERCISE => 'Poznámka k jednomu cvičení',
+            NOTE_ALL_EXERCISES => 'Poznámka ke všem cvičením',
             NOTE_LECTURE => 'Poznámka k předmětu'
         );
     }
@@ -56,7 +56,7 @@ class NoteBean extends DatabaseBean
         $this->updateId();
     }
 
-    function dbQuerySingle()
+    function dbQuerySingle($alt_id=0)
     {
         /* Query the data of this section (ID has been already specified) */
         DatabaseBean::dbQuerySingle();
@@ -117,12 +117,12 @@ class NoteBean extends DatabaseBean
     }
 
     /* Assign a list of valid notes of the given combination of `lecture` and
-       `excersise`. If some of the inputs is zero, it will be ignored.
+       `exercise`. If some of the inputs is zero, it will be ignored.
        */
     function assignNotesForTypes(
         $lectureId,
-        $excersisesForLectureId,
-        $excersiseId
+        $exercisesForLectureId,
+        $exerciseId
     )
     {
         /* Initial string representing the "where" clause of an SQL quary will
@@ -136,16 +136,16 @@ class NoteBean extends DatabaseBean
             $where .= "( type=" . NOTE_LECTURE . " AND object_id=" . $lectureId . ")";
             $doOR = TRUE;
         }
-        if ($excersisesForLectureId > 0)
+        if ($exercisesForLectureId > 0)
         {
             if ($doOR) $where .= " OR ";
-            $where .= "( type=" . NOTE_ALL_EXCERSISES . " AND object_id=" . $excersisesForLectureId . ")";
+            $where .= "( type=" . NOTE_ALL_EXERCISES . " AND object_id=" . $exercisesForLectureId . ")";
             $doOR = TRUE;
         }
-        if ($excersiseId > 0)
+        if ($exerciseId > 0)
         {
             if ($doOR) $where .= " OR ";
-            $where .= "( type=" . NEWS_SINGLE_EXCERSISE . " AND object_id=" . $excersiseId . ")";
+            $where .= "( type=" . NEWS_SINGLE_EXERCISE . " AND object_id=" . $exerciseId . ")";
             $doOR = TRUE;
         }
 

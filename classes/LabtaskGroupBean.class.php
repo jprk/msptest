@@ -3,7 +3,7 @@
 /**
  * Group of laboratory tasks for a lecture.
  *
- * Defines groups of laboratory tasks, which will form a single laboratory excersise.
+ * Defines groups of laboratory tasks, which will form a single laboratory exercise.
  * The laboratory tasks are stored as sections of type ST_PHYLAB.
  *
  * (c) 2013 Jan Přikryl

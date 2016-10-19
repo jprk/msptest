@@ -665,9 +665,9 @@ class SectionBean extends DatabaseBean
         }
         else if ($this->type == ST_EXCLIST)
         {
-            /* Create an ExcersiseListBean instance that will be used to fetch
-               a list of excersises for the lecture given as the $id parameter. */
-            $exclistBean = new ExcersiseListBean ($this->ival1, $this->_smarty, "x", "x");
+            /* Create an ExerciseListBean instance that will be used to fetch
+               a list of exercises for the lecture given as the $id parameter. */
+            $exclistBean = new ExerciseListBean ($this->ival1, $this->_smarty, "x", "x");
             $exclistBean->doShow();
         }
         else

@@ -21,9 +21,9 @@ require ( REQUIRE_DIR . 'CPPSmarty.class.php');
 require ( REQUIRE_DIR . 'StudentBean.class.php');
 //require ( REQUIRE_DIR . 'LectureBean.class.php');
 //require ( REQUIRE_DIR . 'LecturerBean.class.php');
-//require ( REQUIRE_DIR . 'ExcersiseBean.class.php');
-//require ( REQUIRE_DIR . 'ExcersiseListBean.class.php');
-require ( REQUIRE_DIR . 'StudentExcersiseBean.class.php');
+//require ( REQUIRE_DIR . 'ExerciseBean.class.php');
+//require ( REQUIRE_DIR . 'ExerciseListBean.class.php');
+require ( REQUIRE_DIR . 'StudentExerciseBean.class.php');
 require ( REQUIRE_DIR . 'StudentLectureBean.class.php');
 require ( REQUIRE_DIR . 'SessionDataBean.class.php');
 
@@ -102,7 +102,7 @@ if ( empty ( $errstr ))
 	echo "<p>Vaše role je $urole a login je $ulogin.</p>\n";
     echo "<p>Přidáme celkem $num záznamů (některé možná jenom opravíme):<p>\n";
 		
-	/* Get the list of tasks for evaluation of this excersise. The list will contain
+	/* Get the list of tasks for evaluation of this exercise. The list will contain
 	   only task IDs and we will have to fetch task and subtask information
 	   by ourselves later. */
 	$taskList = $evaluationBean->getTaskList ();
@@ -144,7 +144,7 @@ if ( empty ( $errstr ))
 		echo "<tr><td>id=$id:</td><td>$login[$row]</td><td>$surname[$row]</td><td>$firstname[$row]</td><td>$yearno[$row]</td><td>$groupno[$row]</td></tr>\n";
 	
     	/* Now that the id of the student is valid we can add it to the list of
-           students that visit excersises for the given lecture. */  
+           students that visit exercises for the given lecture. */
         $stlist[] = $id;
     	
         foreach ( $subtasks as $val )

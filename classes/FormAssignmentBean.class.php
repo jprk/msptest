@@ -750,10 +750,10 @@ class FormAssignmentBean extends DatabaseBean
 
         /* Generate new task set. First get the list of students. */
         /* Get the list of all exercises, assign it to the Smarty variable
-           'excersiseList' and return it to us as well, we will need it later.
+           'exerciseList' and return it to us as well, we will need it later.
            $this->id will point to the lecture_id in this case. */
-        //$excersiseBean = new ExcersiseBean ( NULL, $this->_smarty, NULL, NULL );
-        //$excersiseList = $excersiseBean->assignFull ( $lectureId );
+        //$exerciseBean = new ExerciseBean ( NULL, $this->_smarty, NULL, NULL );
+        //$exerciseList = $exerciseBean->assignFull ( $lectureId );
 
         if (!empty ($this->catalogue))
         {

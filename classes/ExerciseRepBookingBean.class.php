@@ -7,7 +7,7 @@
  *
  * (c) Jan Prikryl, 2012,2014
  */
-class ExcersiseRepBookingBean extends DatabaseBean
+class ExerciseRepBookingBean extends DatabaseBean
 {
     /* Maximum number of replacement exercises for a single student. */
     const MAX_BOOKINGS = 5;
@@ -107,14 +107,14 @@ class ExcersiseRepBookingBean extends DatabaseBean
      */
     function getBooking()
     {
-        /* To query about booking makes sense only in case that `replId` and `datefrom`
+        /* To query about booking makes sense only in case when `replId` and `datefrom`
            have a meaningful value. Check it. */
         if (empty ($this->replId) || empty ($this->datefrom))
         {
             return NULL;
         }
 
-        /* Get the information about the lecture we are listing excersises for ... */
+        /* Get the information about the lecture we are listing exercises for ... */
         $lectureBean = new LectureBean ($this->id, $this->_smarty, NULL, NULL);
         $lectureBean->assignSingle();
 
@@ -133,7 +133,14 @@ class ExcersiseRepBookingBean extends DatabaseBean
 
         /* In case there is a booking, the entry will be the first element of a one
            element list (it is in fact a resultset). */
-        if (!empty ($booking)) $booking = $booking[0];
+        if (!empty ($booking))
+        {
+            /* Add the new-style tutor info (i.e. multiple lecturers for an exercise). */
+            $tutorsBean = new ExerciseTutorsBean(null, $this->_smarty, null, null);
+            $booking = $tutorsBean->addToExercises($booking);
+
+            $booking = $booking[0];
+        }
 
         return $booking;
     }
@@ -150,15 +157,15 @@ class ExcersiseRepBookingBean extends DatabaseBean
          );
           */
         /*
-         * SELECT NOW(),date,IFNULL(rd.mfrom,ex.from) AS `from`, ADDTIME(date,IFNULL(rd.mfrom,ex.from))-INTERVAL 15 MINUTE, ADDTIME(date,IFNULL(rd.mfrom,ex.from))-INTERVAL 15 MINUTE > NOW() AS candelete FROM replacement_dates AS rd LEFT JOIN excersise AS ex ON rd.excersise_id=ex.id
-         * SELECT NOW(),date,@ftime:=IFNULL(rd.mfrom,ex.from) AS `from`, @fromtime:=ADDTIME(date,@ftime)-INTERVAL 15 MINUTE AS `fromtime`, @fromtime > NOW() AS candelete FROM replacement_dates AS rd LEFT JOIN excersise AS ex ON rd.excersise_id=ex.id
+         * SELECT NOW(),date,IFNULL(rd.mfrom,ex.from) AS `from`, ADDTIME(date,IFNULL(rd.mfrom,ex.from))-INTERVAL 15 MINUTE, ADDTIME(date,IFNULL(rd.mfrom,ex.from))-INTERVAL 15 MINUTE > NOW() AS candelete FROM replacement_dates AS rd LEFT JOIN exercise AS ex ON rd.exercise_id=ex.id
+         * SELECT NOW(),date,@ftime:=IFNULL(rd.mfrom,ex.from) AS `from`, @fromtime:=ADDTIME(date,@ftime)-INTERVAL 15 MINUTE AS `fromtime`, @fromtime > NOW() AS candelete FROM replacement_dates AS rd LEFT JOIN exercise AS ex ON rd.exercise_id=ex.id
          */
         return $this->dbQuery(
             "SELECT replacement_id, date, @ftime:=IFNULL( rd.mfrom, ex.from ) AS `from`, IFNULL( rd.mto, ex.to ) AS `to`, " .
             "@fromtime:=ADDTIME(date,@ftime)-INTERVAL " . self::CANCEL_INTERVAL . " MINUTE AS `fromtime`, (@fromtime > NOW() AND dateto IS NULL) AS candelete, " .
-            "ex.room AS `room`, surname, firstname, datefrom, dateto, passed, failed, IFNULL(group_id,'??') AS `grpid` FROM repl_stud AS rs " .
+            "ex.id AS `id`, ex.room AS `room`, surname, firstname, datefrom, dateto, passed, failed, IFNULL(group_id,'??') AS `grpid` FROM repl_stud AS rs " .
             "LEFT JOIN replacement_dates AS rd ON rs.replacement_id = rd.id " .
-            "LEFT JOIN excersise AS ex ON rd.excersise_id = ex.id " .
+            "LEFT JOIN exercise AS ex ON rd.exercise_id = ex.id " .
             "LEFT JOIN labtask_group AS lg ON rs.lgrp_id = lg.id " .
             "LEFT JOIN lecturer AS le ON ex.lecturer_id = le.id " .
             "WHERE rs.student_id=" . SessionDataBean::getUserId() . " AND " .
@@ -180,7 +187,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
         $rs = $this->dbQuery(
             "SELECT * FROM repl_stud AS rs " .
             "LEFT JOIN replacement_dates AS rd ON rs.replacement_id=rd.id " .
-            "LEFT JOIN excersise AS ex ON rd.excersise_id=ex.id WHERE " .
+            "LEFT JOIN exercise AS ex ON rd.exercise_id=ex.id WHERE " .
             "rd.id IN (" . $replIds . ") AND " .
             "rs.lgrp_id=" . $this->lgrpId . " AND " .
             "rs.student_id=" . $studentId . " AND " .
@@ -269,7 +276,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
     }
 
     /**
-     * Find out whether a lab can be booked for an replacement excersise.
+     * Find out whether a lab can be booked for an replacement exercise.
      *
      * The function operates on internal parameters of this object.
      * It expects to have `replId` and `labId` set to appropriate values.
@@ -295,7 +302,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
             "SELECT rs.*,st.* FROM repl_stud AS rs " .
             "LEFT JOIN student AS st ON rs.student_id=st.id " .
             "LEFT JOIN replacement_dates AS rd ON rs.replacement_id = rd.id " .
-            "LEFT JOIN excersise AS ex ON rd.excersise_id = ex.id " .
+            "LEFT JOIN exercise AS ex ON rd.exercise_id = ex.id " .
             "WHERE rd.id=" . $this->replId . " AND " .
             "(rs.dateto IS NULL OR " .
             "rs.dateto>(ADDTIME(rd.date,IFNULL(rd.mfrom,ex.from))-INTERVAL " . self::CANCEL_INTERVAL . " MINUTE)) "
@@ -382,7 +389,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
             "NOW()>ADDTIME(rd.date,IFNULL( rd.mfrom, ex.from )) AS `finished` " .
             "FROM repl_stud AS rs LEFT JOIN student AS st ON rs.student_id=st.id " .
             "LEFT JOIN replacement_dates AS rd ON rs.replacement_id = rd.id " .
-            "LEFT JOIN excersise AS ex ON rd.excersise_id = ex.id " .
+            "LEFT JOIN exercise AS ex ON rd.exercise_id = ex.id " .
             "LEFT JOIN labtask_group AS lg ON rs.lgrp_id = lg.id WHERE " .
             "replacement_id IN(" . $replIds . ") " .
             $failedBookingPart .
@@ -470,7 +477,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
 
         if (empty ($this->replId))
         {
-            /* Information about the lecture we are listing excersises for ... */
+            /* Information about the lecture we are listing exercises for ... */
             $lectureBean = new LectureBean ($this->id, $this->_smarty, NULL, NULL);
             $lectureBean->assignSingle();
 
@@ -478,7 +485,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
             $termDates = SchoolYearBean::getTermLimits($this->schoolyear, $lectureBean->getTerm());
 
             /* Construct a database bean for accessing replacements. */
-            $replBean = new ExcersiseReplacementBean ($this->id, $this->_smarty, NULL, NULL);
+            $replBean = new ExerciseReplacementBean ($this->id, $this->_smarty, NULL, NULL);
 
             /* Get the list of possible replacements for this lecture. The list will possibly include
                replacement labs where this  particular lab task has been reserved already. */
@@ -492,12 +499,12 @@ class ExcersiseRepBookingBean extends DatabaseBean
         else
         {
             /* Construct a database bean for accessing replacements. */
-            $replBean = new ExcersiseReplacementBean ($this->replId, $this->_smarty, NULL, NULL);
+            $replBean = new ExerciseReplacementBean ($this->replId, $this->_smarty, NULL, NULL);
             $replBean->assignSingle();
 
-            /* Select a list of students who booked this replacement excersise.
+            /* Select a list of students who booked this replacement exercise.
                The list will contain all entries where
-                - the replacement_id corresponds to this replacement excersise,
+                - the replacement_id corresponds to this replacement exercise,
                 - the dateto is null or smaller than replacement->datefrom - CANCEL_INTERVAL.
             */
             $studentList = $this->getStudentList();
@@ -529,7 +536,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
         /* Process the submitted data. In this case it will be just the id of the lab. */
         $this->processPostVars();
 
-        /* Information about the lecture we are listing excersises for ... */
+        /* Information about the lecture we are listing exercises for ... */
         $lectureBean = new LectureBean ($this->id, $this->_smarty, NULL, NULL);
         $lectureBean->assignSingle();
 
@@ -537,7 +544,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
         $termDates = SchoolYearBean::getTermLimits($this->schoolyear, $lectureBean->getTerm());
 
         /* Construct a database bean for accessing replacements. */
-        $replBean = new ExcersiseReplacementBean ($this->id, $this->_smarty, NULL, NULL);
+        $replBean = new ExerciseReplacementBean ($this->id, $this->_smarty, NULL, NULL);
 
         /* Construct a database bean for accessing labtask group information. */
         $lgrpBean = new LabtaskGroupBean ($this->id, $this->_smarty, NULL, NULL);
@@ -600,7 +607,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
             /* The rule says only one replacement student for a single laboratory task.
                We will therefore remove those that have been already reserved for somebody.
                We will also remove replacements that have been already booked out by this
-               user for some other lab excersises. And finally, we will not display
+               user for some other lab exercises. And finally, we will not display
                replacement terms in case that they are full. */
             $replacementList = $this->removeBookedGroups($replacementList, $userId);
 
@@ -615,7 +622,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
     function doSave()
     {
         /* POST variable `replacement` contains a list selected replacement
-           excersises for this lecture. The list may contain new items
+           exercises for this lecture. The list may contain new items
            that shall be saved to the database. It may also not contain
            some previously present items. Those items have to be checked
            for possible registered students and if found empty, they can
@@ -678,7 +685,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
 
             /* We will need access to the replacement table as well - to manipulate
                the number of replacement slots. */
-            $replBean = new ExcersiseReplacementBean ($this->replId, $this->_smarty, NULL, NULL);
+            $replBean = new ExerciseReplacementBean ($this->replId, $this->_smarty, NULL, NULL);
             $replBean->assignSingle();
 
             /* Lock the access to the table. */
@@ -731,7 +738,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
             elseif (!$replBean->hasFreeSlots())
             {
                 /* The replacement booking would still be possible as the labtask group
-                   is still free for this replacement excersise, but someone was faster
+                   is still free for this replacement exercise, but someone was faster
                    taking up the last free slots. */
                 $this->action .= '.e_noslots';
                 $this->sessionPushLgrpId();
@@ -742,8 +749,11 @@ class ExcersiseRepBookingBean extends DatabaseBean
                 $this->dbInsert($this->replId, SessionDataBean::getUserId(), $this->lgrpId);
                 /* Decrease the count of free slots. */
                 $replBean->decreaseCount();
-                /* Assign the group id to Smarty. */
-                $this->assign('lgrpid', $this->lgrpId);
+
+                /* Make information about the selected labtask group available to the templating
+                   engine. */
+                $lgrpBean = new LabtaskGroupBean ($this->lgrpId, $this->_smarty, NULL, NULL);
+                $lgrpBean->assignSingle();
             }
 
             /* Unlock the access to points. */
@@ -810,7 +820,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
         {
             /* We will need access to the replacement table as well - to manipulate
                the number of replacement slots. */
-            $replBean = new ExcersiseReplacementBean ($this->replId, $this->_smarty, NULL, NULL);
+            $replBean = new ExerciseReplacementBean ($this->replId, $this->_smarty, NULL, NULL);
             $replBean->assignSingle();
 
             $lgrpList = $this->getLabtasksForGroup($booking['grpid']);
@@ -848,7 +858,7 @@ class ExcersiseRepBookingBean extends DatabaseBean
         $termDates = SchoolYearBean::getTermLimits($this->schoolyear, $lectureBean->getTerm());
 
         /* Construct a database bean for accessing replacements. */
-        $replBean = new ExcersiseReplacementBean ($this->id, $this->_smarty, NULL, NULL);
+        $replBean = new ExerciseReplacementBean ($this->id, $this->_smarty, NULL, NULL);
         /* Get the list of replacements exercises for this lecture.
            @TODO Why do we need term limits instead of schoolyear? */
         $replacementList = $replBean->getReplacements($termDates);

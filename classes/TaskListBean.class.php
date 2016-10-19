@@ -1,6 +1,6 @@
 <?php
 
-class TaskListBean extends ExcersiseBean
+class TaskListBean extends ExerciseBean
 {
     function dbQuerySingle()
     {
@@ -9,7 +9,7 @@ class TaskListBean extends ExcersiseBean
 
         $this->dumpVar('lecturers', $lecturers);
 
-        $list = ExcersiseBean::dbQueryExcersiseList();
+        $list = ExerciseBean::dbQueryExerciseList();
 
         foreach ($list as $key => $val)
         {
@@ -29,9 +29,9 @@ class TaskListBean extends ExcersiseBean
         $this->dbQuerySingle();
 
         /* The function above sets $this->rs to values that shall be
-           displayed. By assigning $this->rs to Smarty variable 'excersise'
+           displayed. By assigning $this->rs to Smarty variable 'exercise'
            we can fill the values of $this->rs into a template. */
-        $this->assign('excersiseList', $this->rs);
+        $this->assign('exerciseList', $this->rs);
     }
 }
 

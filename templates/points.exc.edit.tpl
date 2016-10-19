@@ -4,15 +4,15 @@
 <table class="exetable" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td><strong>Den:</strong></td>
-<td>{$excersise.day.name}</td>
+<td>{$exercise.day.name}</td>
 </tr>
 <tr class="rowA">
 <td><strong>Hodina:</strong></td>
-<td>{$excersise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$excersise.to|date_format:"%H:%M"}</td>
+<td>{$exercise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$exercise.to|date_format:"%H:%M"}</td>
 </tr>
 <tr class="rowA">
 <td><strong>Místnost:</strong></td>
-<td>{$excersise.room}</td>
+<td>{$exercise.room}</td>
 </tr>
 </table>
 </p>
@@ -39,7 +39,7 @@
     Kromě standardních bodových hodnocení lze do buňky zapsat i hodnotu "<strong>x</strong>"
     označující omluvu z testu a hodnotu "<strong>c</strong>" označující opis.
 </p>
-<form action="?act=save,points,{$excersise.id}" method="post">
+<form action="?act=save,points,{$exercise.id}" method="post">
 <input type="hidden" name="type" value="exc">
 <table class="pointtable" border="1">
 <tr>

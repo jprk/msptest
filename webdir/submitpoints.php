@@ -11,7 +11,7 @@ require ( REQUIRE_DIR . 'CPPSmarty.class.php');
 require ( REQUIRE_DIR . 'BaseBean.class.php');
 require ( REQUIRE_DIR . 'DatabaseBean.class.php');
 
-require ( REQUIRE_DIR . 'ExcersiseBean.class.php');
+require ( REQUIRE_DIR . 'ExerciseBean.class.php');
 require ( REQUIRE_DIR . 'PointsBean.class.php');
 require ( REQUIRE_DIR . 'LectureBean.class.php');
 require ( REQUIRE_DIR . 'SchoolYearBean.class.php');

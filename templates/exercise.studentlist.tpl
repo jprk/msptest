@@ -34,15 +34,15 @@ function rollback ( elem )
 </tr>
 <tr bgcolor="white">
 <td><strong>Den:</strong></td>
-<td>{$excersise.day.name}</td>
+<td>{$exercise.day.name}</td>
 </tr>
 <tr bgcolor="white">
 <td><strong>Hodina:</strong></td>
-<td>{$excersise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$excersise.to|date_format:"%H:%M"}</td>
+<td>{$exercise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$exercise.to|date_format:"%H:%M"}</td>
 </tr>
 <tr bgcolor="white">
 <td><strong>Místnost:</strong></td>
-<td>{$excersise.room}</td>
+<td>{$exercise.room}</td>
 </tr>
 </table>
 </p>

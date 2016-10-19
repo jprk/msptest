@@ -1,18 +1,18 @@
 <?php
 
 /**
- * Interface to replacement excersises and labs (used for physics labs
+ * Interface to replacement exercises and labs (used for physics labs
  * at the moment).
  *
  * (c) Jan Prikryl, 2012, 2013
  */
-class ExcersiseReplacementBean extends DatabaseBean
+class ExerciseReplacementBean extends DatabaseBean
 {
     /* Maximum number of persons allowed for replacement. */
     const PERSON_LIMIT = 3;
 
     private $replacements;
-    private $excersise_id;
+    private $exercise_id;
     private $manual_term;
     private $date;
     private $mfrom;
@@ -27,7 +27,7 @@ class ExcersiseReplacementBean extends DatabaseBean
         //self::_setDefaults();
     }
 
-    function dbInsert($id, $excersise_id, $date, $mfrom, $mto, $count)
+    function dbInsert($id, $exercise_id, $date, $mfrom, $mto, $count)
     {
         if (isset ($mfrom))
             $mfrom = "'" . $mfrom . "'";
@@ -42,7 +42,7 @@ class ExcersiseReplacementBean extends DatabaseBean
         $this->dbQuery(
             "INSERT INTO replacement_dates VALUES (" .
             $id . "," .
-            $excersise_id . ",'" .
+            $exercise_id . ",'" .
             $date . "'," .
             $mfrom . "," .
             $mto . "," .
@@ -62,7 +62,7 @@ class ExcersiseReplacementBean extends DatabaseBean
     function dbQuerySingle($alt_id = 0)
     {
         DatabaseBean::dbQuerySingle($alt_id);
-        $this->excersise_id = $this->rs['excersise_id'];
+        $this->exercise_id = $this->rs['exercise_id'];
     }
 
     function dbDelete($id)
@@ -96,10 +96,10 @@ class ExcersiseReplacementBean extends DatabaseBean
         $this->dbQuerySingle();
         $this->_smarty->assign('replacement', $this->rs);
 
-        /* Fetch the information abou the corresponding
-           excersise and lecturer. */
-        $excersiseBean = new ExcersiseBean ($this->excersise_id, $this->_smarty, NULL, NULL);
-        $excersiseBean->assignSingle();
+        /* Fetch the information about the corresponding
+           exercise and lecturer. */
+        $exerciseBean = new ExerciseBean ($this->exercise_id, $this->_smarty, NULL, NULL);
+        $exerciseBean->assignSingle();
     }
 
     /**
@@ -107,21 +107,21 @@ class ExcersiseReplacementBean extends DatabaseBean
      * Will list all replacement records that are bound to a given set of exercises and occur within the given
      * time limit.
      */
-    function getReplacementsForExcList($excersiseList, $termDates)
+    function getReplacementsForExcList($exerciseList, $termDates)
     {
-        /* Convert the excersise list to an `id` array. */
-        $idStr = array2ToDBString($excersiseList, 'id');
+        /* Convert the exercise list to an `id` array. */
+        $idStr = array2ToDBString($exerciseList, 'id');
         /* Query a list of replacements.
            ADDTIME has to be used to combine the `rd.date` (which is just the day) with the hour when the
            exercise really starts. Without this the 00:00:00 of `rd.date` is used for calculation, effectively
            skipping all exercises during the actual day -- given that $termDates['from'] contains the actual
            time, which it under certain circumstances does. */
         $rs = $this->dbQuery(
-            "SELECT rd.id AS `id`, excersise_id, date, " .
+            "SELECT rd.id AS `id`, exercise_id, date, " .
             "IFNULL(rd.mfrom,ex.from) AS `from`, " .
             "IFNULL(rd.mto,ex.to) AS `to`, rd.mto IS NOT NULL AS `manual_term`, " .
             "avail_count FROM replacement_dates AS rd " .
-            "LEFT JOIN excersise AS ex ON rd.excersise_id=ex.id " .
+            "LEFT JOIN exercise AS ex ON rd.exercise_id=ex.id " .
             "WHERE ex.id IN (" . $idStr . ") AND " .
             "ADDTIME(rd.date,IFNULL(rd.mfrom,ex.from))>='" . $termDates['from'] . "' AND " .
             "rd.date<='" . $termDates['to'] . "' ORDER BY rd.date,`from`");
@@ -145,7 +145,7 @@ class ExcersiseReplacementBean extends DatabaseBean
             foreach ($repls as $key => $val)
             {
                 $date = strtotime($val['date']);
-                $excId = $val['excersise_id'];
+                $excId = $val['exercise_id'];
                 if (!array_key_exists($date, $ret)) $ret[$date] = array();
                 $ret[$date][$val['from']] = $val;
             }
@@ -157,7 +157,7 @@ class ExcersiseReplacementBean extends DatabaseBean
     function getReplacements($termDates)
     {
         /* Get the list of all exercises for the given lecture id and the current school year. */
-        $exerciseBean = new ExcersiseBean (NULL, $this->_smarty, NULL, NULL);
+        $exerciseBean = new ExerciseBean (NULL, $this->_smarty, NULL, NULL);
         $exerciseList = $exerciseBean->getFull($this->id, $this->schoolyear);
 
         /* Convert the exercise list to a list indexed by exercise id so that it can be merged
@@ -173,7 +173,7 @@ class ExcersiseReplacementBean extends DatabaseBean
         /* Populate the entries in the `reps` with exercise info. */
         foreach ($reps as $key => $val)
         {
-            $eId = $val['excersise_id'];
+            $eId = $val['exercise_id'];
             $reps[$key] = array_merge($exerciseList[$eId], $reps[$key]);
         }
 
@@ -187,7 +187,7 @@ class ExcersiseReplacementBean extends DatabaseBean
     {
         assignPostIfExists($this->replacements, $this->rs, 'replacements');
         assignPostIfExists($this->manual_term, $this->rs, 'manual_term');
-        assignPostIfExists($this->excersise_id, $this->rs, 'excersise_id');
+        assignPostIfExists($this->exercise_id, $this->rs, 'exercise_id');
         assignPostIfExists($this->mfrom, $this->rs, 'mfrom');
         assignPostIfExists($this->mto, $this->rs, 'mto');
 
@@ -199,19 +199,19 @@ class ExcersiseReplacementBean extends DatabaseBean
 
     function doAdmin()
     {
-        /* Get the information about the lecture we are listing excersises for ... */
+        /* Get the information about the lecture we are listing exercises for ... */
         $lectureBean = new LectureBean ($this->id, $this->_smarty, NULL, NULL);
         $lectureBean->assignSingle();
 
-        /* Get the list of all excersises for the given lecture id and the
+        /* Get the list of all exercises for the given lecture id and the
            current school year. */
-        $exerciseBean = new ExcersiseBean (NULL, $this->_smarty, NULL, NULL);
+        $exerciseBean = new ExerciseBean (NULL, $this->_smarty, NULL, NULL);
         $exerciseList = $exerciseBean->getFull($this->id, $this->schoolyear);
 
         /* Exercise list is now indexed by row position, we would like to
            have it indexed by exercise id. */
         $exerciseList = resultsetToIndexKey($exerciseList, 'id');
-        //$this->dumpVar('excersiseList',$excersiseList);
+        //$this->dumpVar('exerciseList',$exerciseList);
 
         /* Retrieve parameters of the current term. */
         $termDates = SchoolYearBean::getTermDates($this->schoolyear, $lectureBean->getTerm());
@@ -231,7 +231,7 @@ class ExcersiseReplacementBean extends DatabaseBean
         /* Loop over all exercises and generate possible dates for subscription
            to replacement exercises. */
         $replacementList = array();
-        //$this->dumpVar('excersiseList', $excersiseList);
+        //$this->dumpVar('exerciseList', $exerciseList);
         foreach ($exerciseList as $key => $val)
         {
             //$this->dumpVar('val', $val);
@@ -257,7 +257,7 @@ class ExcersiseReplacementBean extends DatabaseBean
 
             while ($currentDate <= $dateTo)
             {
-                //$this->dumpVar('adding excersise date', strftime('%d.%m.%Y',$currentDate));
+                //$this->dumpVar('adding exercise date', strftime('%d.%m.%Y',$currentDate));
                 $replacementList[$currentDate][$val['from']] = $key;
                 $currentDate = strtotime($spacingStr, $currentDate);
             }
@@ -272,7 +272,7 @@ class ExcersiseReplacementBean extends DatabaseBean
         {
             foreach ($singleDay as $from => $data)
             {
-                $replacementList[$date][$from] = $data['excersise_id'];
+                $replacementList[$date][$from] = $data['exercise_id'];
             }
         }
 
@@ -288,32 +288,32 @@ class ExcersiseReplacementBean extends DatabaseBean
         $this->dumpVar('replacement list', $replacementList);
 
         /* Now construct a new one-level array that contains the list of
-           possible replacement excersises. */
+           possible replacement exercises. */
         $this->replacements = array();
         foreach ($replacementList as $date => $singleDay)
         {
-            foreach ($singleDay as $from => $excersiseId)
+            foreach ($singleDay as $from => $exerciseId)
             {
-                $tmpRec = $exerciseList[$excersiseId];
+                $tmpRec = $exerciseList[$exerciseId];
                 /* The `id` property denotes the id of an existing replacement
                    term. The existing replacements are handled by the if clause
                    below, here we assume the default, unselected replacement
-                   excersise. */
+                   exercise. */
                 $tmpRec['id'] = 0;
-                $tmpRec['excersise_id'] = $excersiseId;
+                $tmpRec['exercise_id'] = $exerciseId;
                 $tmpRec['from'] = strtotime('1970-01-01 ' . $tmpRec['from']);
                 $tmpRec['to'] = strtotime('1970-01-01 ' . $tmpRec['to']);
                 $tmpRec['date'] = $date;
                 $tmpRec['manual_term'] = false;
                 //$this->dumpVar('replacement date',$date);
 
-                /* Handle the existing replacement excersises. */
+                /* Handle the existing replacement exercises. */
                 if (array_key_exists($date, $reps) &&
                     array_key_exists($from, $reps[$date])
                 )
                 {
                     $rdf = $reps[$date][$from];
-                    if ($excersiseId == $rdf['excersise_id'])
+                    if ($exerciseId == $rdf['exercise_id'])
                     {
                         $tmpRec['checked'] = ' checked="checked"';
                         $tmpRec['id'] = $rdf['id'];
@@ -340,21 +340,21 @@ class ExcersiseReplacementBean extends DatabaseBean
 
     function doEdit()
     {
-        /* Get the information about the lecture we are listing excersises
+        /* Get the information about the lecture we are listing exercises
            for ... */
         $lectureBean = new LectureBean ($this->id, $this->_smarty, NULL, NULL);
         $lectureBean->assignSingle();
 
-        /* Get the list of all excersises for the given lecture id and the
+        /* Get the list of all exercises for the given lecture id and the
              current school year. */
-        $excersiseBean = new ExcersiseBean (NULL, $this->_smarty, NULL, NULL);
-        $excersiseBean->assignSelectMap($this->id, $this->schoolyear);
+        $exerciseBean = new ExerciseBean (NULL, $this->_smarty, NULL, NULL);
+        $exerciseBean->assignSelectMap($this->id, $this->schoolyear);
     }
 
     function doSave()
     {
         /* POST variable `replacements` contains a list selected replacement
-           excersises for this lecture. The list may contain new items
+           exercises for this lecture. The list may contain new items
            that shall be saved to the database. It may also not contain
            some previously present items. Those items have to be checked
            for possible registered students and if found empty, they can
@@ -368,14 +368,14 @@ class ExcersiseReplacementBean extends DatabaseBean
         {
             /* Manually adding a single replacement term. */
             $this->dbInsert(
-                0, $this->excersise_id, $this->date,
+                0, $this->exercise_id, $this->date,
                 $this->mfrom, $this->mto,
                 self::PERSON_LIMIT);
             $this->action .= '.manual';
             $this->_smarty->assign('manual_term', $this->rs);
-            /* Get the excersise data. */
-            $excersiseBean = new ExcersiseBean ($this->excersise_id, $this->_smarty, NULL, NULL);
-            $excersiseBean->assignSingle();
+            /* Get the exercise data. */
+            $exerciseBean = new ExerciseBean ($this->exercise_id, $this->_smarty, NULL, NULL);
+            $exerciseBean->assignSingle();
         }
         else
         {
@@ -403,7 +403,7 @@ class ExcersiseReplacementBean extends DatabaseBean
                 {
                     /* Add the element to the database. */
                     $this->dbInsert(
-                        0, $val['excersise_id'], timestampToSQL($val['date']),
+                        0, $val['exercise_id'], timestampToSQL($val['date']),
                         NULL, NULL,
                         self::PERSON_LIMIT);
                     $addedList[] = $val;

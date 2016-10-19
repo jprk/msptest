@@ -1,6 +1,6 @@
 <?php
 
-class StudentExcersiseBean extends DatabaseBean
+class StudentExerciseBean extends DatabaseBean
 {
     var $relation;
 
@@ -20,10 +20,10 @@ class StudentExcersiseBean extends DatabaseBean
 
     function dbReplace()
     {
-        /* First let's find out which excersise ids have been defined for this
+        /* First let's find out which exercise ids have been defined for this
            school year and the active lecture. */
-        $eb = new ExcersiseBean (0, $this->_smarty, NULL, NULL);
-        $ers = $eb->getExcersisesForLecture($this->id, $this->schoolyear);
+        $eb = new ExerciseBean (0, $this->_smarty, NULL, NULL);
+        $ers = $eb->getExercisesForLecture($this->id, $this->schoolyear);
         /* Now we have to transform the result into a string that can be used
            as a parameter of "IN" clause. */
         $elst = array2ToDBString($ers, 'id');
@@ -33,7 +33,7 @@ class StudentExcersiseBean extends DatabaseBean
             $this->dbQuery(
                 "DELETE FROM stud_exc " .
                 "WHERE student_id=" . $key . " " .
-                "AND excersise_id IN (" . $elst . ")");
+                "AND exercise_id IN (" . $elst . ")");
             $this->dbQuery(
                 "REPLACE stud_exc VALUES ("
                 . $key . ","
@@ -53,54 +53,54 @@ class StudentExcersiseBean extends DatabaseBean
     }
 
     /**
-     * Return a list of students attending given excersises.
+     * Return a list of students attending given exercises.
      * Students that are not officially assigned to any of the extersises in
-     * the $excersiseList will not be part of the list.
+     * the $exerciseList will not be part of the list.
      */
-    function getExcersiseBinding($excersiseList)
+    function getExerciseBinding($exerciseList)
     {
-        /* Invert $excersiseList to map from excersise id to the given array
-           key. At the same time construct a list of excersises that will limit
-           the excersise-student mapping query below. */
-        $excersiseMap = array();
-        $excersiseIds = array();
-        foreach ($excersiseList as $key => $val)
+        /* Invert $exerciseList to map from exercise id to the given array
+           key. At the same time construct a list of exercises that will limit
+           the exercise-student mapping query below. */
+        $exerciseMap = array();
+        $exerciseIds = array();
+        foreach ($exerciseList as $key => $val)
         {
             $id = $val['id'];
-            $excersiseMap[$id] = $key;
-            $excersiseIds[] = $id;
+            $exerciseMap[$id] = $key;
+            $exerciseIds[] = $id;
         }
 
-        $this->dumpVar('excersiseList', $excersiseList);
-        $this->dumpVar('excersiseMap', $excersiseMap);
+        $this->dumpVar('exerciseList', $exerciseList);
+        $this->dumpVar('exerciseMap', $exerciseMap);
 
-        /* Now convert the contents of $excersiseIds to a list that can be used
+        /* Now convert the contents of $exerciseIds to a list that can be used
            as a parameter to SQL WHERE ... IN(...) clause. */
-        $eids = arrayToDBString($excersiseIds);
+        $eids = arrayToDBString($exerciseIds);
 
         /* TODO: Limit the list of students to those who are actually
            attending the lecture in this school year. */
         $rs = DatabaseBean::dbQuery(
-            'SELECT student_id, excersise_id FROM stud_exc ' .
-            'WHERE excersise_id IN(' . $eids . ') ' .
+            'SELECT student_id, exercise_id FROM stud_exc ' .
+            'WHERE exercise_id IN(' . $eids . ') ' .
             'ORDER BY student_id');
 
         $binding = array();
         foreach ($rs as $key => $val)
         {
-            $eid = $val['excersise_id'];
+            $eid = $val['exercise_id'];
             $sid = $val['student_id'];
-            if (array_key_exists($eid, $excersiseMap))
+            if (array_key_exists($eid, $exerciseMap))
             {
-                $binding[$sid] = $excersiseMap[$eid];
+                $binding[$sid] = $exerciseMap[$eid];
             }
             //else
             //{
             //    /* Students that repeat the lecture will have more than a
             //       single record returned - the database contains all
-            //       excersises that they have ever attended. If such an older
-            //       `eid` (which is not in the `excersiseMap`) comes after a
-            //       newer, valid one (which is in the `excersiseMap`), the
+            //       exercises that they have ever attended. If such an older
+            //       `eid` (which is not in the `exerciseMap`) comes after a
+            //       newer, valid one (which is in the `exerciseMap`), the
             //     * binding for that student will be voided. We sould prevent
             //     * that. */
             //    if ( ! array_key_exists ( $sid, $binding ))
@@ -115,9 +115,9 @@ class StudentExcersiseBean extends DatabaseBean
         return $binding;
     }
 
-    function getStudentListForExcersise($excersiseId)
+    function getStudentListForExercise($exerciseId)
     {
-        $rs = DatabaseBean::dbQuery("SELECT student_id FROM stud_exc WHERE excersise_id=" . $excersiseId);
+        $rs = DatabaseBean::dbQuery("SELECT student_id FROM stud_exc WHERE exercise_id=" . $exerciseId);
         $studentList = array();
         if (isset ($rs))
         {
@@ -192,12 +192,12 @@ class StudentExcersiseBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doAdmin()
     {
-        /* Get the list of all excersises that have been defined for the current
-           school year, assign it to the Smarty variable 'excersiseList' and
+        /* Get the list of all exercises that have been defined for the current
+           school year, assign it to the Smarty variable 'exerciseList' and
            return it to us as well, we will need it later. The value of
            $this->id holds the lecture_id in this case. */
-        $excersiseBean = new ExcersiseBean (0, $this->_smarty, "x", "x");
-        $excersiseList = $excersiseBean->assignFull($this->id, $this->schoolyear);
+        $exerciseBean = new ExerciseBean (0, $this->_smarty, "x", "x");
+        $exerciseList = $exerciseBean->assignFull($this->id, $this->schoolyear);
 
         /* Get the lecture description, just to fill in some more-or-less
            useful peieces of information. */
@@ -205,17 +205,17 @@ class StudentExcersiseBean extends DatabaseBean
         $lectureBean->assignSingle();
 
         /* Now create an array that contains student id as an key and _index_ to
-           the $excersiseList as a value (that is, not the excersise ID, but the
+           the $exerciseList as a value (that is, not the exercise ID, but the
            true index into the array. */
-        $excersiseBinding = $this->getExcersiseBinding($excersiseList);
-        $this->dumpVar('excersiseBinding', $excersiseBinding);
+        $exerciseBinding = $this->getExerciseBinding($exerciseList);
+        $this->dumpVar('exerciseBinding', $exerciseBinding);
 
         /* Get the list of all students. Additionally, create a field 'checked'
-           that contains text ' checked="checked"' on the position of the excersise
+           that contains text ' checked="checked"' on the position of the exercise
            that the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-        $studentBean->assignStudentListWithExcersises(
-            $this->id, count($excersiseList), $excersiseBinding);
+        $studentBean->assignStudentListWithExercises(
+            $this->id, count($exerciseList), $exerciseBinding);
 
         /* It could have been that doAdmin() has been called from another
            handler. Change the action to "admin" so that ctrl.php will

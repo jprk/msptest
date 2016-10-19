@@ -81,7 +81,7 @@ class PointsBean extends DatabaseBean
                 . $this->schoolyear . ",'"
                 . $numPts . "','"
                 . SessionDataBean::getUserId() . "','"
-                . mysql_escape_string($comment) . "',NULL";
+                . mysql_real_escape_string($comment) . "',NULL";
 
             /* Delete all point records for this student and subtask and
                school year. */
@@ -487,10 +487,10 @@ class PointsBean extends DatabaseBean
 
                 /* Prepare all the variables that are needed for filling in the
                           edit template. These variables are equal to the set needed
-                       for showing the list of students for a single excersise. */
-                $excersiseBean = new ExcersiseBean ($this->id, $this->_smarty, NULL, NULL);
-                $excersiseBean->dbQuerySingle();
-                $excersiseBean->prepareExcersiseData($this->order);
+                       for showing the list of students for a single exercise. */
+                $exerciseBean = new ExerciseBean ($this->id, $this->_smarty, NULL, NULL);
+                $exerciseBean->dbQuerySingle();
+                $exerciseBean->prepareExerciseData($this->order);
                 break;
 
             case 'lec':
@@ -552,9 +552,9 @@ class PointsBean extends DatabaseBean
         if ($this->type == 'exc')
         {
             /* Fetch information about the exercise. */
-            $excersiseBean = new ExcersiseBean ($this->id, $this->_smarty, NULL, NULL);
-            $excersiseBean->dbQuerySingle();
-            $this->_smarty->assign('excersise', $excersiseBean->rs);
+            $exerciseBean = new ExerciseBean ($this->id, $this->_smarty, NULL, NULL);
+            $exerciseBean->dbQuerySingle();
+            $this->_smarty->assign('exercise', $exerciseBean->rs);
 
             /* Unlock the access to points. */
             $res = mutexUnlock($this, self::$editId);

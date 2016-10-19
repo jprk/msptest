@@ -204,9 +204,9 @@ class SolutionBean extends DatabaseBean
         $lecturers = DatabaseBean::dbQuery(
             'SELECT st.id AS uid, le.* ' .
             'FROM      student   AS st ' .
-            'LEFT JOIN excersise AS ex ON ( ex.lecture_id=' . SessionDataBean::getLectureId() . ' AND ex.year=' . SessionDataBean::getSchoolYear() . ' ) ' .
-            'LEFT JOIN stud_exc  AS se ON ( st.id=se.student_id  AND se.excersise_id=ex.id ) ' .
-            'LEFT JOIN lecturer  AS le ON ( ex.lecturer_id=le.id AND se.excersise_id=ex.id ) ' .
+            'LEFT JOIN exercise AS ex ON ( ex.lecture_id=' . SessionDataBean::getLectureId() . ' AND ex.year=' . SessionDataBean::getSchoolYear() . ' ) ' .
+            'LEFT JOIN stud_exc  AS se ON ( st.id=se.student_id  AND se.exercise_id=ex.id ) ' .
+            'LEFT JOIN lecturer  AS le ON ( ex.lecturer_id=le.id AND se.exercise_id=ex.id ) ' .
             'WHERE st.id IN (' . $studentIdList . ') ' .
             'AND (( ex.id IS NULL AND le.id IS NULL ) OR ( ex.id IS NOT NULL AND le.id IS NOT NULL ))',
             'uid'
@@ -239,14 +239,14 @@ class SolutionBean extends DatabaseBean
                 }
                 else
                 {
-                    /* No excersises exist for this lecture. */
+                    /* No exercises exist for this lecture. */
                     $this->rs[$key]['efirst'] = NULL;
                     $this->rs[$key]['elast'] = '-';
                 }
             }
             else
             {
-                /* Excersises exist, but this student did not register for any
+                /* Exercises exist, but this student did not register for any
                  * of them. */
                 $this->rs[$key]['efirst'] = NULL;
                 $this->rs[$key]['elast'] = '?';

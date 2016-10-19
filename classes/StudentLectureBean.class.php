@@ -138,7 +138,7 @@ class StudentLectureBean extends DatabaseBean
 
     /**
      * Prepare the list of students and their points for the lecture.
-     * This is very similar to prepareExcersiseData() in ExcersiseBean.
+     * This is very similar to prepareExerciseData() in ExerciseBean.
      */
     function prepareStudentLectureData($sortType = SB_SORT_BY_NAME)
     {
@@ -164,7 +164,7 @@ class StudentLectureBean extends DatabaseBean
                 self::E_INIT_FAILED);
         }
 
-        /* Get the list of tasks for evaluation of this excersise. The list will
+        /* Get the list of tasks for evaluation of this exercise. The list will
            contain only task IDs and we will have to fetch task and subtask
            information by ourselves later. */
         $taskList = $evalBean->getTaskList();

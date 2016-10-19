@@ -29,34 +29,52 @@ function rollback ( elem )
 <table bgcolor="black" border="0" cellpadding="4" cellspacing="1">
 <tr bgcolor="white">
 <td><strong>Den:</strong></td>
-<td>{$excersise.day.name}</td>
+<td>{$exercise.day.name}</td>
 </tr>
 <tr bgcolor="white">
 <td><strong>Hodina:</strong></td>
-<td>{$excersise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$excersise.to|date_format:"%H:%M"}</td>
+<td>{$exercise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$exercise.to|date_format:"%H:%M"}</td>
 </tr>
 <tr bgcolor="white">
 <td><strong>Místnost:</strong></td>
-<td>{$excersise.room}</td>
+<td>{$exercise.room}</td>
 </tr>
 </table>
 </p>
 <h2>Cvičící</h2>
 <p>
-{if $lecturer.surname}
+{if $exercise.tutors or $lecturer.surname}
 <table bgcolor="black"  border="0" cellpadding="4" cellspacing="1">
-<tr bgcolor="white">
-<td><strong>Jméno:</strong></td>
-<td>{$lecturer.firstname} {$lecturer.surname}</td>
-</tr>
-<tr bgcolor="white">
-<td><strong>E-mail:</strong></td>
-<td><a href="mailto:{$lecturer.email}">{$lecturer.email}</a></td>
-</tr>
-<tr bgcolor="white">
-<td><strong>Místnost:</strong></td>
-<td>{$lecturer.room}</td>
-</tr>
+{* Legacy code for a single tutor until 2016 *}
+{if $exercise.tutors}
+    <tr bgcolor="white">
+        <td><strong>Jméno:</strong></td>
+        {foreach from=$exercise.tutors item=tutor}<td>{$tutor.firstname} {$tutor.surname}</td>{/foreach}
+    </tr>
+    <tr bgcolor="white">
+        <td><strong>E-mail:</strong></td>
+        {foreach from=$exercise.tutors item=tutor}<td><a href="mailto:{$tutor.email}">{$tutor.email}</a></td>{/foreach}
+    </tr>
+    <tr bgcolor="white">
+        <td><strong>Místnost:</strong></td>
+        {foreach from=$exercise.tutors item=tutor}<td>{$tutor.room}</td>{/foreach}
+    </tr>
+{/if}
+{* Legacy code for a single tutor until 2016 *}
+{if $lecturer.surname}
+    <tr bgcolor="white">
+        <td><strong>Jméno:</strong></td>
+        <td>{$lecturer.firstname} {$lecturer.surname}</td>
+    </tr>
+    <tr bgcolor="white">
+        <td><strong>E-mail:</strong></td>
+        <td><a href="mailto:{$lecturer.email}">{$lecturer.email}</a></td>
+    </tr>
+    <tr bgcolor="white">
+        <td><strong>Místnost:</strong></td>
+        <td>{$lecturer.room}</td>
+    </tr>
+{/if}
 </table>
 {else}
 Cvičení nemá přiřazeno určitého cvičícího. S případnými dotazy se prosím
@@ -67,7 +85,7 @@ obracejte na přednášejícího.
 {if $studentList}
 <table bgcolor="black" style="border: 1px solid black;" border="0" cellpadding="4" cellspacing="1">
 <tr class="rowA">
-{if $excersise.displaynames}
+{if $exercise.displaynames}
 {* Display full student names as it was explicitely requested. *}
 <th style="width: 6em; text-align: left; border-bottom: 1px solid black;">Příjmení</th>
 <th style="width: 5em; text-align: left; border-bottom: 1px solid black;">Jméno</th>
@@ -103,7 +121,7 @@ obracejte na přednášejícího.
 {else}
 <tr class="rowB" onmouseover="roll(this);" onmouseout="rollback(this);">
 {/if}
-{if $excersise.displaynames}
+{if $exercise.displaynames}
 <td>{$studentList[studentPos].surname}</td>
 <td>{$studentList[studentPos].firstname}</td>
 <td class="center" style="border-right: 1px solid black;">{$studentList[studentPos].yearno}/{$studentList[studentPos].groupno}</td>
@@ -127,7 +145,7 @@ obracejte na přednášejícího.
 </tr>
 {/section}
 <tr class="rowA">
-<td {if $excersise.displaynames}colspan="3"{else}colspan="1"{/if} style="border-top: 1px solid black; border-right: 1px solid black;">Průměr</td>
+<td {if $exercise.displaynames}colspan="3"{else}colspan="1"{/if} style="border-top: 1px solid black; border-right: 1px solid black;">Průměr</td>
 {section name=subtaskPos loop=$subtaskList}
 <td class="center" style="border-top: 1px solid black;">{$statData.avgSubtask[subtaskPos]|string_format:"%.2f"}</td>
 {/section}
@@ -144,7 +162,7 @@ obracejte na přednášejícího.
 <td class="sumA" style="border-top: 1px solid black; border-left: 1px solid black;">-</td>
 </tr>
 <tr class="rowB">
-<td {if $excersise.displaynames}colspan="3"{else}colspan="1"{/if} style="border-right: 1px solid black;">Nesplněno</td>
+<td {if $exercise.displaynames}colspan="3"{else}colspan="1"{/if} style="border-right: 1px solid black;">Nesplněno</td>
 {section name=subtaskPos loop=$subtaskList}
 <td class="center">-</td>
 {/section}

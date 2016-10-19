@@ -987,17 +987,17 @@ class FormSolutionsBean extends DatabaseBean
         $lectureBean->assignSingle();
 
         /* Now create an array that contains student id as an key and _index_ to
-           the $excersiseList as a value (that is, not the excersise ID, but the
+           the $exerciseList as a value (that is, not the exercise ID, but the
            true index into the array. */
-        $studexcBean = new StudentExcersiseBean (null, $this->_smarty, null, null);
-        $exerciseBinding = $studexcBean->getExcersiseBinding($exerciseList);
+        $studexcBean = new StudentExerciseBean (null, $this->_smarty, null, null);
+        $exerciseBinding = $studexcBean->getExerciseBinding($exerciseList);
         $this->dumpVar('exerciseBinding', $exerciseBinding);
 
         /* Get the list of all students. Additionally, create a field 'checked'
            that contains text ' checked="checked"' on the position of the exercise
            that the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-        $studentList = $studentBean->assignStudentListWithExcersises($lectureBean->id, count($exerciseList), $exerciseBinding);
+        $studentList = $studentBean->assignStudentListWithExercises($lectureBean->id, count($exerciseList), $exerciseBinding);
 
         $this->generateAssignments($this->id, $studentList);
     }

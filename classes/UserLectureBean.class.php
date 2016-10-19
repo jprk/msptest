@@ -184,11 +184,11 @@ class UserLectureBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doAdmin()
     {
-        /* Get the list of all excersises, assign it to the Smarty variable
-           'excersiseList' and return it to us as well, we will need it later.
+        /* Get the list of all exercises, assign it to the Smarty variable
+           'exerciseList' and return it to us as well, we will need it later.
            $this->id will point to the lecture_id in this case. */
-        $excersiseBean = new ExcersiseBean (0, $this->_smarty, "x", "x");
-        $excersiseList = $excersiseBean->assignFull($this->id);
+        $exerciseBean = new ExerciseBean (0, $this->_smarty, "x", "x");
+        $exerciseList = $exerciseBean->assignFull($this->id);
 
         /* Get the lecture description, just to fill in some more-or-less
            usefull peieces of information. */
@@ -196,15 +196,15 @@ class UserLectureBean extends DatabaseBean
         $lectureBean->assignSingle();
 
         /* Now create an array that contains student id as an key and _index_ to
-           the $excersiseList as a value (that is, not the excersise ID, but the
+           the $exerciseList as a value (that is, not the exercise ID, but the
            true index into the array. */
-        $excersiseBinding = $this->getExcersiseBinding($excersiseList);
+        $exerciseBinding = $this->getExerciseBinding($exerciseList);
 
         /* Get the list of all students. Additionally, create a field 'selected'
-           that contains text ' selected' on the position of the excersise that
+           that contains text ' selected' on the position of the exercise that
            the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-        $studentBean->assignStudentListWithExcersises(count($excersiseList), $excersiseBinding);
+        $studentBean->assignStudentListWithExercises(count($exerciseList), $exerciseBinding);
 
         /* It could have been that doAdmin() has been called from another
            handler. Change the action to "admin" so that ctrl.php will

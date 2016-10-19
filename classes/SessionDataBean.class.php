@@ -80,7 +80,7 @@ class SessionDataBean
     }
 
     /**
-     * Return the availability of replacement excersises for the current lecture.
+     * Return the availability of replacement exercises for the current lecture.
      */
     static function getLectureReplacements()
     {

@@ -3,15 +3,15 @@
 <table class="exetable" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td><strong>Den:</strong></td>
-<td>{$excersise.day.name}</td>
+<td>{$exercise.day.name}</td>
 </tr>
 <tr class="rowA">
 <td><strong>Hodina:</strong></td>
-<td>{$excersise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$excersise.to|date_format:"%H:%M"}</td>
+<td>{$exercise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$exercise.to|date_format:"%H:%M"}</td>
 </tr>
 <tr class="rowA">
 <td><strong>Místnost:</strong></td>
-<td>{$excersise.room}</td>
+<td>{$exercise.room}</td>
 </tr>
 </table>
 </p>
@@ -34,8 +34,8 @@
 </p>
 <h2>Seznam studentů</h2>
 {if $studentList}
-<form action="?act=save,points,{$excersise.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<form action="?act=save,points,{$exercise.id}" method="post">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr>
 <th style="width: 8em; text-align: left;">Příjmení</th>
 <th style="width: 5em; text-align: left;">Jméno</th>

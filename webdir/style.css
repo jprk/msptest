@@ -436,8 +436,8 @@ tr.rowAh .tskAn, tr.rowAh .sumAn, tr.rowBh .tskBn, tr.rowBh .sumBn
 .pointtable td { padding: 0px; margin: 0px; }
 .pointtable td.name, .pointtable th.name { padding: 4px 8px; }
 .pointinput { width: 3em; text-align: center; }
-.pointtable td input.edit_success { background-color: #e4ffe4; }
-.pointtable td input.edit_fail { background-color: #ffe4e4; }
+.pointtable td input.edit_success, .admintable td.edit_success { background-color: #e4ffe4; }
+.pointtable td input.edit_fail, .admintable td.edit_fail { background-color: #ffe4e4; }
 .pointtable td input { padding: 4px; border: none; background-color: white; color: inherit; }
 .pointtable tr.rowA td input.active,
 .pointtable tr.rowB td input.active { padding: 2px; margin: 0px; border:2px solid black; background-color: yellow; color: black; }

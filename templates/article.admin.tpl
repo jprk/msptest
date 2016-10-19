@@ -1,7 +1,7 @@
-<h1>Seznam uloenıch èlánkù</h1>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<h1>Seznam uloÅ¾enÃ½ch ÄlÃ¡nkÅ¯</h1>
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
-<td colspan="2">&nbsp;Pøidat èlánek</td>
+<td colspan="2">&nbsp;PÅ™idat ÄlÃ¡nek</td>
 <td width="40" class="smaller" 
   ><a href="ctrl.php?act=edit,article,0"><img src="images/add.gif" alt="[add]" width="16" height="16"></a></td>
 </tr>

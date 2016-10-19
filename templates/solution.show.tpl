@@ -1,7 +1,7 @@
 <p>
 V databázi jsou uložena následující řešení úlohy <em>{$subtask.title} ({$subtask.ttitle})</em>:
 </p>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <th style="text-align: left;"><a href="?act=show,solution,{$subtask.id}&order=1">Login</a></th>
 <th style="text-align: left;"><a href="?act=show,solution,{$subtask.id}&order=2">Student</a></th>

@@ -6,7 +6,7 @@ s vypracovaným řešením zadání. Odpovídat můžete pouze jednou.
 <input type="hidden" name="MAX_FILE_SIZE" value="16000000">
 {section name=pId loop=$parts}
 <h3>Úloha {$subtask.ttitle}-{$assignment.assignmnt_id|string_format:"%05d"}{$parts[pId].part}</h2>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
   <td class="itemtitle" width="100%">Soubor s popisem řešení úlohy (.pdf)</td>
   <td>

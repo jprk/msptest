@@ -1,7 +1,7 @@
 <p>
 Na disk a do databáze byla uložena ručně nahraná řešení následujících úloh:
 <p>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <thead>
 <tr class="newobject">
   <th class="left">Název úlohy</th>

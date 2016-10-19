@@ -4,7 +4,7 @@
     úlohy.
 </p>
 <form id="labForm" name="labform" action="?act=save,labtask,{$lecture.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tbody>
 {foreach name=lab from=$labtaskList item=labData key=labKey }
 {if $smarty.foreach.lab.index is even}

@@ -36,7 +36,7 @@ function rollback ( elem )
     jako oddělovače polí středník a český zápis desetinných čísel. Vzhledem k tomu, jak MS Excel přistupuje k otevírání
     CSV souborů, je dost možné, že v jiné, než české verzi Excelu budete mít s importem problémy.
 </p>
-<table class="admintable" style="border: 1px solid black;" border="0" cellpadding="4" cellspacing="1">
+<table class="admintable table-override" style="border: 1px solid black;" border="0" cellpadding="4" cellspacing="1">
 <thead class="rowA">
 <th style="width: 6em; text-align: left; border-bottom: 1px solid black;">Příjmení</th>
 <th style="width: 5em; text-align: left; border-bottom: 1px solid black;">Jméno</th>

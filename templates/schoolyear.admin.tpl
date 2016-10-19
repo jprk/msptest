@@ -2,7 +2,7 @@
 Zvolte školní rok, jehož výsledky si přejete zobrazit:
 </p>
 <form name="yearform" action="?act=save,schoolyear,{$lecture.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td>Školní rok:</td>
 <td>

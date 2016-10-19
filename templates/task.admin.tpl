@@ -1,4 +1,4 @@
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <td colspan="5">Přidat další úlohu</td>
 <td width="48" class="smaller" align="right" valign="middle" colspan="2"

@@ -59,7 +59,7 @@ function markPres ( )
 {/literal}
 <form id="stupassForm" action="?act=save,stupass,42" method="post">
 <input type="hidden" name="id"         value="{$lecture.id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <th>&nbsp;</th>
 <th>Příjmení a jméno</th>

@@ -14,7 +14,7 @@ Vložte prosím nové datum.
 {section name=sId loop=$studentList}
 <input type="hidden" name="studid[{$studentList[sId].id}]" value="checked">
 {/section}
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Odevzdání do</td>
 <td><input type="text" name="dateto" maxlength="10" size="10" value="{$subtask.dateto|date_format:"%d.%m.%Y"}">&nbsp;&nbsp;<img src="images/calendar.gif" alt="[kalendář]" title="otevři kalendář" onClick="openCalendar('subtaskForm','dateto');"></td>

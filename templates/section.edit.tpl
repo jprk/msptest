@@ -101,7 +101,7 @@ ON_LOAD[ON_LOAD.length] = initSelection;
 <input type="hidden" name="id" value="{$section.id}">
 <input type="hidden" name="lecture_id" value="{$section.lecture_id}">
 <input type="hidden" name="ival1" value="{$section.ival1}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Rodičovská sekce</td>
 <td>

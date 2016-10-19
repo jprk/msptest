@@ -1,7 +1,7 @@
 <form name="taskForm" action="?act=save,task,{$task.id}" method="post">
 <input type="hidden" name="id" value="{$task.id}">
 <input type="hidden" name="lecture_id" value="{$lecture.id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Název</td>
 <td><input type="text" name="title" style="width: 100%;"maxlength="255" size="32" value="{$task.title}"></td>

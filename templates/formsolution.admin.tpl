@@ -5,7 +5,7 @@ Vložte soubory s úlohami, které Vám student odevzdal:
 <form name="solutionform" action="?act=save,formsolution,{$student.id}" method="post" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="16000000">
 <input type="hidden" name="mode" value="2">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <thead>
 <tr class="newobject">
   <th class="left">Název úlohy</th>

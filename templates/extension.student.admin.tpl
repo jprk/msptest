@@ -3,7 +3,7 @@ Vyberte dílčí úlohy, jimž chcete změnit termín odevzdání pro tohoto stu
 </p>
 <form id="extForm" action="?act=edit,extension,{$student.id}" method="post">
 <input type="hidden" name="mode" value="{$mode}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <th>&nbsp;</th>
 <th style="text-align: left; padding: 0ex 0.5ex;">Zkratka</th>

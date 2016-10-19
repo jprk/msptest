@@ -1,7 +1,7 @@
 {include file="admin.sec.hea.tpl"}
 {$section.text}
 <h2>Seznam úloh</h2>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <th>Název úlohy</th>
 <th colspan="2" style="width: 34ex;">Odevzdání od-do</th>

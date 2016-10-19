@@ -4,7 +4,7 @@
     a být seskupený podle jména. V současné době je co řádek to záznam z databáze,
     řadí se to podle jména studenta a datumu docvičení.
 </p>
-    <table class="admintable" border="0" cellpadding="2" cellspacing="1">
+    <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
         <thead>
         <tr class="newobject">
             <th>Jméno</th>

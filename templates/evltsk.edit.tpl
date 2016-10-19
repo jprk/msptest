@@ -1,5 +1,5 @@
 <form action="?act=save,evltsk,{$lecture.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr>
 <th align="left">Název</th>
 {section name=tId loop=$taskList}

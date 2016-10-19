@@ -1,9 +1,9 @@
 <form action="?act=save,urls,{$url.id}" method="post">
 <input type="hidden" name="id" value="{$url.id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">URL</td>
-<td><input class="admintable" type="text" name="url" maxlength="255" style="width: 100%;" value="{$url.url}"></td>
+<td><input class="admintable table-override" type="text" name="url" maxlength="255" style="width: 100%;" value="{$url.url}"></td>
 </tr>
 <tr class="rowB">
 <td class="itemtitle">Titulek</td>

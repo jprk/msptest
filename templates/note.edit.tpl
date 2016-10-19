@@ -1,7 +1,7 @@
 <form action="?act=save,note,{$note.id}" method="post">
 <input type="hidden" name="id"        value="{$note.id}">
 <input type="hidden" name="object_id" value="{$note.object_id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Text</td>
 <td>

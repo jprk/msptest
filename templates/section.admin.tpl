@@ -1,4 +1,4 @@
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 {* disiplay tree icons only if the maximum hierarchyl level is greater than zero *}
 {if $maxlevel > 0}
 <colgroup width="16" span="{$maxlevel}">

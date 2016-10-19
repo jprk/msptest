@@ -1,5 +1,5 @@
 <form action="?act=save,tsksub,{$lecture.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <input type="hidden" name="year" value="{$year}">
 <tr>
 <th align="left">Název úkolu</th>

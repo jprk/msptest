@@ -2,7 +2,7 @@
 Vyberte úlohu k ručnímu obodování.
 </p>
 
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <th class="left">Název úlohy</th>
 <th>Odevzdáno</th>
@@ -28,7 +28,7 @@ Vyberte úlohu k ručnímu obodování.
 </table>
 
 {*
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <th class="left">Název úlohy</th>
 <th>Student</th>

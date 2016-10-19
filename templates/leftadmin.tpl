@@ -118,7 +118,7 @@
     </tr>
     <tr class="mlevel1">
         <td valign="top">-&nbsp;</td>
-        <td>{adminlink act="admin" obj="excersise" id=$lecture.id text="Správa termínů cvičení"}</td>
+        <td>{adminlink act="admin" obj="exercise" id=$lecture.id text="Správa termínů cvičení"}</td>
     </tr>
     <tr class="mlevel1">
         <td valign="top">-&nbsp;</td>

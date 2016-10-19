@@ -59,7 +59,7 @@
         of that particular assignment.
     {/english}
 </p>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
     <tr class="newobject">
         <th>{czech}Název úlohy{/czech}{english}Assignment title{/english}</th>
         <th colspan="2" style="width: 34ex">{czech}Odevzdání od-do{/czech}{english}Submission from-to{/english}</th>
@@ -114,7 +114,7 @@
 {/if}
 {if $subtaskList}
 <h2>{czech}Výsledky{/czech}{english}Results{/english}</h2>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
     <tr class="newobject">
     {section name=subtaskPos loop=$subtaskList}
         <th class="smaller" style="width: 4em;"
@@ -194,7 +194,7 @@
     rezervovat více, než {$lecture.repl_count} termínů docvičení a že po každém proběhlém docvičení vám jeden
     termín ubyde.
 </p>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
     <thead>
     <tr class="newobject">
         <th>Datum</th>

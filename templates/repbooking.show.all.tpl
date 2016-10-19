@@ -3,7 +3,7 @@
     Toto je seznam studentů, kteří si v nějakém okamžiku rezervovali docvičení, ať už na něj potom dorazili
     nebo ne, včetně zrušených rezervací.
 </p>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
     <thead>
     <tr class="newobject">
         <th>Jméno</th>

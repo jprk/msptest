@@ -7,7 +7,7 @@
 <form id="replForm" name="replform" action="?act=save,repbooking,{$lecture.id}" method="post">
     <input type="hidden" name="studentlist" value="1">
     <input type="hidden" name="replid" value="{$replacement.id}">
-    <table class="admintable" border="0" cellpadding="2" cellspacing="1">
+    <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
         <thead>
         <tr class="newobject">
             <th>Jméno</th>

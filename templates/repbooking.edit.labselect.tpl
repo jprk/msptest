@@ -2,7 +2,7 @@
     Zvolte si skupinu úloh, kterou potřebujete docvičit:
 </p>
 <form id="replForm" name="replform" action="?act=edit,repbooking,{$lecture.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tbody>
 {foreach name=lab from=$lgrpList item=lgrp key=labKey }
 {if $smarty.foreach.lab.index is even}

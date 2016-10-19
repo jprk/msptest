@@ -90,7 +90,7 @@ ON_LOAD[ON_LOAD.length] = initSelection;
 <input type="hidden" name="id" value="{$news.id}">
 <input type="hidden" name="object_id" value="-1">
 <input type="hidden" name="author_id" value="{$news.author_id}">
-<table class="admintable" border="0" cellpadding="4" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="4" cellspacing="1">
 <tr class="rowB">
 <td class="itemtitle">Titulek<br/>(zbývá <span id="newstitle">40</span> znaků)</td>
 <td><input type="text" name="title" style="width: 100%;" value="{$news.title|escape:"html"}" onkeyup="javascript:textCounter(this,'newstitle',40);"></td>

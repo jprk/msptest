@@ -1,9 +1,9 @@
-<h1>Editace èlánku</h1>
+<h1>Editace ÄlÃ¡nku</h1>
 <form action="?act=save,article,{$article.id}" method="post">
 <input type="hidden" name="id" value="{$article.id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1" width="100%">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1" width="100%">
 <tr class="rowB">
-<td class="itemtitle">Rodièovská sekce</td>
+<td class="itemtitle">RodiÄovskÃ¡ sekce</td>
 <td>
 <select name="parent" style="width: 100%;">
 {html_options options=$section_parents selected=$article.parent}
@@ -11,7 +11,7 @@
 </td>
 </tr>
 <tr class="rowA">
-<td class="itemtitle">Typ èlánku</td>
+<td class="itemtitle">Typ ÄlÃ¡nku</td>
 <td>
 <select name="type" style="width: 100%;">
 {html_options options=$articleTypes selected=$article.type}
@@ -32,7 +32,7 @@
 <tr class="rowB">
 <td>&nbsp;</td>
 <td>
-<input type="submit" value="Uloit">
+<input type="submit" value="Uloï¿½it">
 <input type="reset" value="Vymazat">
 </td>
 </tr>

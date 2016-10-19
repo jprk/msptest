@@ -5,7 +5,7 @@ Snažíte se zobrazit údaje o neexistujícím předmětu.
 <p>
 Máme založeny tyto weby předmětů: 
 </p>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="adminlisthead">
 <th style="width: 6ex;">Kód</th>
 <th style="width: 80%; text-align: left;">&nbsp;Název</th>

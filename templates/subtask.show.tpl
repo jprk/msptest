@@ -39,7 +39,7 @@ Vložte PDF soubor s vypracovaným řešením zadání. Odpovídat můžete pouz
 </p>
 <form name="solutionform" action="?act=save,formsolution,{$subtask.id}" method="post" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="16000000">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
   <td class="itemtitle" width="100%">Soubor s popisem řešení úlohy (.pdf)</td>
   <td>
@@ -77,7 +77,7 @@ nezvládáme v čase kratším, než jeden týden.
 </p>
 <form name="solutionform" action="?act=save,formsolution,{$subtask.id}" method="post" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="16000000">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
   <td>Soubor s řešením:&nbsp;</td>
   <td><input type="file" name="zip[1]" size="50"></td>

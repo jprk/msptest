@@ -1,7 +1,7 @@
 <form action="?act=save,lecture,{$lectureInfo.id}" method="post">
     <input type="hidden" name="id" value="{$lectureInfo.id}">
     <input type="hidden" name="rootsection" value="{$lectureInfo.rootsection}">
-    <table class="admintable" border="0" cellpadding="2" cellspacing="1">
+    <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
         <tr class="rowA">
             <td class="itemtitle">Kód předmětu</td>
             <td><input type="text" name="code" maxlength="255" size="30" value="{$lectureInfo.code}"></td>

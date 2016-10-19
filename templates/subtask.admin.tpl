@@ -1,5 +1,5 @@
 <p>
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
 <td colspan="6">Přidat dílčí úlohu</td>
 <td colspan="2" width="64" class="smaller" align="right" valign="middle"

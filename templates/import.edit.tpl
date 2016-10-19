@@ -4,7 +4,7 @@ Pro školní rok {$schoolyear} budou do seznamu studentů předmětu
 <em>{$lecture.title}</em> přidáni tito studenti:
 </p>
 <form action="?act=save,import,{$lecture.id}" method="post" name="kosimport1" id="kosimport1">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr>
 <th>Příjmení</th>
 <th>Jméno</th>

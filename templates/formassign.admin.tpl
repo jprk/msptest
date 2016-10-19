@@ -1,4 +1,4 @@
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr>
   <th style="text-align: left;">Název</th>
   <th>Kód</th>

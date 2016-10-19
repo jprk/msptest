@@ -1,7 +1,7 @@
 <form name="subtaskForm" action="?act=save,subtask,{$subtask.id}" method="post">
 <input type="hidden" name="id" value="{$subtask.id}">
 <input type="hidden" name="lecture_id" value="{$lecture.id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Název</td>
 <td><input type="text" name="title" maxlength="255" size="32" value="{$subtask.title}"></td>

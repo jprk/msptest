@@ -1,6 +1,6 @@
 <form action="?act=save,user,{$user.id}" method="post">
 <input type="hidden" name="id" value="{$user.id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Jméno</td>
 <td><input type="text" name="firstname" maxlength="255" size="30" value="{$user.firstname}"></td>

@@ -1,7 +1,7 @@
 <form name="evaluationForm" action="?act=save,evaluation,{$evaluation.id}" method="post">
 <input type="hidden" name="id"         value="{$evaluation.id}">
 <input type="hidden" name="lecture_id" value="{$lecture.id}">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Název</td>
 <td><input type="text" name="title" maxlength="255" style="width: 100%;" value="{$evaluation.title}"></td>

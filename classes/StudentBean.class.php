@@ -60,6 +60,8 @@ class StudentBean extends DatabaseBean
     private $groupno;
     private $email;
     private $calendaryear;
+    private $coeff;
+
     private $twistMatrix;
     private $role;
     private $fullList;
@@ -82,6 +84,7 @@ class StudentBean extends DatabaseBean
         $this->calendaryear = $this->rs['calendaryear'] = 0;
         $this->role = $this->rs['role'] = USR_STUDENT;
         $this->fullList = false;
+        $this->coeff = $this->rs['coeff'] = 1.0;
     }
 
     /* Constructor */
@@ -149,6 +152,15 @@ class StudentBean extends DatabaseBean
     public function getFirstName()
     {
         return $this->firstname;
+    }
+
+    /**
+     * Get the time scaling coefficient for impaired students.
+     * @return float The scaling coefficient, in general >= 1.0.
+     */
+    public function getCoeff()
+    {
+        return $this->coeff;
     }
 
     /**
@@ -231,6 +243,15 @@ class StudentBean extends DatabaseBean
         $this->calendaryear = $calendaryear;
     }
 
+    /**
+     * Set the time scaling coefficient for impaired students.
+     * @param float $coeff The scaling coefficient, in general >= 1.0.
+     */
+    public function setCoeff($coeff)
+    {
+        $this->coeff = $coeff;
+    }
+
 
     /**
      * Replace or insert student entry in the database.
@@ -279,23 +300,23 @@ class StudentBean extends DatabaseBean
             {
                 /* We shall put the text specified in $pw_field_test directly into the password field without
                    hashing it. This is used to indicate an invalid or locked password. */
-                $pw_field_text = "'" . mysql_escape_string($this->password) . "'";
+                $pw_field_text = "'" . mysql_real_escape_string($this->password) . "'";
             }
 
             /* Standard replace creates also the hash. */
             DatabaseBean::dbQuery(
                 "REPLACE student VALUES ("
                 . $this->id . ",MD5('"
-                . mysql_escape_string($this->hash) . "'),'"
-                . mysql_escape_string($this->login) . "',"
+                . mysql_real_escape_string($this->hash) . "'),'"
+                . mysql_real_escape_string($this->login) . "',"
                 . $pw_field_text . ",'"
-                . mysql_escape_string($this->surname) . "','"
-                . mysql_escape_string($this->firstname) . "','"
+                . mysql_real_escape_string($this->surname) . "','"
+                . mysql_real_escape_string($this->firstname) . "','"
                 . $this->yearno . "','"
                 . $this->groupno . "','"
                 . $this->calendaryear . "','"
-                . mysql_escape_string($this->email) . "','"
-                . $this->active . "')"
+                . mysql_real_escape_string($this->email) . "','"
+                . $this->coeff . "')"
             );
 
             /* New records have initial 'id' equal to zero and the proper value is
@@ -309,14 +330,14 @@ class StudentBean extends DatabaseBean
                everything else. */
             DatabaseBean::dbQuery(
                 "UPDATE student SET "
-                . "login='" . mysql_escape_string($this->login) . "', "
-                . "surname='" . mysql_escape_string($this->surname) . "', "
-                . "firstname='" . mysql_escape_string($this->firstname) . "', "
+                . "login='" . mysql_real_escape_string($this->login) . "', "
+                . "surname='" . mysql_real_escape_string($this->surname) . "', "
+                . "firstname='" . mysql_real_escape_string($this->firstname) . "', "
                 . "yearno='" . $this->yearno . "', "
                 . "groupno='" . $this->groupno . "', "
                 . "calendaryear='" . $this->calendaryear . "', "
-                . "email='" . mysql_escape_string($this->email) . "', "
-                . "active='" . $this->active . "' "
+                . "email='" . mysql_real_escape_string($this->email) . "', "
+                . "coeff='" . $this->coeff . "' "
                 . "WHERE id=" . $this->id
             );
         }
@@ -426,7 +447,7 @@ class StudentBean extends DatabaseBean
         /* Standard replace does not replace passwords */
         DatabaseBean::dbQuery(
             "UPDATE student SET "
-            . "password=MD5('" . mysql_escape_string($this->password) . "') "
+            . "password=MD5('" . mysql_real_escape_string($this->password) . "') "
             . "WHERE id='" . $this->id . "'"
         );
     }
@@ -440,8 +461,8 @@ class StudentBean extends DatabaseBean
     {
         /* Escape the login and password characters in an attempt to at least
            partially prevent command injection. */
-        $eLogin = mysql_escape_string($login);
-        $ePass = mysql_escape_string($password);
+        $eLogin = mysql_real_escape_string($login);
+        $ePass = mysql_real_escape_string($password);
 
         /* Check if the login can be verified against our own database.
            This is the case of demonstration users and external users that
@@ -500,6 +521,7 @@ class StudentBean extends DatabaseBean
         $this->groupno = $this->rs['groupno'];
         $this->email = $this->rs['email'];
         $this->login = $this->rs['login'];
+        $this->coeff = $this->rs['coeff'];
         /* Mask password if one exists */
         if (!empty ($this->rs['password']))
         {
@@ -541,8 +563,8 @@ class StudentBean extends DatabaseBean
         $this->yearno = (integer)trimStrip($_POST['yearno']);
         $this->groupno = (integer)trimStrip($_POST['groupno']);
         $this->email = trimStrip($_POST['email']);
-        $this->calendaryear = (integer)trimStrip($_POST['calendaryear']);
-        $this->active = (integer)trimStrip($_POST['active']);
+        $this->calendaryear = intval($_POST['calendaryear']);
+        $this->coeff = (float)$_POST['coeff'];
     }
 
     /* ---------------------------------------------------------------------
@@ -624,11 +646,11 @@ class StudentBean extends DatabaseBean
         $this->_smarty->assign('studentList', $rs);
     }
 
-    /* $excersiseBinding contains excersiseList index for every valid student id. */
-    function assignStudentListWithExcersises(
+    /* $exerciseBinding contains exerciseList index for every valid student id. */
+    function assignStudentListWithExercises(
         $lectureId,
-        $numExcersises,
-        $excersiseBinding
+        $numExercises,
+        $exerciseBinding
     )
     {
         /* Initial list of students is empty. */
@@ -661,14 +683,14 @@ class StudentBean extends DatabaseBean
                 /* This array will be added to every student. By default it is empty,
                    and only a single item will be modified to contain the "checked"
                    flag for the activation of the corrsponding radio button. */
-                $checked = array_fill(0, $numExcersises + 1, '');
-                /* The `bindKey` contains the identifier of an excersise. If the
-                   student is not assigned into any excersise yet, the array element
+                $checked = array_fill(0, $numExercises + 1, '');
+                /* The `bindKey` contains the identifier of an exercise. If the
+                   student is not assigned into any exercise yet, the array element
                    is empty. */
-                if (array_key_exists($id, $excersiseBinding))
+                if (array_key_exists($id, $exerciseBinding))
                 {
-                    $bindKey = $excersiseBinding[$id];
-                    if ($bindKey === NULL || $bindKey < 0 || $bindKey >= $numExcersises)
+                    $bindKey = $exerciseBinding[$id];
+                    if ($bindKey === NULL || $bindKey < 0 || $bindKey >= $numExercises)
                     {
                         $trace = getDebugBacktrace();
                         trigger_error(
@@ -684,9 +706,9 @@ class StudentBean extends DatabaseBean
                     $bindKey = NULL;
                 }
                 $this->dumpVar("bindkey[$id]", $bindKey);
-                /* The last position in the list of excersises is a fall-through for
+                /* The last position in the list of exercises is a fall-through for
                    unassigned students. */
-                if ($bindKey === NULL) $bindKey = $numExcersises;
+                if ($bindKey === NULL) $bindKey = $numExercises;
                 /* Correct HTML has to contain a string parameter of the `checked`
                    attribute. */
                 $checked[$bindKey] = ' checked="checked"';
@@ -1379,9 +1401,9 @@ class StudentBean extends DatabaseBean
         if (SessionDataBean::getLectureReplacements())
         {
             $termLimits = SchoolYearBean::getTermLimits($this->schoolyear, SessionDataBean::getLectureTerm());
-            /* This lecture has replacement excersises activated, we will
+            /* This lecture has replacement exercises activated, we will
                display everything related to the current student. */
-            $repBookingBean = new ExcersiseRepBookingBean ($lectureId, $this->_smarty, NULL, NULL);
+            $repBookingBean = new ExerciseRepBookingBean ($lectureId, $this->_smarty, NULL, NULL);
             $bookings = $repBookingBean->getBookedReplacements($termLimits);
             $this->_smarty->assign('bookings', $bookings);
             /* Reset the pre-selected labtask group. */
@@ -1415,7 +1437,7 @@ class StudentBean extends DatabaseBean
             return;
         }
 
-        /* Get the list of tasks for evaluation of this excersise. The list will contain
+        /* Get the list of tasks for evaluation of this exercise. The list will contain
            only task IDs and we will have to fetch task and subtask information
            by ourselves later. */
         $taskList = $evaluationBean->getTaskList();

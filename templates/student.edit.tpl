@@ -1,5 +1,5 @@
 <form name="studentForm" action="?act=save,student,{$student.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
 <td class="itemtitle">Jméno</td>
 <td><input type="text" name="firstname" maxlength="64" size="32" value="{$student.firstname}"></td>
@@ -48,8 +48,8 @@
 <td><input type="text" name="hash" maxlength="64" size="64" value="{$student.hash}"></td>
 </tr>
 <tr class="rowB">
-<td class="itemtitle">Aktivní</td>
-<td>{html_radios name="active" options=$yesno selected=$student.active}</td>
+<td class="itemtitle">Koeficient</td>
+<td><input type="text" name="coeff" maxlength="5" size="5" value="{$student.coeff}"></td>
 </tr>
 <tr class="rowA">
 <td class="itemtitle">Kalendářní rok</td>

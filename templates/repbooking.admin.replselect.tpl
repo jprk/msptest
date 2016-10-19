@@ -3,7 +3,7 @@
     Zvole termín docvičení:
 </p>
 <form id="replForm" name="replform" action="?act=admin,repbooking,{$lecture.id}" method="post">
-    <table class="admintable" border="0" cellpadding="2" cellspacing="1">
+    <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
         <thead>
         <tr class="newobject">
             <th width="1ex" style="height: 24px;">&nbsp;</th>
@@ -16,7 +16,7 @@
         </tr>
         </thead>
         <tbody>
-        {section name=rpos loop=$replacements}
+        {foreach from=$replacements name=rpos item=repl}
             {if $smarty.section.rpos.iteration is even}
             <tr class="rowA">
                 {else}
@@ -24,17 +24,25 @@
             {/if}
             <td width="5%" align="center"><input type="radio"
                                                  name="replid"
-                                                 value="{$replacements[rpos].id}"
-                                                 onclick="this.form.submit();"{$replacements[rpos].checked}/></td>
-            <td class="center">{$replacements[rpos].date|date_format:"%d.%m.%Y"}</td>
-            <td class="center">{$replacements[rpos].from|date_format:"%H:%M"}
-                &nbsp;-&nbsp;{$replacements[rpos].to|date_format:"%H:%M"}</td>
-            <td class="center">{$replacements[rpos].room}</td>
-            <td class="center">{$replacements[rpos].lecturer.firstname} {$replacements[rpos].lecturer.surname}</td>
-            <td class="center">{$replacements[rpos].avail_count}</td>
-            <td class="center">{if $replacements[rpos].manual_term}(nepravidelný){/if}</td>
+                                                 value="{$repl.id}"
+                                                 onclick="this.form.submit();"{$repl.checked}/></td>
+            <td class="center">{$repl.date|date_format:"%d.%m.%Y"}</td>
+            <td class="center">{$repl.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$repl.to|date_format:"%H:%M"}</td>
+            <td class="center">{$repl.room}</td>
+            <td class="center">
+                {* current storage of tutors, ordered list of persons per exercise*}
+                {strip}
+                    {foreach from=$repl.tutors item=tutor name=tul}
+                        {if $smarty.foreach.tul.index > 0}, {/if}
+                        {$tutor.firstname} {$tutor.surname}
+                    {/foreach}
+                {/strip}
+                {* legacy storage of tutors, a single person per exercise*}
+                {$repl.lecturer.firstname} {$repl.lecturer.surname}</td>
+            <td class="center">{$repl.avail_count}</td>
+            <td class="center">{if $repl.manual_term}(nepravidelný){/if}</td>
         </tr>
-        {/section}
+        {/foreach}
         <tr class="submitrow">
             <td>&nbsp;</td>
             <td colspan="5">

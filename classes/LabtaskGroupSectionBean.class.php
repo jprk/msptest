@@ -71,6 +71,7 @@ class LabtaskGroupSectionBean extends DatabaseBean
                 $labtaskList[$val['section_id']] = 1;
             }
         }
+        $this->dumpVar('labtaskList', $labtaskList);
         return $labtaskList;
     }
 
@@ -123,10 +124,11 @@ class LabtaskGroupSectionBean extends DatabaseBean
            to make the search for particular section id faster. */
         $groupLabList = $this->getLabtaskListAsKeys();
 
-        /* Now fetch the list of all lab tasks that are stored in the `section`
-           table. */
-        $sectionBean = new SectionBean (NULL, $this->_smarty, NULL, NULL);
-        $labSectionList = $sectionBean->getLabList(SessionDataBean::getLectureId(), $this->labtaskList);
+        /* Now fetch the list of all lab tasks that are active in this term. */
+        $labtaskBean = new LabtaskBean(SessionDataBean::getLectureId(), $this->_smarty, null, null);
+        // $labSectionList = $sectionBean->getLabList(SessionDataBean::getLectureId(), $this->labtaskList);
+        $labSectionList = $labtaskBean->getActiveLabtaskList();
+        $this->dumpVar('labSectionList intermediate', $labSectionList);
 
         /* Augment the $labList with information about labtasks that already
            belong to this group. */

@@ -1,11 +1,11 @@
 <form name="replForm" action="?act=save,replacement,{$lecture.id}" method="post">
     <input type="hidden" name="manual_term" value="1">
-    <table class="admintable" border="0" cellpadding="2" cellspacing="1">
+    <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
         <tr class="rowA">
             <td class="itemtitle">Cvičení</td>
             <td>
-                <select name="excersise_id" style="width: 100%;">
-                {html_options options=$excersiseSelect}
+                <select name="exercise_id" style="width: 100%;">
+                {html_options options=$exerciseSelect}
                 </select>
             </td>
         </tr>

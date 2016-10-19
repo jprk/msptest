@@ -1,1 +1,1 @@
-Výběr úloh pro skupinu č. {$lgrp.group_id} v roce {$schoolyear}
+Výběr úloh pro skupinu č. S{$lgrp.group_id} v roce {$schoolyear}

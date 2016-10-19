@@ -1,10 +1,10 @@
 <p>
-    Vyberte ze seznamu laboratorních úloh ty úlohy, které chcte přiřadit do skupiny úloh č. {$lgrp.id}
-    ve školním roce {$schoolyear}. Pokud v seznamu nějaká úloha chybí, je to proto, že ve stránkách
+    Vyberte ze seznamu laboratorních úloh ty úlohy, které chcte přiřadit do skupiny úloh č. S{$lgrp.group_id}
+    ve školním roce {$schoolyear}. Pokud v&nbsp;seznamu nějaká úloha chybí, je to proto, že ve stránkách
     předmětu chybí sekce s popisem úlohy.
 </p>
 <form id="lgrpForm" name="lgrpform" action="?act=save,lgrpsec,{$lgrp.id}" method="post">
-<table class="admintable" border="0" cellpadding="2" cellspacing="1">
+<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tbody>
 {foreach name=lab from=$labList item=labData key=labKey }
 {if $smarty.foreach.lab.index is even}

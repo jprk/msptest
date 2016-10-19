@@ -24,3 +24,5 @@ webdir/lightwindow v2.0 source
 #
 *.attic
 *.bak
+# Ignore Dibi
+classes/external/dibi

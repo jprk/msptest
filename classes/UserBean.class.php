@@ -107,11 +107,11 @@ class UserBean extends DatabaseBean
             DatabaseBean::dbQuery(
                 "REPLACE user (id,login,role,firstname,surname,email) VALUES ("
                 . $this->id . ",'"
-                . mysql_escape_string($this->login) . "',"
+                . mysql_real_escape_string($this->login) . "',"
                 . $this->role . ",'"
-                . mysql_escape_string($this->firstname) . "','"
-                . mysql_escape_string($this->surname) . "','"
-                . mysql_escape_string($this->email) . "')"
+                . mysql_real_escape_string($this->firstname) . "','"
+                . mysql_real_escape_string($this->surname) . "','"
+                . mysql_real_escape_string($this->email) . "')"
             );
             /* New records have initial 'id' equal to zero and the proper value is
                set by the database engine. We have to retrieve the 'id' back so that
@@ -124,11 +124,11 @@ class UserBean extends DatabaseBean
                password. */
             DatabaseBean::dbQuery(
                 "UPDATE user SET "
-                . "login='" . mysql_escape_string($this->login) . "', "
+                . "login='" . mysql_real_escape_string($this->login) . "', "
                 . "role=" . $this->role . ", "
-                . "firstname='" . mysql_escape_string($this->firstname) . "', "
-                . "surname='" . mysql_escape_string($this->surname) . "', "
-                . "email='" . mysql_escape_string($this->email) . "' "
+                . "firstname='" . mysql_real_escape_string($this->firstname) . "', "
+                . "surname='" . mysql_real_escape_string($this->surname) . "', "
+                . "email='" . mysql_real_escape_string($this->email) . "' "
                 . "WHERE id=" . $this->id
             );
         }
@@ -151,8 +151,8 @@ class UserBean extends DatabaseBean
         /* Query the database for the login and password tuple. */
         $rs = DatabaseBean::dbQuery(
             "SELECT * FROM user WHERE "
-            . "login='" . mysql_escape_string($login) . "' AND "
-            . "password=MD5('" . mysql_escape_string($password) . "')");
+            . "login='" . mysql_real_escape_string($login) . "' AND "
+            . "password=MD5('" . mysql_real_escape_string($password) . "')");
 
         /* If the result contains something, the check is positive. */
         if (!empty ($rs))

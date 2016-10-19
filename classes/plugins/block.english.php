@@ -12,7 +12,7 @@ function smarty_block_english($params, $content, &$smarty, &$repeat)
 
         /* Return the text only in case that the application runs in the
            English language. */
-        if ($smarty->_locale == 'en') $text = $content;
+        if ($smarty->displayLocale('en')) $text = $content;
     }
 
     return $text;

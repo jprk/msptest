@@ -77,6 +77,14 @@ class DatabaseBean extends BaseBean
         $this->dbQuery("DELETE FROM " . $this->_table . " WHERE id='" . $this->id . "'");
     }
 
+    function dbDeleteByIdList(&$id_list)
+    {
+        /* Convert the array to a string */
+        $ids = arrayToDBString($id_list);
+        /* Delete the ID from the specified table. */
+        $this->dbQuery("DELETE FROM " . $this->_table . " WHERE id IN(" . $ids . ")");
+    }
+
     /* -------------------------------------------------------------------
        COUNTER QUERIES
        ------------------------------------------------------------------- */

@@ -127,6 +127,11 @@ class CPPSmarty extends Smarty
         return $this->_config[$key];
     }
 
+    function displayLocale($locale)
+    {
+        return ($this->_locale == $locale);
+    }
+
     /**
      * @return resource
      * @throws Exception
@@ -141,7 +146,7 @@ class CPPSmarty extends Smarty
             $error = "<p>Cannot connect to mySQL as <tt>'" .
                 $db['user'] . "@" . $db['host'] . "'</tt></p>\n";
             logSystemError($error);
-            throw new Exception ('Nelze se p�ipojit k datab�zov�mu serveru.');
+            throw new Exception ('Nelze se připojit k databázovému serveru.');
         }
 
         /* Select the database. */
@@ -152,7 +157,7 @@ class CPPSmarty extends Smarty
                 $db['data'] . "'</tt> as <tt>'" . $db['user'] . "@" .
                 $db['host'] . "'</tt></p>\n";
             logSystemError($error);
-            throw new Exception ('Nelze se p�ipojit k datab�zov�mu serveru.');
+            throw new Exception ('Nelze se připojit k databázovému serveru.');
         }
 
         /* Support for UTF-8 data exchange. */
@@ -162,7 +167,7 @@ class CPPSmarty extends Smarty
             $error = "<p>Cannot set charset to utf8: <tt>" . mysql_error() .
                 "</tt></p>\n";
             logSystemError($error);
-            throw new Exception ('Nelze zvolit znakovou sadu pro komunikaci s datab�z�.');
+            throw new Exception ('Nelze zvolit znakovou sadu pro komunikaci s databází.');
         }
 
         return $link;
@@ -177,9 +182,9 @@ class CPPSmarty extends Smarty
     {
         $user_id = SessionDataBean::getUserId();
         $lecture_id = SessionDataBean::getLectureId();
-        $get_data = mysql_escape_string(json_encode($_GET));
-        $post_data = mysql_escape_string(json_encode($_POST));
-        $ip_address = mysql_escape_string($_SERVER['REMOTE_ADDR']);
+        $get_data = mysql_real_escape_string(json_encode($_GET));
+        $post_data = mysql_real_escape_string(json_encode($_POST));
+        $ip_address = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
 
         $this->dbQuery(
             "INSERT INTO log " .
@@ -192,8 +197,8 @@ class CPPSmarty extends Smarty
     {
         $user_id = SessionDataBean::getUserId();
         $lecture_id = SessionDataBean::getLectureId();
-        $ip_address = mysql_escape_string($_SERVER['REMOTE_ADDR']);
-        $message = mysql_escape_string($message);
+        $ip_address = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
+        $message = mysql_real_escape_string($message);
 
         $this->dbQuery(
             "INSERT INTO log " .
@@ -229,7 +234,7 @@ class CPPSmarty extends Smarty
             $error = "<p>Invalid query: <tt>" . mysql_error() . "</tt></p>\n";
             $error .= "<p>Query string: <tt>" . $query . "</tt></p>\n";
             logSystemError($error);
-            throw new Exception ('Neplatn� SQL dotaz.');
+            throw new Exception ('Neplatný SQL dotaz.');
         }
 
         /* Allocate an array for the query result. */
@@ -282,7 +287,7 @@ class CPPSmarty extends Smarty
             $error = "<p>Invalid query: <tt>" . mysql_error() . "</tt></p>\n";
             $error .= "<p>Query string: <tt>" . $query . "</tt></p>\n";
             logSystemError($error);
-            throw new Exception ('Neplatn� SQL dotaz.');
+            throw new Exception ('Neplatný SQL dotaz.');
         }
 
         if (!($row = mysql_fetch_assoc($result)))

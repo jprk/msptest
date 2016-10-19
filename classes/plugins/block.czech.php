@@ -12,7 +12,7 @@ function smarty_block_czech($params, $content, &$smarty, &$repeat)
 
         /* Return the text only in case that the application runs in the
            Czech language. */
-        if ($smarty->_locale == 'cs') $text = $content;
+        if ($smarty->displayLocale('cs')) $text = $content;
     }
 
     return $text;

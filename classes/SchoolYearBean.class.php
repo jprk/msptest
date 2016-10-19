@@ -55,7 +55,7 @@ class SchoolYearBean extends BaseBean
                 self::TERMTYPE_SUMMER => array('from' => '2016-02-22', 'to' => '2016-05-29')
             ),
             2016 => array(
-                self::TERMTYPE_WINTER => array('from' => '2016-10-03', 'to' => '2016-12-22'),
+                self::TERMTYPE_WINTER => array('from' => '2016-10-03', 'to' => '2017-01-13'),
                 self::TERMTYPE_SUMMER => array('from' => '2017-02-20', 'to' => '2017-05-26')
             ),
             /* Dummy, there is no official info yet. */

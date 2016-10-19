@@ -20,9 +20,17 @@ webdir/bootstrap
 webdir/js
 webdir/lightwindow v2.0 source
 #
+# Ignore temporary and development intermediates
+#
+login_broken.inc
+webdir/ajaxpoints.html
+webdir/index_top.php
+#
 # Ignore backup files
 #
 *.attic
 *.bak
+#
 # Ignore Dibi
+#
 classes/external/dibi

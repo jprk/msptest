@@ -12,11 +12,13 @@ webdir/ldaptest.novell.php
 # Do not store lecture GUI setups (images, CSS)
 #
 webdir/ex/*
+webdir/exorig/*
 #
-# Ignore Bootstrap and Javascript directories
+# Ignore Bootstrap, Lightwindow, and Javascript directories
 #
 webdir/bootstrap
 webdir/js
+webdir/lightwindow v2.0 source
 #
 # Ignore backup files
 #

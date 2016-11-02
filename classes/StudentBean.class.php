@@ -1046,12 +1046,12 @@ class StudentBean extends DatabaseBean
                         /* Update HTML class list. Again, as $gotPoints may be a string '-',
                            representing all non-numerical values (not classified, excused,
                            copied) or a float value, we have to specify that we want a string
-                           comparison of $gotPoints to '-'. Othwerwise, '-' would have been
+                           comparison of $gotPoints to '-'. Otherwise, '-' would have been
                            converted to integer and the result would be wrong. */
                         if (strval($gotPoints) != '-')
                         {
                             /* Mark results with colour only in case that some measurable
-                               result has been acheved. If the student has not been classified
+                               result has been achieved. If the student has not been classified
                                yet ($gotPoints == '-'), do not mark the result (that could be
                                converted to 0pt) as positiver or negative. */
                             $tClass[$sKey] = ($positive) ? 'p' : 'n';
@@ -1079,6 +1079,7 @@ class StudentBean extends DatabaseBean
                    @TODO@ This is hardcoded and it is nonsense to do it this way. */
                 if ($lectureId == 1 and $this->schoolyear <= 2009)
                 {
+                    /* 11MSP */
                     $this->dumpVar('tPoints', $tPoints);
                     if ($this->schoolyear == 2009)
                     {
@@ -1093,6 +1094,19 @@ class StudentBean extends DatabaseBean
                         $exmPoints = ($exmPoints < 0) ? 0 : (($exmPoints > 6) ? 6 : $exmPoints);
                         $exmPoints = $exmPoints + $tPoints[0];
                     }
+                }
+                elseif ($lectureId == 27)
+                {
+                    /* 11DOPM */
+                    $this->dumpVar('11DOPM tPoints', $tPoints);
+                    $this->dumpVar('11DOPM sumPoints', $sumPoints);
+                    $intSumPoints = intval($sumPoints);
+                    if ($intSumPoints > 90)
+                        $exmPoints = 20;
+                    elseif ($intSumPoints > 80)
+                        $exmPoints = 10;
+                    else
+                        $exmPoints = 0;
                 }
                 else
                 {

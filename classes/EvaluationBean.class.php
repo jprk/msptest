@@ -192,10 +192,11 @@ class EvaluationBean extends DatabaseBean
     }
 
     /**
-     * Initialise the evaluation bean by the evaluation scheme for the given
-     * schoolyear.
-     * The function will return boolean 'true' in case that the evaluation
-     * was succesful.
+     * Initialise the evaluation bean by the evaluation scheme for the given schoolyear.
+     * The function will return boolean 'true' in case that the initialisation was successful.
+     * @param int $lectureId Lecture identifier.
+     * @param int $schoolYear School year begin (i.e. 2015 for 2015/2016)
+     * @return bool
      */
     function initialiseFor($lectureId, $schoolYear)
     {
@@ -203,13 +204,11 @@ class EvaluationBean extends DatabaseBean
         $where = $this->_lectureIdToWhereClause($lectureId);
         /* ... and valid in this or previous years (see below). */
         $where = $where . ' AND year<=' . $schoolYear;
-        /* Get the evaluation that is valid for the given schoolyear. This
-           evaluation will be the most current one with year <= schoolyear.
-           Example: If there are different evaluation schemes in 2006, 2009,
-           and 2010 and schoolyear is 2008, evaluation for 2006 will be
-           returned as this was the scheme active in 2008 as well. For 2009,
-           evaluation 2009 will be returned, for 2011, evaluation from 2010
-           will be returned. */
+        /* Get the evaluation that is valid for the given schoolyear. This evaluation will be the most current one
+           with year <= schoolyear.
+           Example: If there are different evaluation schemes in 2006, 2009, and 2010 and schoolyear is 2008,
+           evaluation for 2006 will be returned as this was the scheme active in 2008 as well. For 2009,
+           evaluation 2009 will be returned, for 2011, evaluation from 2010 will be returned. */
         $rs = $this->dbQuery(
             'SELECT * FROM evaluation' . $where . ' ORDER BY year DESC LIMIT 1'
         );

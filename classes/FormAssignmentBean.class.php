@@ -12,10 +12,11 @@ class FormAssignmentBean extends DatabaseBean
     var $part;
     var $count;
     var $a, $b, $c, $d, $e, $f;
-    var $regenerate;
-    var $onlynew;
-    var $catalogue;
-    var $copysub;
+    private $regenerate;
+    private $onlynew;
+    private $catalogue;
+    private $copysub;
+    private $pdfimport;
 
     /* Fill in reasonable defaults. */
     function _setDefaults()
@@ -33,9 +34,17 @@ class FormAssignmentBean extends DatabaseBean
         $this->f = $this->rs['f'] = 0;
 
         $this->copysub = 0;
+        $this->pdfimport = 0;
     }
 
     /* Constructor */
+    /**
+     * FormAssignmentBean constructor.
+     * @param $id
+     * @param $smarty
+     * @param $action
+     * @param $object
+     */
     function __construct($id, & $smarty, $action, $object)
     {
         /* Call parent's constructor first */
@@ -44,16 +53,40 @@ class FormAssignmentBean extends DatabaseBean
         $this->_setDefaults();
     }
 
+    /**
+     *
+     */
     function dbReplace()
     {
-        DatabaseBean:: dbQuery("DELETE FROM formassignmnt WHERE " . "subtask_id=" . $this->subtask_id . " AND " . "assignmnt_id=" . $this->assignment_id . " AND part='" . mysql_escape_string($this->part) . "'");
+        /* Erase old values for the given assignment. */
+        $args = [
+            'subtask_id' => $this->subtask_id,
+            'assignmnt_id' => $this->assignment_id,
+            'part' => $this->part
+        ];
+        dibi::query('DELETE FROM `formassignmnt` WHERE %and', $args);
 
-        DatabaseBean:: dbQuery("REPLACE formassignmnt VALUES (" . $this->subtask_id . "," . $this->assignment_id . ",'" . mysql_escape_string($this->part) . "'," . $this->count . "," . $this->a . "," . $this->b . "," . $this->c . "," . $this->d . "," . $this->e . "," . $this->f . ")");
+        /* Replace them with the new ones. */
+        $args = [
+            'subtask_id' => $this->subtask_id,
+            'assignmnt_id' => $this->assignment_id,
+            'part' => $this->part,
+            'count' => $this->count,
+            'a' => $this->a,
+            'b' => $this->a,
+            'c' => $this->a,
+            'd' => $this->a,
+            'e' => $this->a,
+            'f' => $this->a
+        ];
+        dibi::query('REPLACE `formassignmnt`', $args);
     }
 
     /**
      * Get the full list of records corresponding to the given WHERE clause.
      * If `$where` is empty, returns the full list of all form assignments.
+     * @param string $where
+     * @return array
      */
     function _getFullList($where = '')
     {
@@ -67,19 +100,26 @@ class FormAssignmentBean extends DatabaseBean
      */
     function processPostVars()
     {
-        $this->subtask_id = $_POST['subtask_id'];
+        assignPostIfExists($this->subtask_id, $rs, 'subtask_id');
+        assignPostIfExists($this->pdfimport, $this->rs, 'pdfimport');
     }
 
+    /**
+     *
+     */
     function processGetVars()
     {
         assignGetIfExists($this->regenerate, $this->rs, 'regenerate');
         assignGetIfExists($this->catalogue, $this->rs, 'catalogue');
         assignGetIfExists($this->onlynew, $this->rs, 'onlynew');
         assignGetIfExists($this->copysub, $this->rs, 'copysub');
+        assignGetIfExists($this->pdfimport, $this->rs, 'pdfimport');
     }
 
     /**
      * Fetch a complete list of assigments for a list of subtasks.
+     * @param $subtaskList
+     * @return array
      */
     function getFullSubtaskList($subtaskList)
     {
@@ -90,6 +130,8 @@ class FormAssignmentBean extends DatabaseBean
 
     /**
      * Get the number of assignment parts for the guiven subtask.
+     * @param $subtaskId
+     * @return array
      */
     function getParts($subtaskId)
     {
@@ -102,6 +144,17 @@ class FormAssignmentBean extends DatabaseBean
 
     /**
      * Match the submitted solution with the solution in database.
+     * @param $assignmntId
+     * @param $part
+     * @param $type
+     * @param $a
+     * @param $b
+     * @param $c
+     * @param $d
+     * @param $e
+     * @param $f
+     * @param null $g
+     * @return float|int
      */
     function matchSolution($assignmntId, $part, $type, $a, $b, $c, $d, $e, $f, $g = NULL)
     {
@@ -240,6 +293,8 @@ class FormAssignmentBean extends DatabaseBean
 
     /**
      * Assign the list of assignment parts to Smarty variable 'parts'.
+     * @param $subtaskId
+     * @return array
      */
     function assignParts($subtaskId)
     {
@@ -805,6 +860,218 @@ class FormAssignmentBean extends DatabaseBean
         $this->assign('formassignment', $this->rs);
     }
 
+    function uploadAssignmentCSV()
+    {
+        /* Open the file. */
+        $handle = @ fopen($_FILES['assignfile']['tmp_name'], "r");
+        if ($handle)
+        {
+            /* TODO: Only CSV format allowed here. Currently we do not check it. */
+            /* Can be opened, it shall be a CSV, so delete all previous data
+               from the table and parse the lines. */
+            $this->dbQuery(
+                'DELETE FROM formassignmnt WHERE subtask_id=' .
+                $this->subtask_id
+            );
+            /* CSV loop. */
+            while (!feof($handle))
+            {
+                $buffer = fgets($handle, 4096);
+                $trimmed = trim($buffer);
+
+                /* Ignore empty lines. */
+                if (empty ($trimmed))
+                    continue;
+
+                $la = explode(";", $trimmed);
+                echo "\n<!-- la=";
+                print_r($la);
+                echo " -->";
+
+                /* The record has to have 8 elements. Skip it otherwise. */
+                if (count($la) != 8)
+                    continue;
+
+                $this->assignment_id = trim($la[0], " \t\n\r\"");
+                $this->part = trim($la[1], " \t\n\r\"");
+                $this->a = trim($la[2], " \t\n\r\"");
+                $this->b = trim($la[3], " \t\n\r\"");
+                $this->c = trim($la[4], " \t\n\r\"");
+                $this->d = trim($la[5], " \t\n\r\"");
+                $this->e = trim($la[6], " \t\n\r\"");
+                $this->f = trim($la[7], " \t\n\r\"");
+                $this->count = 0;
+
+                $this->dbReplace();
+            }
+
+            fclose($handle);
+        }
+        else
+        {
+            /* Cannot open the file for reading. */
+            $this->action = "e_cantread";
+        }
+    }
+
+    function uploadAssignmentsPDFZIP()
+    {
+        /* Due to its typical size (often 30-60MB), the ZIP file is uploaded manually to
+           a pre-defined directory on the server.
+           Check that the file exists. */
+        $file_name = SessionDataBean::getCode().'-'.$this->schoolyear.'-'.$this->id.'.zip';
+        $this->assign('file_name', $file_name);
+        $file_path = STATICFILES.'/upload/'.SessionDataBean::getCode().'/'.$file_name;
+        $this->dumpVar('full zip file path', $file_path);
+        if (!is_file($file_path))
+        {
+            throw new Exception(
+                "Path $file_path is not a file!"
+            );
+        }
+        /* Only ZIP format allowed here. */
+        $zip = new ZipArchive();
+        /* Open the file. */
+        $res = $zip->open($file_path, ZipArchive::CHECKCONS);
+        if ($res===true)
+        {
+            /* Can be opened, extract it to the directory where PDFs shall be generated.
+               First get the code of the subtask id.
+               TODO: We have constructed another SubtaskBean in doSave() ... */
+            $subtaskBean = new SubtaskBean ($this->id, $this->_smarty, null, null);
+            $subtask_code = $subtaskBean->getSubtaskCode($this->id);
+
+            /* Construct the path where the PDFs should land and make sure it exists. */
+            $gendir_path = "/generated/" . $subtask_code . "/" . $this->schoolyear . "/";
+            $full_gendir_path = CMSFILES . $gendir_path;
+            if (!is_dir($full_gendir_path))
+            {
+                mkdir($full_gendir_path, 0775, true);
+            }
+            else
+            {
+                /* Directory already exists, clean it. */
+                removeDirContent($full_gendir_path);
+            }
+
+            /* And extract the ZIP file there. */
+            $zip->extractTo($full_gendir_path);
+
+            /* Sanity check. Loop over all files and check that they correspond to the expected pattern. */
+            $lecture_code = SessionDataBean::getCode();
+            $lecture_year = $this->schoolyear;  // cannot use $this->... inside "..."
+            $error_str = "";
+            $file_list = array();
+            $files = glob($full_gendir_path . '*', GLOB_MARK);
+            foreach ($files as $file)
+            {
+                if (is_dir($file))
+                {
+                    $error_str = "Archive is not in expected format. Found top-level subdirectory <tt>$file</tt>.";
+                    break;
+                }
+                $file_info = pathinfo($file);
+                list($file_code, $year, $num) = explode('-', $file_info['filename']);
+                if ($file_code != $lecture_code)
+                {
+                    $error_str .= "<li>File code <tt>$file_code</tt> but <tt>$lecture_code</tt> expected.</li>";
+                }
+                if (empty($year))
+                {
+                    if (!empty($error_str)) $error_str .= "\n";
+                    $error_str .= "<li>File year is empty, but <tt>$lecture_year</tt> expected.</li>";
+                }
+                elseif ($year != $this->schoolyear)
+                {
+                    if (!empty($error_str)) $error_str .= "\n";
+                    $error_str .= "<li>File year <tt>$year</tt> but <tt>$lecture_year</tt> expected.</li>";
+                }
+                if (empty($num))
+                {
+                    if (!empty($error_str)) $error_str .= "\n";
+                    $error_str .= "<li>File number is empty, but 5 digits expected.</li>";
+                }
+                elseif (strlen($num) != 5 || intval($num) <= 0 )
+                {
+                    if (!empty($error_str)) $error_str .= "\n";
+                    $error_str .= "<li>File number is <tt>$num</tt> but 5 digits expected.</li>";
+                }
+                if ($file_info['extension'] != 'pdf')
+                {
+                    if (!empty($error_str)) $error_str .= "\n";
+                    $error_str .= "<li>File extension <tt>" . $file_info['extenstion'] . "</tt> but <tt>pdf</tt> expected.</li>";
+                }
+                if (!empty($error_str)) {
+                    $error_str = "<p>Inconsistencies in filename <tt>$file</tt>:</p>\n<ul>\n" . $error_str . "\n</ul>\n";
+                    break;
+                }
+                /* Now it seems that the file is genuine, add information about it to the file list. */
+                $file_list[intval($num)] = $gendir_path . $file_info['filename'] . '.' . $file_info['extension'];
+            }
+
+            if (!empty($error_str))
+            {
+                $this->assign('error_str',$error_str);
+                $this->action = 'e_zipformat';
+                return;
+            }
+
+            /* The format of the archive seems to be okay. As a precaution check that the number of students
+               or the number of student groups is lower or equal to the number of assignments. */
+            switch (SessionDataBean::getLectureGroupType())
+            {
+                case StudentGroupBean::GRPTYPE_NONE:
+                    /* No student group, the number of assignments has to be greater or equal to the number
+                       of students. */
+                    break;
+                case StudentGroupBean::GRPTYPE_EXERCISE:
+                case StudentGroupBean::GRPTYPE_LECTURE;
+                    /* Student groups, the number of assignments has to be greater or equal to the number of
+                       student groups. */
+                    $grpb = new StudentGroupBean(null, $this->_smarty, null, null);
+                    $grp_count = $grpb->getGroupCount();  // by default it returns the number of groups for this lecture and year
+                    $this->dumpVar('file count',count($files));
+                    $this->dumpVar('grp_count',$grp_count);
+                    $this->dumpVar('file_list',$file_list);
+                    if (count($files) < $grp_count)
+                    {
+                        $this->action = 'e_grpcount';
+                        return;
+                    }
+                    /* Construct the file DAO that implements also all operations on assignment files. */
+                    $fileBean = new FileBean (null, $this->_smarty, null, null);
+                    $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+                    $ab = new AssignmentsBean(null, $this->_smarty, null, null);
+                    /* Store information about all files in the database. */
+                    foreach ($file_list as $num => $file)
+                    {
+                        /* Determine group id for this file. In case that $num is greater than the
+                           number of opened groups, $grpid will be zero and such group will be ignored. */
+                        $grpid = $sgb->getGroupIdByNum($num);
+                        if ($grpid > 0 ) {
+                            /* Record information into the database. */
+                            $file_id = $fileBean->addFile(FT_X_ASSIGNMENT, $this->id, $grpid,
+                                $file, basename($file), "Úloha $subtask_code, zadání pro skupinu $num");
+                            /* Loop over all students of the group and create assignment record for them. */
+                            $student_list = $sgb->getStudentsIdsForGroupId($grpid);
+                            $this->dumpVar('student_list for ' . $file, $student_list);
+                            foreach ($student_list as $student_id) {
+                                $ab->setAssignment($student_id, $this->id, $num, $file_id);
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    throw new Exception("Unknown student group type in __method__");
+            }
+        }
+        else
+        {
+            /* Cannot open the file for reading. */
+            $this->action = "e_nozipfile";
+        }
+    }
+
     /* -------------------------------------------------------------------
        HANDLER: ADMIN
        ------------------------------------------------------------------- */
@@ -854,6 +1121,11 @@ class FormAssignmentBean extends DatabaseBean
             /* Display a list of all subtasks that may server as a source
                of "copy subtask assignments" operation. */
             $subtaskBean->assignStudentSubtaskList();
+            $this->action = 'edit.copysub';
+        }
+        elseif (!empty($this->pdfimport))
+        {
+            $this->action = 'edit.pdfimport';
         }
 
         $this->assign('formassignment', $this->rs);
@@ -870,63 +1142,22 @@ class FormAssignmentBean extends DatabaseBean
         /* Get the description of the current subtask. */
         $subtaskBean = new SubtaskBean($this->id, $this->_smarty, "", "");
         $subtaskBean->assignSingle();
+
+        $this->dumpVar('$_FILES',$_FILES);
         /* Check the uploaded file. */
-        if (is_uploaded_file($_FILES['assignfile']['tmp_name']))
+        if (array_key_exists('assignfile', $_FILES) && is_uploaded_file($_FILES['assignfile']['tmp_name']))
         {
-            /* Upload ok, open it. */
-            $handle = @ fopen($_FILES['assignfile']['tmp_name'], "r");
-            if ($handle)
-            {
-                /* Can be opened, it shall be a CSV, so delete all previous data
-                   from the table and parse the lines. */
-                $this->dbQuery(
-                    'DELETE FROM formassignmnt WHERE subtask_id=' .
-                    $this->subtask_id
-                );
-                /* CSV loop. */
-                while (!feof($handle))
-                {
-                    $buffer = fgets($handle, 4096);
-                    $trimmed = trim($buffer);
-
-                    /* Ignore empty lines. */
-                    if (empty ($trimmed))
-                        continue;
-
-                    $la = explode(";", $trimmed);
-                    echo "\n<!-- la=";
-                    print_r($la);
-                    echo " -->";
-
-                    /* The record has to have 8 elements. Skip it otherwise. */
-                    if (count($la) != 8)
-                        continue;
-
-                    $this->assignment_id = trim($la[0], " \t\n\r\"");
-                    $this->part = trim($la[1], " \t\n\r\"");
-                    $this->a = trim($la[2], " \t\n\r\"");
-                    $this->b = trim($la[3], " \t\n\r\"");
-                    $this->c = trim($la[4], " \t\n\r\"");
-                    $this->d = trim($la[5], " \t\n\r\"");
-                    $this->e = trim($la[6], " \t\n\r\"");
-                    $this->f = trim($la[7], " \t\n\r\"");
-                    $this->count = 0;
-
-                    $this->dbReplace();
-                }
-
-                fclose($handle);
-            }
-            else
-            {
-                /* Cannot open the file for reading. */
-                $this->action = "err01";
-            }
+            $this->uploadAssignmentCSV();
+        }
+        elseif ($this->pdfimport)
+        {
+            $this->uploadAssignmentsPDFZIP();
+            $this->action = 'save.pdfimport';
         }
         else
         {
             /* Possible file uplad attack. */
-            $this->action = "err02";
+            $this->action = "e_uploadattack";
         }
     }
 

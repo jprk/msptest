@@ -701,10 +701,8 @@ class ExerciseRepBookingBean extends DatabaseBean
             {
                 /** @noinspection PhpMissingBreakStatementInspection */
                 case MUTEX_LOCK_STOLEN_OK;
-                    /* Stealing a stale lock is perfecty okay. On the other
-                hand we would better let the user know that someone
-                has started editing the data and did not save them for
-                more than 30 minutes. */
+                    /* Stealing a stale lock is perfecty okay. On the other hand we would better let the user
+                       know that someone has started editing the data and did not save them for more than 30 minutes. */
                     $this->_smarty->assign('lockstolen', true);
                 case MUTEX_OK:
                     /* Pass to the next stage. */
@@ -718,8 +716,7 @@ class ExerciseRepBookingBean extends DatabaseBean
                     $this->action = 'e_ftok';
                     return;
                 case MUTEX_E_CANTACQUIRE:
-                    /* Could not acquire the semaphore used to block access to the
-                  mutex file. */
+                    /* Could not acquire the semaphore used to block access to the mutex file. */
                     $this->action = 'e_cantacquire';
                     return;
                 default:

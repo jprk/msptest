@@ -90,7 +90,7 @@ class SessionDataBean
     /**
      * Return the group mode flag for the current lecture.
      */
-    static function getLectureGroupFlag()
+    static function getLectureGroupType()
     {
         return LectureBean::getGroupFlag($_SESSION[self::SDB_LECTURE_DATA]);
     }
@@ -116,7 +116,7 @@ class SessionDataBean
      */
     static function getCode()
     {
-        return LectureBean::getCode($_SESSION[self::SDB_LECTURE_DATA]);
+        return LectureBean::getCodeFromData($_SESSION[self::SDB_LECTURE_DATA]);
     }
 
     /**

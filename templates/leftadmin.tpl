@@ -156,6 +156,14 @@
     </tr>
     <tr>
         <td valign="top">-&nbsp;</td>
+        <td>{condlink act="admin" obj="studentgroup" id=$lecture.id condition=$lecture.group_type text="Generovat studentské skupiny"}</a></td>
+    </tr>
+    <tr class="mlevel1">
+        <td valign="top">-&nbsp;</td>
+        <td><a href="?act=admin,studentgroup,{$lecture.id}&forcegroup=1">Nucené přidělení skupiny</a></td>
+    </tr>
+    <tr>
+        <td valign="top">-&nbsp;</td>
         <td><a href="?act=admin,subtask,{$lecture.id}">Dílčí úkoly</a></td>
     </tr>
     <tr>
@@ -176,7 +184,7 @@
     </tr>
     <tr>
         <td valign="top">-&nbsp;</td>
-        <td><a href="?act=admin,formassign,{$lecture.id}">Nahrát týdenní úlohy</a></td>
+        <td><a href="?act=admin,formassign,{$lecture.id}">Nahrát zadání úloh</a></td>
     </tr>
 </table>
 <br/>

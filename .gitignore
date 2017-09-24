@@ -5,26 +5,26 @@
 #
 # Do not store file that may contain sensitive information (passwords, logins)
 #
-webdir/config.php
-webdir/ldaptest.php
-webdir/ldaptest.novell.php
+public/config.php
+public/ldaptest.php
+public/ldaptest.novell.php
 #
 # Do not store lecture GUI setups (images, CSS)
 #
-webdir/ex/*
-webdir/exorig/*
+public/ex/*
+public/exorig/*
 #
 # Ignore Bootstrap, Lightwindow, and Javascript directories
 #
-webdir/bootstrap
-webdir/js
-webdir/lightwindow v2.0 source
+public/bootstrap
+public/js
+public/lightwindow v2.0 source
 #
 # Ignore temporary and development intermediates
 #
 login_broken.inc
-webdir/ajaxpoints.html
-webdir/index_top.php
+public/ajaxpoints.html
+public/index_top.php
 #
 # Ignore backup files
 #

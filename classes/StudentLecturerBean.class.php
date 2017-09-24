@@ -27,22 +27,7 @@ class StudentLecturerBean extends DatabaseBean
 
     function dbReplace()
     {
-        /* Standard replace does not replace passwords */
-        DatabaseBean::dbQuery(
-            "REPLACE user (id,surname,firstname,yearno,group) VALUES ("
-            . $this->id . ",'"
-            . mysql_escape_string($this->surname) . "','"
-            . mysql_escape_string($this->firstname) . "','"
-            . $this->yearno . "','"
-            . $this->group . "')"
-        );
-        /* New records have initial 'id' equal to zero and the proper value is
-           set by the database engine. We have to retrieve the 'id' back so that
-           we can later try to update passwords as well. */
-        if (!$this->id)
-        {
-            $this->id = mysql_insert_id();
-        }
+        throw new \Dibi\NotImplementedException('No code here yet');
     }
 
     function dbQuerySingle()

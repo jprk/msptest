@@ -62,6 +62,11 @@ class SchoolYearBean extends BaseBean
             2017 => array(
                 self::TERMTYPE_WINTER => array('from' => '2017-09-25', 'to' => '2018-01-10'),
                 self::TERMTYPE_SUMMER => array('from' => '2018-02-17', 'to' => '2018-05-16')
+            ),
+            /* Dummy, there is no official info yet. */
+            2018 => array(
+                self::TERMTYPE_WINTER => array('from' => '2018-09-25', 'to' => '2019-01-10'),
+                self::TERMTYPE_SUMMER => array('from' => '2019-02-17', 'to' => '2019-05-16')
             ));
 
         if (array_key_exists($schoolyear, $_dates))
@@ -197,7 +202,7 @@ class SchoolYearBean extends BaseBean
                 return self::TERMTYPE_SUMMER;
                 break;
             default :
-                throw new OutOfRangeException ('Unsupported enum value for term.');
+                throw new OutOfRangeException ('Unsupported enum value `' . $enumVal . '` for term.');
         }
     }
 

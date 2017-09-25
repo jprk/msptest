@@ -5,19 +5,21 @@
 #
 # Do not store file that may contain sensitive information (passwords, logins)
 #
-public/config.php
+config/config.php
 public/ldaptest.php
 public/ldaptest.novell.php
 #
 # Do not store lecture GUI setups (images, CSS)
 #
-public/ex/*
-public/exorig/*
+public/ex
+public/exorig
+public/fonts
+public/edc-01
+public/edc-02
 #
-# Ignore Bootstrap, Lightwindow, and Javascript directories
+# Ignore Bootstrap and Lightwindow source
 #
 public/bootstrap
-public/js
 public/lightwindow v2.0 source
 #
 # Ignore temporary and development intermediates
@@ -30,7 +32,3 @@ public/index_top.php
 #
 *.attic
 *.bak
-#
-# Ignore Dibi
-#
-classes/external/dibi

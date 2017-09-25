@@ -31,7 +31,7 @@ session_start ();
 SessionDataBean::conditionalInit ( SchoolYearBean::getSchoolYearStart() );
 
 /* Construct a Smarty instance. Configuration has been specified in config.php. */
-$smarty = new CPPSmarty ( $config, false );
+$smarty = new LectwebSmarty ( $config, false );
 
 /* Initialise error message and status. */
 $status       = 2;

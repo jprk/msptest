@@ -71,7 +71,7 @@ if ( ! $isAllowed )         $errstr .= "<li>Nemáte dostatečná oprávnění pr
 if ( empty ( $errstr ))
 {
 	/* Construct a Smarty instance. Configuration has been specified in config.php. */
-	$smarty = new CPPSmarty ( $config, true );
+	$smarty = new LectwebSmarty ( $config, true );
 	/* Initialise database connection */
 	$smlink = $smarty->dbOpen ();
 

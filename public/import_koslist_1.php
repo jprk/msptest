@@ -50,7 +50,7 @@ if ( is_uploaded_file ( $_FILES['kosfile']['tmp_name'] ))
 	if ( $handle )
 	{
         /* Construct a Smarty instance. Configuration has been specified in config.php. */
-        $smarty = new CPPSmarty ( $config, TRUE );
+        $smarty = new LectwebSmarty ( $config, TRUE );
         /* Initialise database connection */
         $smlink = $smarty->dbOpen ();
         $lct = new LectureBean ( 0, $smarty, "x", "x" );

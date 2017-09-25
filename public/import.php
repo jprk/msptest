@@ -38,7 +38,7 @@ if ( is_uploaded_file ( $_FILES['csvfile']['tmp_name'] ))
 	echo "<p>Displaying contents:<p>\n";
 	
 	/* Construct a Smarty instance. Configuration has been specified in config.php. */
-	$smarty = new CPPSmarty ( $config );
+	$smarty = new LectwebSmarty ( $config );
 	/* Initialise database connection */
 	$smlink = $smarty->dbOpen ();
 	

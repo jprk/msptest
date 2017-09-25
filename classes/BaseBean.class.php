@@ -26,7 +26,7 @@ define('ERR_INVALID_ID', 5);
 /**
  * Base class of the LectWeb system.
  *
- * @property CPPSmarty $_smarty
+ * @property LectwebSmarty $_smarty
  */
 class BaseBean
 {
@@ -111,7 +111,7 @@ class BaseBean
      * Useful e.g. in case that a BaseBean child instance is fetched from session and its internal
      * instalce of CPP smarty is no longer valid.
      * TODO: Think about means for serialization of BaseBean instances.
-     * @param $smarty CPPSmarty Smarty instance that shall be used for class-internal operations.
+     * @param $smarty LectwebSmarty Smarty instance that shall be used for class-internal operations.
      */
     function setSmarty(&$smarty)
     {

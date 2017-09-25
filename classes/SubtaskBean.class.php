@@ -37,18 +37,17 @@ class SubtaskBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE subtask VALUES ('"
-            . $this->id . "','"
-            . $this->type . "','"
-            . mysql_escape_string($this->title) . "','"
-            . mysql_escape_string($this->ttitle) . "','"
-            . mysql_escape_string($this->assignment) . "','"
-            . $this->maxpts . "','"
-            . $this->position . "','"
-            . $this->lecture_id . "')"
-        );
-        /* Update the id of this record if necessary. */
+        $args = [
+            'id' => $this->id,
+            'type' => $this->type,
+            'title' => $this->title,
+            'ttitle' => $this->ttitle,
+            'assignment' => $this->assignment,
+            'maxpts' => $this->maxpts,
+            'position' => $this->position,
+            'lecture_id' => $this->lecture_id
+        ];
+        dibi::query('REPLACE `subtask`', $args);
         $this->updateId();
     }
 

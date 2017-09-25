@@ -27,15 +27,14 @@ class LecturerBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE lecturer VALUES ("
-            . $this->id . ",'"
-            . mysql_escape_string($this->surname) . "','"
-            . mysql_escape_string($this->firstname) . "','"
-            . mysql_escape_string($this->room) . "','"
-            . mysql_escape_string($this->email) . "')"
-        );
-
+        $args = [
+            'id' => $this->id,
+            'surname' => $this->surname,
+            'firstname' => $this->firstname,
+            'room' => $this->room,
+            'email' => $this->email
+        ];
+        dibi::query('REPLACE `lecturer`', $args);
         $this->updateId();
     }
 

@@ -6,6 +6,7 @@ class URLsBean extends DatabaseBean
     var $title;
     var $description;
     var $position;
+    private $lecture_id;
 
     function _setDefaults()
     {
@@ -27,16 +28,14 @@ class URLsBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE urls VALUES ("
-            . $this->id . ",'"
-            . mysql_escape_string($this->url) . "','"
-            . mysql_escape_string($this->title) . "','"
-            . mysql_escape_string($this->description) . "',"
-            . mysql_escape_string($this->position) . ","
-            . mysql_escape_string($this->lecture_id) . ")"
-        );
-
+        $args = [
+            'id' => $this->id,
+            'url' => $this->url,
+            'description' => $this->description,
+            'position' => $this->position,
+            'lecture_id' => $this->lecture_id
+        ];
+        dibi::query('REPLACE `urls`', $args);
         $this->updateId();
     }
 

@@ -71,37 +71,38 @@ class PointsBean extends DatabaseBean
             self::dumpVar('comment', $comment);
             self::dumpVar('origComment', $origComment);
 
-            /* There has been some change in points or comment, or we want to
-               create a new point record for a new student or a new subtask.
-               Prepare an SQL string that will become an argument to the
-             VALUES() clause. */
-            $sqlData =
-                $studentId . ","
-                . $subtaskId . ","
-                . $this->schoolyear . ",'"
-                . $numPts . "','"
-                . SessionDataBean::getUserId() . "','"
-                . mysql_real_escape_string($comment) . "',NULL";
+            /* Delete all point records for this student and subtask and school year. */
+            $args = [
+                'student_id' => $studentId,
+                'subtask_id' => $subtaskId,
+                'year' => $this->schoolyear
+            ];
+            dibi::query('DELETE FROM `points` WHERE %and', $args);
 
-            /* Delete all point records for this student and subtask and
-               school year. */
-            DatabaseBean::dbQuery(
-                "DELETE FROM points WHERE student_id=" .
-                $studentId . " AND subtask_id=" . $subtaskId .
-                " AND year=" . $this->schoolyear);
+            /* There has been some change in points or comment, or we want to create a new
+               point record for a new student or a new subtask. The data will be inserted
+               twice, once in the 'real' table and once in the backup table so that we have
+               track of points being awarded in time. */
+            $args = [
+                'student_id' => $studentId,
+                'subtask_id' => $subtaskId,
+                'year' => $this->schoolyear,
+                'points' => $numPts,
+                'user_id' => SessionDataBean::getUserId(),
+                'comment' => $comment,
+                'timestamp' => null
+            ];
 
             /* Store the record. */
-            DatabaseBean::dbQuery(
-                "REPLACE points VALUES (" . $sqlData . ")"
-            );
+            dibi::query('REPLACE `points`', $args);
 
-            /* In case of record update store the backup record so that we have
-               a history. If $origPTS is NULL and $origComment is NULL as well,
-               we are initialising the record (see `updatePoints()`). */
-            if ($origPts != NULL || $origComment != NULL)
+            /* In case of record update store the backup record so that we have a history.
+               If $origPTS is NULL and $origComment is NULL as well, we are initialising the
+               record and nothing shall be recorded yet (see `updatePoints()`). */
+            if ($origPts != null || $origComment != null)
             {
-                DatabaseBean::dbQuery(
-                    "INSERT INTO points_bak VALUES ( 0," . $sqlData . ")");
+                $args['id'] = 0;
+                dibi::query('INSERT INTO `points_bak`', $args);
             }
         }
     }

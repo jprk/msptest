@@ -53,40 +53,38 @@ class DeadlineExtensionBean extends DatabaseBean
             {
                 case self::EXTEND_SUBTASK:
                     /* Delete the extension record that will be replaced. */
-                    DatabaseBean::dbQuery(
-                        "DELETE FROM extension WHERE "
-                        . "subtask_id='" . $this->subtaskId . "' AND "
-                        . "student_id='" . $val . "' AND "
-                        . "year='" . $this->schoolyear . "'"
-                    );
+                    $args = [
+                        'subtask_id' => $this->subtaskId,
+                        'student_id' => $val,
+                        'year' => $this->schoolyear
+                    ];
+                    dibi::query('DELETE FROM `extension` WHERE %and', $args);
                     /* Store the new final date. */
-                    DatabaseBean::dbQuery(
-                        "REPLACE extension VALUES ('"
-                        . $this->subtaskId . "','"
-                        . $val . "','"
-                        . $this->schoolyear . "','"
-                        . mysql_escape_string($this->dateTo) . "')"
-                    );
-
+                    $args = [
+                        'subtask_id' => $this->subtaskId,
+                        'student_id' => $val,
+                        'year' => $this->schoolyear,
+                        'dateto' => $this->dateTo
+                    ];
+                    dibi::query('REPLACE `extension`', $args);
                     break;
 
                 case self::EXTEND_STUDENT:
                     /* Delete the extension record that will be replaced. */
-                    DatabaseBean::dbQuery(
-                        "DELETE FROM extension WHERE "
-                        . "subtask_id='" . $val . "' AND "
-                        . "student_id='" . $this->studentId . "' AND "
-                        . "year='" . $this->schoolyear . "'"
-                    );
+                    $args = [
+                        'subtask_id' => $val,
+                        'student_id' => $this->studentId,
+                        'year' => $this->schoolyear
+                    ];
+                    dibi::query('DELETE FROM `extension` WHERE %and', $args);
                     /* Store the new final date. */
-                    DatabaseBean::dbQuery(
-                        "REPLACE extension VALUES ('"
-                        . $val . "','"
-                        . $this->studentId . "','"
-                        . $this->schoolyear . "','"
-                        . mysql_escape_string($this->dateTo) . "')"
-                    );
-
+                    $args = [
+                        'subtask_id' => $val,
+                        'student_id' => $this->studentId,
+                        'year' => $this->schoolyear,
+                        'dateto' => $this->dateTo
+                    ];
+                    dibi::query('REPLACE `extension`', $args);
                     break;
 
                 default:
@@ -96,6 +94,10 @@ class DeadlineExtensionBean extends DatabaseBean
         }
     }
 
+    /**
+     * @param int $alt_id
+     * @throws Exception
+     */
     function dbQuerySingle($alt_id = 0)
     {
         throw new Exception ('Method not implemented in this context!');

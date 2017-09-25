@@ -105,6 +105,15 @@ class LectureBean extends DatabaseBean
     }
 
     /**
+     * Getter function for group type.
+     * @return mixed
+     */
+    public function getGroupType()
+    {
+        return $this->group_type;
+    }
+
+    /**
      * Getter function for lecture code.
      */
     function getCode()
@@ -196,23 +205,22 @@ class LectureBean extends DatabaseBean
             $this->rootsection = $secBean->id;
         }
 
-        DatabaseBean::dbQuery(
-            "REPLACE lecture VALUES ("
-            . $this->id . ",'"
-            . mysql_escape_string($this->code) . "','"
-            . mysql_escape_string($this->title) . "','"
-            . mysql_escape_string($this->syllabus) . "','"
-            . mysql_escape_string($this->alert) . "','"
-            . mysql_escape_string($this->thanks) . "','"
-            . mysql_escape_string($this->locale) . "','"
-            . mysql_escape_string(SchoolYearBean::termToEnum($this->term)) . "',"
-            . $this->repl_students . ","
-            . $this->repl_count . ","
-            . $this->group_limit . ","
-            . $this->group_type . ","
-            . $this->rootsection . ")"
-        );
-
+        $args = [
+            'id' => $this->id,
+            'code' => $this->code,
+            'title' => $this->title,
+            'syllabus' => $this->syllabus,
+            'alert' => $this->alert,
+            'thanks' => $this->thanks,
+            'locale' => $this->locale,
+            'term' => SchoolYearBean::termToEnum($this->term),
+            'repl_students' => $this->repl_students,
+            'repl_count' => $this->repl_count,
+            'group_limit' => $this->group_type,
+            'group_type' => $this->group_type,
+            'rootsection' => $this->rootsection
+        ];
+        dibi::query('REPLACE `lecture`', $args);
         $this->updateId();
     }
 

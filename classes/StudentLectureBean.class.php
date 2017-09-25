@@ -37,13 +37,12 @@ class StudentLectureBean extends DatabaseBean
      */
     function dbAppendSingle($student_id)
     {
-        /* Assign every student id from relation to this lecture. */
-        DatabaseBean::dbQuery(
-            "REPLACE stud_lec VALUES ("
-            . $student_id . ","
-            . $this->id . ","
-            . $this->schoolyear . ")"
-        );
+        $args = [
+            'student_id' => $student_id,
+            'lecture_id' => $this->id,
+            'year' => $this->schoolyear
+        ];
+        dibi::query('REPLACE `stud_lec`', $args);
     }
 
     /**
@@ -62,9 +61,11 @@ class StudentLectureBean extends DatabaseBean
     function dbReplace()
     {
         /* Delete all entries for the lecture and the year. */
-        DatabaseBean::dbQuery(
-            "DELETE FROM stud_lec WHERE lecture_id="
-            . $this->id . " AND year=" . $this->schoolyear);
+        $args = [
+            'lecture_id' => $this->id,
+            'year' => $this->schoolyear
+        ];
+        dibi::query('DELETE FROM `stud_lec` WHERE %and', $args);
         /* And append the data into the cleared table. */
         $this->dbAppend();
     }
@@ -125,15 +126,15 @@ class StudentLectureBean extends DatabaseBean
     /**
      * Verify that a student studies given lecture.
      */
-    function studentIsListed($studentId, $lectureId, $year)
+    function studentIsListed($student_id, $lecture_id, $year)
     {
-        $rs = DatabaseBean::dbQuery(
-            "SELECT student_id FROM stud_lec " .
-            "WHERE student_id=" . $studentId . " " .
-            "AND lecture_id=" . $lectureId . " " .
-            "AND year=" . $year);
-
-        return (count($rs) > 0);
+        $args = [
+            'student_id' => $student_id,
+            'lecture_id' => $lecture_id,
+            'year' => $year
+        ];
+        $result = dibi::query('SELECT `student_id` FROM `stud_lec` WHERE %and', $args);
+        return ($result->count() > 0);
     }
 
     /**
@@ -222,19 +223,18 @@ class StudentLectureBean extends DatabaseBean
 
     function createSQLFilter()
     {
-        $where = "";
+        $where = array();
         if (!empty ($this->firstLetter))
         {
-            $where .= 'surname LIKE "' . mysql_escape_string($this->firstLetter) . '%"';
+            $where = array('WHERE `surname` LIKE %like~', $this->firstLetter);
         }
-        if (!empty ($where)) $where = " WHERE " . $where;
 
         return $where;
     }
 
     function createSQLLimit()
     {
-        return array('offset' => $this->fromCount, 'count' => self::LIMIT_COUNT);
+        return array('%ofs', $this->fromCount, '%lmt', self::LIMIT_COUNT);
     }
 
     /* -------------------------------------------------------------------

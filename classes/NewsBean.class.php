@@ -67,18 +67,17 @@ class NewsBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE news VALUES ("
-            . $this->id . ",'"
-            . mysql_escape_string($this->title) . "','"
-            . mysql_escape_string($this->text) . "',"
-            . $this->author_id . ","
-            . $this->type . ","
-            . $this->object_id . ",'"
-            . mysql_escape_string($this->datefrom) . "','"
-            . mysql_escape_string($this->dateto) . "')"
-        );
-
+        $args = [
+            'id' => $this->id,
+            'title' => $this->title,
+            'text' => $this->text,
+            'author_id' => $this->author_id,
+            'type' => $this->type,
+            'object_id' => $this->object_id,
+            'datefrom' => $this->datefrom,
+            'dateto' => $this->dateto
+        ];
+        dibi::query('REPLACE `news` VALUES', $args);
         $this->updateId();
     }
 

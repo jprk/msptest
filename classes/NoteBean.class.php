@@ -43,16 +43,15 @@ class NoteBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE note VALUES ("
-            . $this->id . ",'"
-            . mysql_escape_string($this->text) . "',"
-            . $this->type . ","
-            . $this->object_id . ","
-            . $this->author_id . ","
-            . "NOW())"
-        );
-
+        $args = [
+            'id' => $this->id,
+            'text' => $this->text,
+            'type' => $this->type,
+            'object_id' => $this->object_id,
+            'author_id' => $this->author_id,
+            'timestamp' => null
+        ];
+        dibi::query('REPLACE `note`', $args);
         $this->updateId();
     }
 

@@ -92,20 +92,21 @@ class ArticleBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE article VALUES ("
-            . $this->id . ","
-            . $this->type . ","
-            . $this->parent . ",'"
-            . mysql_escape_string($this->title) . "','"
-            . $this->authorid . "','"
-            . mysql_escape_string($this->abstract) . "','"
-            . mysql_escape_string($this->text) . "',"
-            . $this->position . ","
-            . "NULL,'"
-            . $this->activefrom . "','"
-            . $this->activeto . "')"
-        );
+        $args = [
+            'id' => $this->id,
+            'type' => $this->type,
+            'parent' => $this->parent,
+            'title' => $this->title,
+            'author_id' => $this->authorid,
+            'abstract' => $this->abstract,
+            'text' => $this->text,
+            'position' => $this->position,
+            'timestamp' => null,
+            'active_from' => $this->activefrom,
+            'active_to' => $this->activeto
+        ];
+        dibi::query('REPLACE `article`', $args);
+        $this->updateId();
     }
 
     function dbQuerySingle($alt_id = 0)

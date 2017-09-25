@@ -267,8 +267,9 @@ class StudentBean extends DatabaseBean
      *     from the new interface) student;
      * (c) student id is >0 and there is a corresponding entry in the database
      *     based on the hash - this is an existing student.
+     * @param null $pw_field_text
      */
-    function dbReplace($pw_field_text = NULL)
+    function dbReplace($pw_field_text = null)
     {
         /* Temporary storage for student id based on the hash query. */
         $dbId = 0;
@@ -294,30 +295,30 @@ class StudentBean extends DatabaseBean
             if (is_null($pw_field_text))
             {
                 /* No password field override specified, we will encode the password given. */
-                $pw_field_text = "MD5('" . mysql_escape_string($this->password) . "')";
+                $pw_field = array('MD5(%s)', $this->password);
             }
             else
             {
                 /* We shall put the text specified in $pw_field_test directly into the password field without
                    hashing it. This is used to indicate an invalid or locked password. */
-                $pw_field_text = "'" . mysql_real_escape_string($this->password) . "'";
+                $pw_field = $this->password;
             }
 
             /* Standard replace creates also the hash. */
-            DatabaseBean::dbQuery(
-                "REPLACE student VALUES ("
-                . $this->id . ",MD5('"
-                . mysql_real_escape_string($this->hash) . "'),'"
-                . mysql_real_escape_string($this->login) . "',"
-                . $pw_field_text . ",'"
-                . mysql_real_escape_string($this->surname) . "','"
-                . mysql_real_escape_string($this->firstname) . "','"
-                . $this->yearno . "','"
-                . $this->groupno . "','"
-                . $this->calendaryear . "','"
-                . mysql_real_escape_string($this->email) . "','"
-                . $this->coeff . "')"
-            );
+            $args = [
+                'id' => $this->id,
+                'hash%sql' => array('MD5(%s)', $this->hash),
+                'login' => $this->login,
+                'password' => $pw_field,
+                'surname' => $this->surname,
+                'firstname' => $this->firstname,
+                'yearno' => $this->yearno,
+                'groupno' => $this->groupno,
+                'calndaryear' => $this->calendaryear,
+                'email' => $this->email,
+                'coeff' => $this->coeff
+            ];
+            dibi::query('REPLACE `student`', $args);
 
             /* New records have initial 'id' equal to zero and the proper value is
                set by the database engine. We have to retrieve the 'id' back so that
@@ -328,18 +329,17 @@ class StudentBean extends DatabaseBean
         {
             /* Student exists in the database. Keep the hash intact and update
                everything else. */
-            DatabaseBean::dbQuery(
-                "UPDATE student SET "
-                . "login='" . mysql_real_escape_string($this->login) . "', "
-                . "surname='" . mysql_real_escape_string($this->surname) . "', "
-                . "firstname='" . mysql_real_escape_string($this->firstname) . "', "
-                . "yearno='" . $this->yearno . "', "
-                . "groupno='" . $this->groupno . "', "
-                . "calendaryear='" . $this->calendaryear . "', "
-                . "email='" . mysql_real_escape_string($this->email) . "', "
-                . "coeff='" . $this->coeff . "' "
-                . "WHERE id=" . $this->id
-            );
+            $args = [
+                'login' => $this->login,
+                'surname' => $this->surname,
+                'firstname' => $this->firstname,
+                'yearno' => $this->yearno,
+                'groupno' => $this->groupno,
+                'calndaryear' => $this->calendaryear,
+                'email' => $this->email,
+                'coeff' => $this->coeff
+            ];
+            dibi::query('UPDATE `student` SET ', $args, 'WHERE `id`=%i', $this->id);
         }
     }
 
@@ -445,11 +445,10 @@ class StudentBean extends DatabaseBean
         /* Set the password */
         $this->password = $pass;
         /* Standard replace does not replace passwords */
-        DatabaseBean::dbQuery(
-            "UPDATE student SET "
-            . "password=MD5('" . mysql_real_escape_string($this->password) . "') "
-            . "WHERE id='" . $this->id . "'"
-        );
+        $args = [
+            'password%sql' => array('MD5(%s)', $this->password)
+        ];
+        dibi::query('UPDATE `student` SET ', $args, 'WHERE `id`=%i', $this->id);
     }
 
     /**
@@ -459,48 +458,42 @@ class StudentBean extends DatabaseBean
      */
     function dbCheckLogin($login, $password)
     {
-        /* Escape the login and password characters in an attempt to at least
-           partially prevent command injection. */
-        $eLogin = mysql_real_escape_string($login);
-        $ePass = mysql_real_escape_string($password);
+        $rs = null;
+        /* Query the database for the login and password tuple. */
+        $args = [
+            'login' => $login,
+            'password%sql' => array('MD5(%s)', $password)
+        ];
+        $result = dibi::query('SELECT * FROM `user` WHERE %and', $args);
 
-        /* Check if the login can be verified against our own database.
-           This is the case of demonstration users and external users that
-           cannot be verified against LDAP. */
-        $rs = DatabaseBean::dbQuery(
-            "SELECT * FROM student " .
-            "WHERE login='" . $eLogin . "' " .
-            "AND password=MD5('" . $ePass . "')"
-        );
-
-        $this->dumpVar('studentbean rs nonempty after db query', $rs);
+        Debug::barDump($result, 'StudentBean login check after db query');
 
         /* In case that the LDAP server is down for some reason, we have the
            possibility to skip the LDAP check. */
-        if (empty ($rs) && (LDAPConnection::isActive($this->_smarty)))
+        if (empty ($result) && (LDAPConnection::isActive($this->_smarty)))
         {
             /* As a last resort, try to contact the LDAP server and verify
                the user. */
-            $rs = DatabaseBean::dbQuery(
-                "SELECT * FROM student WHERE login='" . $eLogin . "'");
-            if (!empty ($rs))
+            $result = dibi::query('SELECT * FROM `student` WHERE `login`=%s', $login);
+            if (!empty ($result))
             {
                 /* Login exists, check the password. */
                 $valid = $this->ldapCheckLogin($login, $password);
                 /* If the password check failed, clear the contents of $rs. */
-                if (!$valid) $rs = array();
+                if (!$valid) $result = null;
             }
         }
 
-        /* Empty $rs now signalls that the student could not be verified. */
-        if (!empty ($rs))
+        /* Empty $result now signals that the student could not be verified. */
+        if (!empty ($result))
         {
-            $this->dumpVar('studentbean rs nonempty after ldap', $rs);
+            Debug::barDump($result, 'StudentBean result after ldap check');
 
-            /* If the verification suceeded, we have to update the information
+            /* If the verification succeeded, we have to update the information
                about the student so that the student's home page gets displayed
                correctly. */
-            $this->id = $rs[0]['id'];
+            $row = $result->fetch();
+            $this->id = $row['id'];
             $this->dbQuerySingle();
             /* Set the returned record. */
             $rs = $this->rs;
@@ -1379,9 +1372,8 @@ class StudentBean extends DatabaseBean
      */
     function doShowWithoutQuery()
     {
-        /* The function above sets $this->rs to values that shall be
-              displayed. By assigning $this->rs to Smarty variable 'student'
-           we can fill the values of $this->rs into a template. */
+        /* The function above sets $this->rs to values that shall be displayed. By assigning $this->rs to Smarty
+           variable 'student' we can fill the values of $this->rs into a template. */
         $this->_smarty->assign('student', $this->rs);
 
         /* Get the lecture id from session. It may be under some circumstances empty. */
@@ -1405,10 +1397,18 @@ class StudentBean extends DatabaseBean
         }
 
         /* Check for possible student group mode. */
-        if (SessionDataBean::getLectureGroupFlag())
+        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
         {
             $grpb = new StudentGroupBean(null, $this->_smarty, null, null);
-            $grpb->assignGroupAndGroupStudentsOfStudent($this->id);
+            $data = $grpb->assignGroupAndGroupStudentsOfStudent($this->id);
+            /* If the student is not member of any student group, the content of `$data` are two empty lists.
+               In that case, fetch the list of free student groups (but only in case that the student is not
+               a member, as an attempt to fetch a list when all group places are already taken -- which could
+               happen if the student is already a member -- results in an exception). */
+            if (empty($data[0]))
+            {
+                $grpb->assignFreeGroupsList();
+            }
         }
 
         /* Check the replacement exercises. */

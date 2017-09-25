@@ -1,5 +1,7 @@
 <?php
 
+use Tracy\Debugger;
+
 /* User categories */
 define('USR_ANONYMOUS', 0);
 define('USR_ADMIN', 1);
@@ -104,33 +106,32 @@ class UserBean extends DatabaseBean
         if (!$this->id)
         {
             /* Standard replace does not replace passwords */
-            DatabaseBean::dbQuery(
-                "REPLACE user (id,login,role,firstname,surname,email) VALUES ("
-                . $this->id . ",'"
-                . mysql_real_escape_string($this->login) . "',"
-                . $this->role . ",'"
-                . mysql_real_escape_string($this->firstname) . "','"
-                . mysql_real_escape_string($this->surname) . "','"
-                . mysql_real_escape_string($this->email) . "')"
-            );
+            $args = [
+                'id' => $this->id,
+                'login' => $this->login,
+                'role' => $this->role,
+                'firstname' => $this->firstname,
+                'surname' => $this->surname,
+                'email' => $this->email
+                ];
+            dibi::query("INSERT INTO `user`", $args);
             /* New records have initial 'id' equal to zero and the proper value is
                set by the database engine. We have to retrieve the 'id' back so that
                we can later try to update passwords as well. */
-            $this->id = mysql_insert_id();
+            $this->id = dibi::getInsertId();
         }
         else
         {
             /* Update just selected elements of the record, except the hashed
                password. */
-            DatabaseBean::dbQuery(
-                "UPDATE user SET "
-                . "login='" . mysql_real_escape_string($this->login) . "', "
-                . "role=" . $this->role . ", "
-                . "firstname='" . mysql_real_escape_string($this->firstname) . "', "
-                . "surname='" . mysql_real_escape_string($this->surname) . "', "
-                . "email='" . mysql_real_escape_string($this->email) . "' "
-                . "WHERE id=" . $this->id
-            );
+            $args = [
+                'login' => $this->login,
+                'role' => $this->role,
+                'firstname' => $this->firstname,
+                'surname' => $this->surname,
+                'email' => $this->email
+            ];
+            dibi::query('UPDATE `user` SET ', $args, 'WHERE `id`=%i', $this->id);
         }
     }
 
@@ -139,51 +140,54 @@ class UserBean extends DatabaseBean
         /* Set the password */
         $this->password = $pass;
         /* Standard replace does not replace passwords */
-        DatabaseBean::dbQuery(
-            "UPDATE user SET "
-            . "password=MD5('" . mysql_escape_string($this->password) . "') "
-            . "WHERE id='" . $this->id . "'"
-        );
+        $args = [
+            'password%sql' => array('MD5(%s)', $this->password)
+        ];
+        dibi::query('UPDATE user SET ', $args, 'WHERE `id`=%i', $this->id);
     }
 
+    /**
+     * @param $login
+     * @param $password
+     * @return \Dibi\Row
+     */
     function dbCheckLogin($login, $password)
     {
         /* Query the database for the login and password tuple. */
-        $rs = DatabaseBean::dbQuery(
-            "SELECT * FROM user WHERE "
-            . "login='" . mysql_real_escape_string($login) . "' AND "
-            . "password=MD5('" . mysql_real_escape_string($password) . "')");
+        $args = [
+            'login' => $login,
+            'password%sql' => array('MD5(%s)', $password)
+        ];
+        $result = dibi::query('SELECT * FROM `user` WHERE %and', $args);
 
         /* If the result contains something, the check is positive. */
-        if (!empty ($rs))
+        if (!empty ($result))
         {
-            /* There will be no other record than $rs[0] as logins have
-               to be unique. */
-            $this->id = $rs[0]['id'];
+            /* There will be exactly one row as logins have to be unique. */
+            $row = $result->fetch();
+            $this->id = $row['id'];
+            $this->rs = $row;
             /* Initialise the bean data of this user from database. */
             $this->dbQuerySingle();
             /* Reset the counter of unsuccesful logins and update the
                timestamp of the last succesful login. */
-            DatabaseBean::dbQuery(
-                "UPDATE user SET "
-                . "lastlogin=NULL, "
-                . "failcount=0 "
-                . "WHERE id=" . $this->id
-            );
+            $args = [
+                'lastlogin%sql' => 'NULL',
+                'failcount' => 0
+            ];
+            dibi::query('UPDATE `user` SET ', $args, 'WHERE `id`=%i', $this->id);
             /* Set the returned record. */
-            $rs = $this->rs;
+            // ???? TODO ???? $rs = $this->rs;
         }
         else
         {
             /* Update the counter of unsuccesful logins. */
-            DatabaseBean::dbQuery(
-                "UPDATE user SET " .
-                "failcount=failcount+1 " .
-                "WHERE login='" . mysql_escape_string($login) . "'"
-            );
+            dibi::query('UPDATE `user` SET ', [ 'failcount' => 'failocunt+1'],
+                'WHERE', [ 'login' => $login] );
+            $row = null;
         }
 
-        return $rs;
+        return $row;
     }
 
     function dbQuerySingle($alt_id = 0)

@@ -68,21 +68,20 @@ class SectionBean extends DatabaseBean
        this class. If $this->id is equal to zero, a new record will be created. */
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE section VALUES (" .
-            $this->id . "," .
-            $this->parent . "," .
-            $this->lecture_id . ",'" .
-            mysql_escape_string($this->type) . "','" .
-            mysql_escape_string($this->title) . "','" .
-            mysql_escape_string($this->mtitle) . "','" .
-            mysql_escape_string($this->text) . "'," .
-            $this->position . ",'" .
-            mysql_escape_string($this->redirect) . "'," .
-            "NULL" . "," .
-            $this->ival1 . ")"
-        );
-        /* Update the id of this recored if necessary. */
+        $args = [
+            'id' => $this->id,
+            'parent' => $this->parent,
+            'lecture_id' => $this->lecture_id,
+            'type' => $this->type,
+            'title' => $this->title,
+            'mtitle' => $this->mtitle,
+            'text' => $this->text,
+            'position' => $this->position,
+            'redirect' => $this->redirect,
+            'lastmodified' => null,
+            'ival1' => $this->ival1
+        ];
+        dibi::query('REPLACE `section`', $args);
         $this->updateId();
     }
 

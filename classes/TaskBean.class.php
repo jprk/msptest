@@ -20,7 +20,7 @@ class TaskBean extends DatabaseBean
     var $title;
     var $minpts;
     var $position;
-    var $lectureId;
+    var $lecture_id;
 
     /* Fill in reasonable defaults. */
     function _setDefaults()
@@ -60,16 +60,15 @@ class TaskBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE task VALUES ("
-            . $this->id . ","
-            . $this->type . ",'"
-            . mysql_escape_string($this->title) . "',"
-            . $this->minpts . ","
-            . $this->position . ","
-            . $this->lecture_id . ")"
-        );
-        /* Update the id of this record if necessary. */
+        $args = [
+            'id' => $this->id,
+            'type' => $this->type,
+            'title' => $this->title,
+            'minpts' => $this->minpts,
+            'position' => $this->position,
+            'lecture_id' => $this->lecture_id
+        ];
+        dibi::query('REPLACE `task`', $args);
         $this->updateId();
     }
 

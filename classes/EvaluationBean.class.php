@@ -37,26 +37,20 @@ class EvaluationBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE evaluation VALUES ("
-            . $this->id . ",'"
-            . mysql_escape_string($this->title) . "','"
-            . $this->year . "','"
-            . $this->lecture_id . "','"
-            . $this->do_grades . "','"
-            . $this->pts_A . "','"
-            . $this->pts_B . "','"
-            . $this->pts_C . "','"
-            . $this->pts_D . "','"
-            . $this->pts_E . "')"
-        );
-        /* New records have initial 'id' equal to zero and the proper value is
-           set by the database engine. We have to retrieve the 'id' back so that
-           we can later update this record if needed. */
-        if (!$this->id)
-        {
-            $this->id = mysql_insert_id();
-        }
+        $args = [
+            'id' => $this->id,
+            'title' => $this->title,
+            'year' => $this->schoolyear,
+            'lecture_id' => $this->lecture_id,
+            'do_grades' => $this->do_grades,
+            'pts_A' => $this->pts_A,
+            'pts_B' => $this->pts_B,
+            'pts_C' => $this->pts_C,
+            'pts_D' => $this->pts_D,
+            'pts_E' => $this->pts_E
+        ];
+        dibi::query('REPLACE `evaluation`', $args);
+        $this->updateId();
     }
 
     function _initFromResultSet()

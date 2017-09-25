@@ -122,20 +122,20 @@ class FileBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE file VALUES ("
-            . $this->id . ","
-            . $this->type . ","
-            . $this->objid . ","
-            . $this->uid . ","
-            . "NULL,'"
-            . mysql_escape_string($this->fname) . "','"
-            . mysql_escape_string($this->origfname) . "','"
-            . mysql_escape_string($this->description) . "',"
-            . $this->position . ")"
-        );
+        $args = [
+            'id' => $this->id,
+            'type' => $this->type,
+            'objid' => $this->objid,
+            'uid' => $this->uid,
+            'timestamp' => null,
+            'fname' => $this->fname,
+            'origfname' => $this->origfname,
+            'description' => $this->description,
+            'position' => $this->position
+        ];
+        dibi::query('REPLACE `file`', $args);
 
-        /* Update $this->id in case that REPLACE actually inserten a new record. */
+        /* Update $this->id in case that REPLACE actually inserted a new record. */
         $this->updateId();
     }
 
@@ -322,17 +322,20 @@ class FileBean extends DatabaseBean
      */
     function dbQueryFname($fname)
     {
-        $rs = self::dbQuery("SELECT id FROM file " .
-            "WHERE fname='" . mysql_escape_string($fname) . "'");
-        if (empty ($rs))
+        $result = dibi::query('SELECT `id` FROM `file` WHERE `fname`=%s', $fname);
+
+        if (empty($result))
         {
             return 0;
         }
-        if (count($rs) > 1)
+
+        if ($result->count() > 1)
         {
-            trigger_error('More than one files for assignment and student');
+            trigger_error('More than one files with the same name found (fname=`' . $fname . '`)');
         }
-        return $rs[0]['id'];
+
+        $row = $result->fetch();
+        return $row['id'];
     }
 
     /* -------------------------------------------------------------------
@@ -689,7 +692,7 @@ class FileBean extends DatabaseBean
             {
                 /* If the lecture student group mode is on, check that the student is a member of the student group that
                    owns the file. */
-                if (SessionDataBean::getLectureGroupFlag())
+                if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
                 {
                     /* Group mode on. Check the student group ids. */
                     $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
@@ -1226,13 +1229,13 @@ class FileBean extends DatabaseBean
             else
             {
                 /* And reflect the change in the database. */
-                DatabaseBean::dbQuery(
-                    "UPDATE file SET " .
-                    "type=" . $_POST['type'] . ", " .
-                    "objid=" . $_POST['objid'] . ", " .
-                    "position=" . $_POST['position'] . ", " .
-                    "description='" . mysql_escape_string($_POST['description']) . "' " .
-                    "WHERE id=" . $this->id);
+                $args = [
+                    'type' => $_POST['type'],
+                    'objid' => intval($_POST['objid']),
+                    'position' => intval($_POST['position']),
+                    'description' => $_POST['description']
+                ];
+                dibi::query('UPDATE `file` SET ', $args, 'WHERE `id`=%i', $this->id);
             }
         }
 

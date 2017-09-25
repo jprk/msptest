@@ -40,17 +40,17 @@ class ExerciseBean extends DatabaseBean
 
     function dbReplace()
     {
-        DatabaseBean::dbQuery(
-            "REPLACE exercise VALUES ("
-            . $this->id . ",'"
-            . $this->day . "','"
-            . mysql_real_escape_string($this->from) . "','"
-            . mysql_real_escape_string($this->to) . "','"
-            . mysql_real_escape_string($this->room) . "','"
-            . $this->lecture_id . "','"
-            . "0" . "','" // we have no lecturer stored here now, everything is handled through ExerciseTutorBean
-            . mysql_real_escape_string($this->schoolyear) . "')"
-        );
+        $args = [
+            'id' => $this->id,
+            'day' => $this->day,
+            'from' => $this->from,
+            'to' => $this->to,
+            'room' => $this->room,
+            'lecture_id' => $this->lecture_id,
+            'lecturer' => 0,
+            'year' => $this->schoolyear
+        ];
+        dibi::query('REPLACE `exercise`', $args);
 
         $this->updateId();
         $this->extutBean->setTutorsIdsForExercise($this->tutor_ids, $this->id);
@@ -434,7 +434,7 @@ class ExerciseBean extends DatabaseBean
     {
         /* Get the information about the lecture we are listing exercises
            for ... */
-        $lectureBean = new LectureBean ($this->id, $this->_smarty, "", "");
+        $lectureBean = new LectureBean ($this->id, $this->_smarty, null, null);
         $lectureBean->assignSingle();
 
         /* Get the list of all exercises for the given lecture id and the

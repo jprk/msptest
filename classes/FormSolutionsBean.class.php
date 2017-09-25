@@ -4,7 +4,7 @@ class FormSolutionsBean extends DatabaseBean
 {
     var $student_id;
     var $subtask_id;
-    var $assignmnt_id;
+    var $assignment_id;
     var $part;
     var $a, $b, $c, $d, $e, $f, $g, $h;
     var $timestamp;
@@ -30,7 +30,7 @@ class FormSolutionsBean extends DatabaseBean
     {
         $this->student_id = $this->rs['student_id'] = 0;
         $this->subtask_id = $this->rs['subtask_id'] = 0;
-        $this->assignmnt_id = $this->rs['assignmnt_id'] = 0;
+        $this->assignment_id = $this->rs['assignmnt_id'] = 0;
         $this->part = $this->rs['part'] = '';
 
         $this->a = $this->aa = $this->rs['a'] = NULL;
@@ -57,30 +57,22 @@ class FormSolutionsBean extends DatabaseBean
 
     function dbReplace()
     {
-        if ($this->a === NULL) $this->a = 'NULL';
-        if ($this->b === NULL) $this->b = 'NULL';
-        if ($this->c === NULL) $this->c = 'NULL';
-        if ($this->d === NULL) $this->d = 'NULL';
-        if ($this->e === NULL) $this->e = 'NULL';
-        if ($this->f === NULL) $this->f = 'NULL';
-        if ($this->g === NULL) $this->g = 'NULL';
-        if ($this->h === NULL) $this->h = 'NULL';
 
-        DatabaseBean::dbQuery(
-            "REPLACE formsolutions VALUES ("
-            . $this->student_id . ","
-            . $this->subtask_id . ","
-            . $this->assignmnt_id . ",'"
-            . mysql_escape_string($this->part) . "',"
-            . $this->a . ","
-            . $this->b . ","
-            . $this->c . ","
-            . $this->d . ","
-            . $this->e . ","
-            . $this->f . ","
-            . $this->g . ","
-            . $this->h . ", NULL)"
-        );
+        $args = [
+            'subtask_id' => $this->subtask_id,
+            'assignmnt_id' => $this->assignment_id,
+            'part' => $this->part,
+            'a' => $this->a,
+            'b' => $this->a,
+            'c' => $this->a,
+            'd' => $this->a,
+            'e' => $this->a,
+            'f' => $this->a,
+            'g' => $this->a,
+            'h' => $this->a,
+            'timestamp' => null
+        ];
+        dibi::query('REPLACE `formsolutions`', $args);
     }
 
     /**
@@ -344,7 +336,7 @@ class FormSolutionsBean extends DatabaseBean
                 $this->e = 0;
                 $this->f = 0;
                 $this->subtask_id = $suId;
-                $this->assignmnt_id = $assignmentId;
+                $this->assignment_id = $assignmentId;
                 $this->part = $part;
                 $this->student_id = $stId;
                 /* And store the data. */
@@ -509,7 +501,7 @@ class FormSolutionsBean extends DatabaseBean
         $cf = array();
 
         /* Get student group */
-        if (SessionDataBean::getLectureGroupFlag())
+        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
         {
             $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
             $students = $sgb->getGroupStudentsOfStudent($studentId);
@@ -575,7 +567,7 @@ class FormSolutionsBean extends DatabaseBean
 
                         /* Subtask id and part number and assignment id. */
                         $this->subtask_id = $this->id;
-                        $this->assignmnt_id = $assignmentId;
+                        $this->assignment_id = $assignmentId;
                         $this->part = $key;
                         $this->student_id = SessionDataBean::getUserId();
                         /* And store the data. */
@@ -655,7 +647,7 @@ class FormSolutionsBean extends DatabaseBean
                         $this->e = 0;
                         $this->f = 0;
                         $this->subtask_id = $this->id;
-                        $this->assignmnt_id = $assignmentId;
+                        $this->assignment_id = $assignmentId;
                         $this->part = 'a';
                         $this->student_id = SessionDataBean::getUserId();
                         /* And store the data. */
@@ -751,13 +743,14 @@ class FormSolutionsBean extends DatabaseBean
                                 $this->e = 0;
                                 $this->f = 0;
                                 $this->subtask_id = $this->id;
-                                $this->assignmnt_id = $assignmentId;
+                                $this->assignment_id = $assignmentId;
                                 $this->part = $key;
                                 $this->student_id = SessionDataBean::getUserId();
                                 /* And store the data. */
                                 $this->dbReplace();
 
-                                if ($subtaskBean->type == TT_SEMESTRAL_IND && SessionDataBean::getLectureGroupFlag())
+                                if ($subtaskBean->type == TT_SEMESTRAL_IND &&
+                                    SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
                                 {
                                     /* Send a confirmation e-mail to the whole group */
                                     $this->sendConfirmationEmail($subtaskBean, $students);
@@ -849,7 +842,7 @@ class FormSolutionsBean extends DatabaseBean
                                 $this->e = 0;
                                 $this->f = 0;
                                 $this->subtask_id = $this->id;
-                                $this->assignmnt_id = $assignmentId;
+                                $this->assignment_id = $assignmentId;
                                 $this->part = $key;
                                 $this->student_id = SessionDataBean::getUserId();
                                 /* And store the data. */
@@ -889,7 +882,7 @@ class FormSolutionsBean extends DatabaseBean
                             /* Save information about this submission - set subtask
                                   id and part number and assignment id. */
                             $this->subtask_id = $this->id;
-                            $this->assignmnt_id = $assignmentId;
+                            $this->assignment_id = $assignmentId;
                             $this->part = $key;
                             $this->student_id = SessionDataBean::getUserId();
                             /* And store the data. */
@@ -983,8 +976,7 @@ class FormSolutionsBean extends DatabaseBean
 
         /* Get the lecture description, just to fill in some more-or-less
            useful peieces of information. */
-        $lectureBean = SessionDataBean::getLecture();
-        $lectureBean->assignSingle();
+        $lecture_data = SessionDataBean::getLecture();
 
         /* Now create an array that contains student id as an key and _index_ to
            the $exerciseList as a value (that is, not the exercise ID, but the
@@ -997,7 +989,8 @@ class FormSolutionsBean extends DatabaseBean
            that contains text ' checked="checked"' on the position of the exercise
            that the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-        $studentList = $studentBean->assignStudentListWithExercises($lectureBean->id, count($exerciseList), $exerciseBinding);
+        $studentList = $studentBean->assignStudentListWithExercises($lecture_data['id'], count($exerciseList), $exerciseBinding);
+        $studentList = $studentBean->assignStudentListWithExercises($lecture_data['id'], count($exerciseList), $exerciseBinding);
 
         $this->generateAssignments($this->id, $studentList);
     }

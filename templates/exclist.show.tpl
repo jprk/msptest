@@ -34,10 +34,10 @@
     ><img src="images/famfamfam/application_view_detail.png" alt="[ukázat]"
           title="ukázat detail cvičení"></a
 {if $isAdmin || $isLecturer}
-  > <a href="?act=show,exercise,{$exerciseList[excPos].id}&displaynames=true"
+  > <a href="?act=show,exercise,{$exercise.id}&displaynames=true"
     ><img src="images/famfamfam/group.png" alt="[seznam]"
           title="ukázat seznam studentů na cvičení"></a
-  > <a href="?act=edit,points,{$exerciseList[excPos].id}&type=exc"
+  > <a href="?act=edit,points,{$exercise.id}&type=exc"
     ><img src="images/famfamfam/award_star_add.png" alt="[body]"
           title="bodování studentů"></a
 {/if}

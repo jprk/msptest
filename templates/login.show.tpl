@@ -71,6 +71,6 @@ a zprávu nějak smysluplně pojmenujte, aby ji nepřehlédl.
 </p> 
 <p> 
 V přihlašování pokračujte
-<a href="https://{$HOST_NAME}{$SCRIPT_NAME}?act=show,login,42">zde</a>.
+<a href="https://{$smarty.server.SERVER_NAME}{$smarty.server.SCRIPT_URL}?act=show,login,42">zde</a>.
 </p>
 {/if}

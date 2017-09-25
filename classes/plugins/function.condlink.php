@@ -9,8 +9,14 @@
 function smarty_function_condlink($params, &$smarty)
 {
     /* This is the list of mandatory parameters. */
-    $mparams = array('text' => NULL, 'condition' => NULL,
-        'obj' => NULL, 'act' => NULL, 'id' => NULL);
+    $mparams = [
+        'text' => null,
+        'condition' => null,
+        'obj' => null,
+        'act' => null,
+        'id' => null
+    ];
+
     /* Merge the parameter array with the mandatory parameters.
        Use `mparams` as the base so that any entry with an identical
        key in `params` will overwrite it. */
@@ -23,8 +29,8 @@ function smarty_function_condlink($params, &$smarty)
     {
         if (!isset ($params[$kval]))
         {
-            $smarty->trigger_error("condlink: missing '" . $kval . "' parameter");
-            return;
+            trigger_error("condlink: missing '" . $kval . "' parameter");
+            return null;
         }
     }
 

@@ -7,7 +7,10 @@
 {assign var="empty" value=""}
 {section name=mId loop=$menuHierList}
 <tr class="mlevel{$menuHierList[mId].level}">
-{$empty|indent:$menuHierList[mId].level:"<td>&nbsp;</td>"}
+    {* original trick with $empty|indent stopped working in Smarty 3 *}
+    {for $foo=1 to $menuHierList[mId].level}
+        <td>&nbsp;</td>
+    {/for}
 {if $menuHierList[mId].hilit}
 <td style="width: 1em; text-align: right; vertical-align: top;"><strong>&raquo;</strong>&nbsp;</td>
 <td colspan="{$menuHierList[mId].colspan}"><strong><a href="?act=show,section,{$menuHierList[mId].id}">{$menuHierList[mId].mtitle}</a></strong></td>

@@ -6,12 +6,12 @@
  * @param $smarty
  * @return string
  */
-function smarty_function_lockicon($params, &$smarty)
+function smarty_function_lockicon($params, Smarty_Internal_Template $template)
 {
     if (!isset ($params['file']))
     {
-        $smarty->trigger_error("lockicon: missing 'file' parameter");
-        return;
+        trigger_error("lockicon: missing 'file' parameter");
+        return null;
     }
 
     if ($params['file']['type'] == 253)

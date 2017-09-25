@@ -28,8 +28,8 @@ var ON_LOAD = [];
 <!-- body leftmargin="0" topmargin="0" rightmargin="0" bottommargin="0" marginwidth="0" marginheight="0" -->
 <!-- map for the login image -->
 <map id="loginmap" name="loginmap">
-    <area shape="rect" coords="29,16,57,30"  href="http://{$HOST_NAME}{$SCRIPT_NAME}?act=show,login,42"    alt="přihlášení" title="Přihlášení uživatele">
-    <area shape="rect" coords="70,16,102,30" href="http://{$HOST_NAME}{$SCRIPT_NAME}?act=delete,login,42"  alt="odhlášení"  title="Odhlášení uživatele">
+    <area shape="rect" coords="29,16,57,30"  href="http://{$smarty.server.SERVER_NAME}{$smarty.server.SCRIPT_URL}?act=show,login,42"    alt="přihlášení" title="Přihlášení uživatele">
+    <area shape="rect" coords="70,16,102,30" href="http://{$smarty.server.SERVER_NAME}{$smarty.server.SCRIPT_URL}?act=delete,login,42"  alt="odhlášení"  title="Odhlášení uživatele">
 </map>
 <!-- page markup starts here -->
 <table width="900" border="0" cellspacing="0" cellpadding="0">
@@ -84,7 +84,7 @@ var ON_LOAD = [];
           </td>
           <td width="720" valign="top" style="border-right: 1px solid #eeeeee;"><div style="padding: 6px;">
           <table border="0" cellspacing="0" cellpadding="0">
-{if $newsList}
+{if !empty($newsList)}
             <tr>
               <td valign="top">
                 <br><img id="newstitle" src="hg.php?text=Novinky" alt="[Novinky]" border="0">
@@ -117,7 +117,7 @@ var ON_LOAD = [];
           <div class="backcolor" style="padding: 4px 10px; color: white;">
           <p style="margin: 0px;"><small>
           Školní rok: {$schoolyear}.
-{if $section.lastmodified}
+{if isset($section.lastmodified)}
           Poslední změna obsahu: {$section.lastmodified|date_format:"%d.%m.%Y %H:%M:%S"}.
 {/if}
           Vzniklo díky podpoře grantu FRVŠ 1344/2007{$lecture.thanks}.</small></p>

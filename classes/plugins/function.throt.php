@@ -1,5 +1,5 @@
 <?php
-function smarty_function_throt($params, &$smarty)
+function smarty_function_throt($params, Smarty_Internal_Template $template)
 {
     /* Get the text parameter. */
     $text = $params['text'];
@@ -7,8 +7,8 @@ function smarty_function_throt($params, &$smarty)
     /* Check that it is not empty. */
     if (empty ($text))
     {
-        $smarty->trigger_error("throt: missing 'text' parameter");
-        return;
+        trigger_error("throt: missing 'text' parameter");
+        return null;
     }
 
     return '<img src="throt.php?text=' . $text .

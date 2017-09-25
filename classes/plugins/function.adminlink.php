@@ -1,5 +1,5 @@
 <?php
-function smarty_function_adminlink($params, &$smarty)
+function smarty_function_adminlink($params, Smarty_Internal_Template $template)
 {
     /* Get the text parameter. */
     $text = $params['text'];
@@ -7,7 +7,7 @@ function smarty_function_adminlink($params, &$smarty)
     /* Check that it is not empty. */
     if (empty ($text))
     {
-        $smarty->trigger_error("adminlink: missing 'text' parameter");
+        trigger_error("adminlink: missing 'text' parameter");
         return;
     }
 
@@ -16,23 +16,23 @@ function smarty_function_adminlink($params, &$smarty)
     {
         if (empty ($params['act']))
         {
-            $smarty->trigger_error("adminlink: 'href' is empty and 'act' is missing as well");
+            trigger_error("adminlink: 'href' is empty and 'act' is missing as well");
             return;
         }
 
         if (empty ($params['obj']))
         {
-            $smarty->trigger_error("adminlink: 'href' is empty and 'obj' is missing as well");
+            trigger_error("adminlink: 'href' is empty and 'obj' is missing as well");
             return;
         }
 
         if (empty ($params['id']))
         {
-            $smarty->trigger_error("adminlink: 'href' is empty and 'id' is missing as well");
+            trigger_error("adminlink: 'href' is empty and 'id' is missing as well");
             return;
         }
 
-        if ($smarty->_tpl_vars['isAdmin'])
+        if ($template->getTemplateVars('isAdmin'))
         {
             $text =
                 '<a href="?act=' .
@@ -43,13 +43,13 @@ function smarty_function_adminlink($params, &$smarty)
     }
     else
     {
-        if ($smarty->_tpl_vars['isAdmin'])
+        if ($template->getTemplateVars('isAdmin'))
         {
             $text = '<a href="' . $params['href'] . '">' . $text . '</a>';
         }
     }
 
-    if (!$smarty->_tpl_vars['isAdmin'])
+    if (!$template->getTemplateVars('isAdmin'))
     {
         $text = '<span class="inactive">' . $text . '</span>';
     }

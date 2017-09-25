@@ -1,5 +1,5 @@
 <?php
-function smarty_block_czech($params, $content, &$smarty, &$repeat)
+function smarty_block_czech($params, $content, Smarty_Internal_Template $template, &$repeat)
 {
     /* This is the string that will be returned to Smarty. */
     $text = '';
@@ -12,7 +12,7 @@ function smarty_block_czech($params, $content, &$smarty, &$repeat)
 
         /* Return the text only in case that the application runs in the
            Czech language. */
-        if ($smarty->displayLocale('cs')) $text = $content;
+        if ($template->displayLocale('cs')) $text = $content;
     }
 
     return $text;

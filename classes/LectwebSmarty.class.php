@@ -4,7 +4,9 @@
 require('tools.php');
 
 // load Smarty library
-require('Smarty.class.php');
+require('smarty3/Smarty.class.php');
+
+use Tracy\Debugger;
 
 /* News types */
 define('NEWS_SECTION', 1);
@@ -16,7 +18,7 @@ define('IMG_SIZE', 190);
  * Modified Smarty class for LectWeb.
  * @method void assign(string $smartyVariable, mixed $data) Assigns data to Smarty variable.
  */
-class CPPSmarty extends Smarty
+class LectwebSmarty extends Smarty
 {
     private $_currencies;
     private $_submenu;
@@ -24,6 +26,9 @@ class CPPSmarty extends Smarty
     private $_dayMap;
     private $_yearMap;
     private $_locale;
+    private $_config;  // Smarty3 does not have this
+
+    private $connection;
 
     public $debug;
 
@@ -59,10 +64,13 @@ class CPPSmarty extends Smarty
     /**
      * Class constructor
      */
-    function CPPSmarty($config, $isPageOutput)
+    function __construct($config, $isPageOutput)
     {
         /* Call parent constructor first. */
         parent::__construct();
+
+        /* Database layer is not initialised yet. */
+        $this->connection = null;
 
         /* Set default locale. This is just an information for our plugins,
            it does not change the locale of the system.
@@ -72,20 +80,20 @@ class CPPSmarty extends Smarty
 
         /* Set the application directories. Value of `APP_BASE_DIR`
            is defined in configuration file. */
-        $this->template_dir = APP_BASE_DIR . '/templates';
-        $this->compile_dir = APP_BASE_DIR . '/templates_c';
-        $this->config_dir = APP_BASE_DIR . '/configs';
-        $this->cache_dir = APP_BASE_DIR . '/cache';
+        $this->setTemplateDir(APP_BASE_DIR . DIRECTORY_SEPARATOR . 'templates');
+        $this->setCompileDir(APP_BASE_DIR . DIRECTORY_SEPARATOR . 'templates_c');
+        $this->setConfigDir(APP_BASE_DIR . DIRECTORY_SEPARATOR . 'configs');
+        $this->setCacheDir(APP_BASE_DIR . DIRECTORY_SEPARATOR . 'cache');
 
         /* We will place (and look for) plugins into a subdirectory
            of directory where class files are located. */
-        $this->plugins_dir[] = REQUIRE_DIR . '/plugins';
+        $this->addPluginsDir(REQUIRE_DIR . DIRECTORY_SEPARATOR . 'plugins');
 
         $this->_yesno = array(0 => '&nbsp;ne', 1 => '&nbsp;ano');
         $this->_dayMap = self::_assignDayMap();
         $this->_yearMap = self::_assignYearMap();
 
-        $this->assign('app_name', 'CPPSmarty');
+        $this->assign('app_name', 'LectwebSmarty');
         $this->assign('yesno', $this->_yesno);
         $this->assign('daySelect', $this->_dayMap);
         $this->assign('yearSelect', $this->_yearMap);
@@ -114,6 +122,8 @@ class CPPSmarty extends Smarty
         {
             ini_set('display_errors', 1);
             error_reporting(E_ALL | E_STRICT);
+            /* Enable Tracy debugger, https://tracy.nette.org/ */
+            Debugger::enable();
         }
     }
 
@@ -133,78 +143,79 @@ class CPPSmarty extends Smarty
     }
 
     /**
-     * @return resource
+     * Initialise database connection.
+     * Internally creates a Dibi\Connection() instance.
      * @throws Exception
      */
-    function dbOpen()
+    function db_connect()
     {
         /* Open connection to the database server. */
-        $db = $this->_config['db'];
-        $link = mysql_connect($db['host'], $db['user'], $db['pass']);
-        if (!$link)
+        $options = $this->_config['dibi'];
+        $options['charset'] = 'utf8';
+        try
         {
-            $error = "<p>Cannot connect to mySQL as <tt>'" .
-                $db['user'] . "@" . $db['host'] . "'</tt></p>\n";
-            logSystemError($error);
-            throw new Exception ('Nelze se připojit k databázovému serveru.');
+            dibi::connect($options);
         }
-
-        /* Select the database. */
-        $res = mysql_select_db($db['data']);
-        if (!$res)
+        catch (Exception $e)
         {
-            $error = "<p>Cannot select database <tt>'" .
-                $db['data'] . "'</tt> as <tt>'" . $db['user'] . "@" .
-                $db['host'] . "'</tt></p>\n";
+            /* Log the error and rethrow it. */
+            $error = "<p>Cannot connect to database as <tt>'" .
+                $options['username'] . "@" . $options['host'] . "'</tt></p>\n" .
+                "<p>Error message: " . $e->getMessage() . "</p>";
             logSystemError($error);
-            throw new Exception ('Nelze se připojit k databázovému serveru.');
+            throw $e;
         }
-
-        /* Support for UTF-8 data exchange. */
-        $res = mysql_query("SET NAMES utf8");
-        if (!$res)
-        {
-            $error = "<p>Cannot set charset to utf8: <tt>" . mysql_error() .
-                "</tt></p>\n";
-            logSystemError($error);
-            throw new Exception ('Nelze zvolit znakovou sadu pro komunikaci s databází.');
-        }
-
-        return $link;
     }
 
-    function dbClose($link)
+    /**
+     * Disconnect from database.
+     */
+    function db_disconnect()
     {
-        if ($link) mysql_close($link);
+        if (dibi::isConnected()) dibi::disconnect();
     }
 
-    function dbLog($time_start, $object, $action)
+    function db_log($time_start, $object, $action)
     {
-        $user_id = SessionDataBean::getUserId();
-        $lecture_id = SessionDataBean::getLectureId();
-        $get_data = mysql_real_escape_string(json_encode($_GET));
-        $post_data = mysql_real_escape_string(json_encode($_POST));
-        $ip_address = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
+        /* Remove sensitive information from POST data. */
+        $post_copy = $_POST;
+        if (array_key_exists('password', $post_copy))
+        {
+            $post_copy['password'] = '*****';
+        }
 
-        $this->dbQuery(
-            "INSERT INTO log " .
-            "(`timestamp`,time_start,lecture_id,user_id,ip_address,object,action,get_data,post_data) " .
-            "VALUES " .
-            "(NULL,'$time_start','$lecture_id','$user_id','$ip_address','$object','$action','$get_data','$post_data')");
+        /* Prepare insert elements */
+        $data = [
+            'timestamp' => null,
+            'time_start' => $time_start,
+            'lecture_id' => SessionDataBean::getLectureId(),
+            'user_id' => SessionDataBean::getUserId(),
+            'ip_address' => $_SERVER['REMOTE_ADDR'],
+            'object' => $object,
+            'action' => $action,
+            'get_data' => json_encode($_GET),
+            'post_data' => json_encode($post_copy)
+        ];
+
+        dibi::query('INSERT INTO log', $data);
     }
 
-    function dbLogException($time_start, $message)
+    function db_log_exception($time_start, $message)
     {
-        $user_id = SessionDataBean::getUserId();
-        $lecture_id = SessionDataBean::getLectureId();
-        $ip_address = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
-        $message = mysql_real_escape_string($message);
+        /* Prepare insert elements */
+        $data = [
+            'timestamp' => null,
+            'time_start' => $time_start,
+            'lecture_id' => SessionDataBean::getLectureId(),
+            'user_id' => SessionDataBean::getUserId(),
+            'ip_address' => $_SERVER['REMOTE_ADDR'],
+            'object' => 'error',
+            'action' => 'exception',
+            'get_data' => '',
+            'post_data' => $message
+        ];
 
-        $this->dbQuery(
-            "INSERT INTO log " .
-            "(`timestamp`,time_start,lecture_id,user_id,ip_address,object,action,get_data,post_data) " .
-            "VALUES " .
-            "(NULL,'$time_start','$lecture_id','$user_id','$ip_address','error','exception','','$message')");
+        dibi::query('INSERT INTO log', $data);
     }
 
     /**
@@ -226,7 +237,7 @@ class CPPSmarty extends Smarty
             echo "<!-- " . $caller['file'] . ":" . $caller['line'] . " in `" . $ucaller['function'] . "()`\n";
             echo "     dbQuery():'" . $query . "' -->\n";
         }
-        $result = mysql_query($query);
+        $result = dibi::query($query);
 
         /* Is the result a meaningful `resource` or did an error occur? */
         if (!$result)
@@ -240,29 +251,25 @@ class CPPSmarty extends Smarty
         /* Allocate an array for the query result. */
         $asr = array();
 
-        /* If dbQuery was used to update some information, the result is irrelevant. */
-        if (!is_bool($result))
+        /* If dbQuery was used to update some information, the Dibi will return the number of
+           affected rows. This is irrelevant. */
+        if (!is_int($result))
         {
             /* If normal indexing has been requested, copy the returned rows exactly
-             * in the order they have been retured by the database. */
+             * in the order they have been returned by the database. */
             if ($idx === null)
             {
-                while ($row = mysql_fetch_assoc($result))
-                {
-                    $asr[] = $row;
-                }
+                $asr = $result->fetchAll();
             }
             else
             {
                 /* Assume that every fetched row contains a field with name given by
                  * $idx and use the value of that field as an index. */
-                while ($row = mysql_fetch_assoc($result))
-                {
-                    $asr[$row[$idx]] = $row;
-                }
+                $asr = $result->fetchAssoc($idx);
             }
 
-            mysql_free_result($result);
+            /* Release Dibi resources. */
+            unset($result);
         }
 
         return $asr;
@@ -279,7 +286,14 @@ class CPPSmarty extends Smarty
             echo "<!-- " . $caller['file'] . ":" . $caller['line'] . " in `" . $ucaller['function'] . "()`\n";
             echo "     dbQuerySingle():'" . $query . "' -->\n";
         }
-        $result = mysql_query($query);
+
+        $result = dibi::query($query);
+
+        if ($this->debug) {
+            echo '<!-- ';
+            print_r($result);
+            echo "-->\n";
+        }
 
         /* Is the result a meaningful `resource` or did an error occur? */
         if (!$result)
@@ -290,12 +304,20 @@ class CPPSmarty extends Smarty
             throw new Exception ('Neplatný SQL dotaz.');
         }
 
-        if (!($row = mysql_fetch_assoc($result)))
-        {
-            $row = NULL;
+        $row = $result->fetch();
+
+        if ($this->debug) {
+            echo '<!-- ';
+            print_r($row);
+            echo "-->\n";
         }
 
-        mysql_free_result($result);
+        if (!$row)
+        {
+            $row = null;
+        }
+
+        unset($result);
 
         return $row;
     }

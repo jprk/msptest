@@ -1,3 +1,4 @@
+{if !empty($studentList) && !empty($exerciseList)}
 <form action="?act=save,stuexe,{$lecture.id}" method="post">
 <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 {section name=studentPos loop=$studentList}
@@ -29,3 +30,12 @@
 <tr class="rowA"><td colspan="12" class="center"><input type="submit" value="Uložit"></td></tr>
 </table>
 </form>
+{else}
+    <p>
+        Nic zde nevidíte, protože:
+    </p>
+    <ul>
+        {if empty($studentList)}<li>Předmět zatím nestudují žádní studenti, není koho rozřazovat.</li>{/if}
+        {if empty($exerciseList)}<li>Předmět zatím nemá vypsána žádná cvičení, není kam rozřazovat.</li>{/if}
+    </ul>
+{/if}

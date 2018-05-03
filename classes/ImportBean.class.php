@@ -2,9 +2,10 @@
 
 class ImportBean extends DatabaseBean
 {
+    const FORMAT_WEBKOS_2017 = 5;
     const FORMAT_IKOS_ROZ = 4;
     const FORMAT_IKOS = 3;
-    const FORMAT_WEBKOS = 2;
+    const FORMAT_WEBKOS_2015 = 2;
     const FORMAT_TERMINAL = 1;
 
     private $firstname;
@@ -84,9 +85,10 @@ class ImportBean extends DatabaseBean
         return RET_OK;
     }
 
-    /* -------------------------------------------------------------------
-       HANDLER: EDIT
-       ------------------------------------------------------------------- */
+    /**
+     * Edit handler.
+     * @throws Exception
+     */
     function doEdit()
     {
         /* Check the version of the imported data.
@@ -105,7 +107,10 @@ class ImportBean extends DatabaseBean
            passwords that is stored in configuration files of the application. */
         $proxy_cn = $this->_smarty->getConfig('ldap_proxy_cn');
         $proxy_pw = $this->_smarty->getConfig('ldap_proxy_pw');
-        $ldap->bind($proxy_cn, $proxy_pw);
+        if (! $ldap->bind($proxy_cn, $proxy_pw))
+        {
+            throw new Exception("Cannot bind to LDAP server as `$proxy_cn`!");
+        }
 
         /* Initialise the list of students that will be imported. */
         $studentList = array();
@@ -122,9 +127,9 @@ class ImportBean extends DatabaseBean
             $handle = @fopen($kosfile['tmp_name'], "r");
             if ($handle)
             {
-                /* In case of FORMAT_WEBKOS or FORMAT_IKOS we have to skip the first line of
+                /* In case of FORMAT_WEBKOS_2015 or FORMAT_IKOS we have to skip the first line (or two) of
                    the imported CSV file - it contains header information. */
-                $skipHeader = ($format == self::FORMAT_WEBKOS) || ($format == self::FORMAT_IKOS) || ($format == self::FORMAT_IKOS_ROZ);
+                $skipHeader = ($format == self::FORMAT_WEBKOS_2015) || ($format == self::FORMAT_IKOS) || ($format == self::FORMAT_IKOS_ROZ);
                 /* First row of the resulting list. */
                 $row = 0;
                 /* And loop while we have something to chew on ... */
@@ -134,7 +139,7 @@ class ImportBean extends DatabaseBean
                     $buffer = fgets($handle, 4096);
                     /* The file contains sometimes also form feed character
                        (^L, 0x0c) which shall be removed as well. */
-                    $trimmed = trim($buffer, " \t\n\r\0\x0b\x0c");
+                    $trimmed = trim($buffer, " \t\n\r\0\x0b\x0c\xa0");
                     /* The file may also contain some empty lines, and trimming
                        the form feed will generate another empty line. */
                     if (empty ($trimmed))
@@ -144,8 +149,21 @@ class ImportBean extends DatabaseBean
                     }
                     if ($skipHeader)
                     {
-                        /* Skip the header line in case of FORMAT_WEBKOS. */
-                        $skipHeader = false;
+                        /* Skip the header line in case of FORMAT_WEBKOS_2015/IKOS.
+                           The (again) updated WEBKOS format adds an extra header line in the format
+                              KOSI export_prez_sez_<term_id e.g. B162>_<lecture_id e.g. 11FY1>;;;;;;;;;;;;
+                           and an extra column "Typ programu". */
+                        if ($row == 0 && strpos($buffer, 'KOSI export_prez_sez') === 0)
+                        {
+                            /* New WEBKOS format */
+                            $format = self::FORMAT_WEBKOS_2017;
+                        }
+                        else
+                        {
+                            /* For other formats only the first line will be skipped, but for the new WEBKOS
+                               format we will skip at least two lines. */
+                            $skipHeader = false;
+                        }
                         continue;
                     }
                     /* The line contains several fields separated by semicolon. */
@@ -176,13 +194,29 @@ class ImportBean extends DatabaseBean
                                      used anywhere. */
                             if (empty ($data['groupno'])) $data['groupno'] = "0";
                             break;
-                        case self::FORMAT_WEBKOS:
-                            $data['surname'] = iconv("windows-1250", "utf-8", trim($la[0], " \t\n\r\""));
-                            $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\""));
+                        case self::FORMAT_WEBKOS_2015:
+                        case self::FORMAT_WEBKOS_2017:
+                            $idx = array(
+                                self::FORMAT_WEBKOS_2015 => array(
+                                    'yearno' => 9,
+                                    'groupno' => 11,
+                                    'numcols' => 13,
+                                    'manual_login' => 12,
+                                    'manual_email' => 13),
+                                self::FORMAT_WEBKOS_2017 => array(
+                                    'yearno' => 10,
+                                    'groupno' => 12,
+                                    'numcols' => 14,
+                                    'manual_login' => 13,
+                                    'manual_email' => 14));
+                            $data['surname'] = iconv("windows-1250", "utf-8", trim($la[0], " \t\n\r\"\xa0"));
+                            $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\"\xa0"));
                             // up to 2012-11-05 ... $data['yearno']    = trim ( $la[8], " \t\n\r\"" );
-                            $data['yearno'] = trim($la[9], " \t\n\r\"");
+                            $i = $idx[$format]['yearno'];
+                            $data['yearno'] = trim($la[$i], " \t\n\r\"");
                             // up to 2012-11-05 ... $data['groupno']   = trim ( $la[10], " \t\n\r\"" );
-                            $data['groupno'] = trim($la[11], " \t\n\r\"");
+                            $i = $idx[$format]['groupno'];
+                            $data['groupno'] = trim($la[$i], " \t\n\r\"");
                             $cvutid = trim($la[2], " \t\n\r\"");
                             $data['cvutid'] = $cvutid;
                             $data['hash'] = $cvutid;
@@ -194,7 +228,7 @@ class ImportBean extends DatabaseBean
                             /* We have the possibility to append `login` and `e-mail` information manually, circumventing
                                the need for LDAP queiries (again, this is mostly necessary for Decin). */
                             $this->dumpVar('count(la)', count($la));
-                            if (count($la) <= 13)
+                            if (count($la) <= $idx[$format]['numcols'])
                             {
                                 /* Fetch information from LDAP about this student. */
                                 $info = $ldap->searchSingle("cvutid=$cvutid");
@@ -203,7 +237,7 @@ class ImportBean extends DatabaseBean
                                 if (is_null($info))
                                 {
                                     throw new Exception (
-                                        'LDAP info neobsahuje záznam pro ČVUT ID ' . $cvutid
+                                        "Row $row: LDAP info neobsahuje záznam pro ČVUT ID `$cvutid`"
                                     );
                                 }
 
@@ -252,8 +286,20 @@ class ImportBean extends DatabaseBean
                             else
                             {
                                 /* Manually extended WebKOS output with login and e-mail information. */
-                                $data['login'] = $la[12];
-                                $data['email'] = $la[13];
+                                $i = $idx[$format]['manual_login'];
+                                $data['login'] = $la[$i];
+                                /* Check that the data contains something meaningful */
+                                if (empty ($data['login']))
+                                {
+                                    throw new Exception("Row $row: Expected field $i to contain login, but the field is empty.");
+                                }
+                                $i = $idx[$format]['manual_email'];
+                                $data['email'] = $la[$i];
+                                /* Check that the data contains something meaningful */
+                                if (empty ($data['login']))
+                                {
+                                    throw new Exception("Row $row: Expected field $i to contain e-mail address, but the field is empty.");
+                                }
                             }
 
                             break;

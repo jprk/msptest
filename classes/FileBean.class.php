@@ -129,9 +129,9 @@ class FileBean extends DatabaseBean
             . $this->objid . ","
             . $this->uid . ","
             . "NULL,'"
-            . mysql_escape_string($this->fname) . "','"
-            . mysql_escape_string($this->origfname) . "','"
-            . mysql_escape_string($this->description) . "',"
+            . mysql_real_escape_string($this->fname) . "','"
+            . mysql_real_escape_string($this->origfname) . "','"
+            . mysql_real_escape_string($this->description) . "',"
             . $this->position . ")"
         );
 
@@ -323,7 +323,7 @@ class FileBean extends DatabaseBean
     function dbQueryFname($fname)
     {
         $rs = self::dbQuery("SELECT id FROM file " .
-            "WHERE fname='" . mysql_escape_string($fname) . "'");
+            "WHERE fname='" . mysql_real_escape_string($fname) . "'");
         if (empty ($rs))
         {
             return 0;

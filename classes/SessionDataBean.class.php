@@ -116,7 +116,7 @@ class SessionDataBean
      */
     static function getCode()
     {
-        return LectureBean::getCode($_SESSION[self::SDB_LECTURE_DATA]);
+        return LectureBean::getCodeFromData($_SESSION[self::SDB_LECTURE_DATA]);
     }
 
     /**

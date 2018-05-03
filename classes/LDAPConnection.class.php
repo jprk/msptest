@@ -18,6 +18,7 @@ class LDAPConnection
     private $serverURL;
     private $basedn;
     private $ldap;
+    private $debug;
 
     static function isActive(&$smarty)
     {
@@ -27,7 +28,7 @@ class LDAPConnection
     /**
      * Class constructor.
      * Opens connection to an LDAP server. Checked only with URL based ldaps:// connections.
-     * @param Smarty $smarty Smarty object containing configuration parameters of the LDAP connection, 'ldap_server_url' and 'ldap_basedn'.
+     * @param CPPSmarty $smarty Smarty object containing configuration parameters of the LDAP connection, 'ldap_server_url' and 'ldap_basedn'.
      * @throws Exception
      */
     function __construct(&$smarty)
@@ -35,6 +36,7 @@ class LDAPConnection
         /* Initialise configuration parameters from Smarty config. */
         $this->serverURL = $smarty->_config['ldap_server_url'];
         $this->basedn = $smarty->_config['ldap_basedn'];
+        $this->debug = $smarty->debug;
 
         /* Initialise LDAP connection for LDAP search of usernames and e-mails. */
         $this->ldap = ldap_connect($this->serverURL);
@@ -166,9 +168,9 @@ class LDAPConnection
     function bind($userDN, $password)
     {
         @$ldapbind = ldap_bind($this->ldap, $userDN, $password);
-        if ($this->_smarty->debug)
+        $ldapstr = var_export($ldapbind, true);
+        if ($this->debug)
         {
-            $ldapstr = var_export($ldapbind, true);
             echo "<!-- binding with `$userDN` and password `$password` -->";
             echo "<!-- ldapbind is $ldapstr -->";
         }

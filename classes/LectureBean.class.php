@@ -43,6 +43,28 @@ class LectureBean extends DatabaseBean
         $this->_update_rs();
     }
 
+    /**
+     * Convert lecture code to lecture base URL.
+     * @param $code string Lecture code
+     * @return string Lecture base URL
+     */
+    function code2url($code)
+    {
+        if (strtoupper($code[0]) == 'K')
+        {
+            // Something like K611MSP
+            $code = substr($code, 1);
+        }
+        // Trim number code from the beginning
+        $code = ltrim($code, "0123456789");
+        // Remove non-alphabetic characters from the string
+        $code = str_replace(".", "", $code);
+        $code = str_replace("-", "", $code);
+        $code = str_replace("_", "", $code);
+        $code = str_replace("/", "", $code);
+        return strtolower($code) . '/';
+    }
+
     /* Constructor */
     function __construct($id, &$smarty, $action, $object)
     {
@@ -356,7 +378,8 @@ class LectureBean extends DatabaseBean
                 $lectureList[$key]['syllabus'] = stripslashes($val['syllabus']);
                 $lectureList[$key]['locale'] = $val['locale'];
                 $lectureList[$key]['term'] = $val['term'];
-                //$lectureList[$key]['rootsection'] = $val['rootsection'];
+                // Construct base URL of the lecture
+                $lectureList[$key]['url'] = self::code2url($lectureList[$key]['code']);
             }
         }
 

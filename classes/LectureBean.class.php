@@ -81,12 +81,12 @@ class LectureBean extends DatabaseBean
     /**
      * Getter method for SessionDataBean
      */
-    static function getGroupFlag(&$rsData)
+    static function getGroupType(&$rsData)
     {
         if (!empty ($rsData))
         {
-            if (array_key_exists('do_groups', $rsData))
-                return $rsData['do_groups'];
+            if (array_key_exists('group_type', $rsData))
+                return $rsData['group_type'];
         }
         return NULL;
     }

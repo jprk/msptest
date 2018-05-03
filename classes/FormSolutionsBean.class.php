@@ -509,7 +509,7 @@ class FormSolutionsBean extends DatabaseBean
         $cf = array();
 
         /* Get student group */
-        if (SessionDataBean::getLectureGroupFlag())
+        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
         {
             $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
             $students = $sgb->getGroupStudentsOfStudent($studentId);
@@ -757,7 +757,8 @@ class FormSolutionsBean extends DatabaseBean
                                 /* And store the data. */
                                 $this->dbReplace();
 
-                                if ($subtaskBean->type == TT_SEMESTRAL_IND && SessionDataBean::getLectureGroupFlag())
+                                if ($subtaskBean->type == TT_SEMESTRAL_IND &&
+                                    SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
                                 {
                                     /* Send a confirmation e-mail to the whole group */
                                     $this->sendConfirmationEmail($subtaskBean, $students);

@@ -324,7 +324,7 @@ class SolutionBean extends DatabaseBean
 
         /* In case that the lecture uses student group tasks, we have to fetch also information about
            the student group. */
-        if (SessionDataBean::getLectureGroupFlag())
+        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
         {
             /* Get the student group of the student that submitted the file. */
             $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
@@ -375,7 +375,7 @@ class SolutionBean extends DatabaseBean
 
         /* In case that the lecture uses student group tasks, we have to award the same points to every member
            of the group. */
-        if (SessionDataBean::getLectureGroupFlag())
+        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
         {
             $group_res = $_SESSION['group_res'];
             $group_data = $group_res[0];

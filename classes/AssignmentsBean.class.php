@@ -162,7 +162,7 @@ class AssignmentsBean extends DatabaseBean
 
             /* Query the group mode flag of the lecture. The flag influences the computation of `haveSolution`
                flag in the code below. */
-            if (SessionDataBean::getLectureGroupFlag())
+            if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
             {
                 $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
                 $students = $sgb->getGroupStudentsOfStudent($studentId);

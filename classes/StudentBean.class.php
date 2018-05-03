@@ -1405,7 +1405,7 @@ class StudentBean extends DatabaseBean
         }
 
         /* Check for possible student group mode. */
-        if (SessionDataBean::getLectureGroupFlag())
+        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
         {
             $grpb = new StudentGroupBean(null, $this->_smarty, null, null);
             $grpb->assignGroupAndGroupStudentsOfStudent($this->id);

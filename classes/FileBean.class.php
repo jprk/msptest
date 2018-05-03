@@ -689,7 +689,7 @@ class FileBean extends DatabaseBean
             {
                 /* If the lecture student group mode is on, check that the student is a member of the student group that
                    owns the file. */
-                if (SessionDataBean::getLectureGroupFlag())
+                if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
                 {
                     /* Group mode on. Check the student group ids. */
                     $sgb = new StudentGroupBean(null, $this->_smarty, null, null);

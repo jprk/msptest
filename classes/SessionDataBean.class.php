@@ -90,9 +90,9 @@ class SessionDataBean
     /**
      * Return the group mode flag for the current lecture.
      */
-    static function getLectureGroupFlag()
+    static function getLectureGroupType()
     {
-        return LectureBean::getGroupFlag($_SESSION[self::SDB_LECTURE_DATA]);
+        return LectureBean::getGroupType($_SESSION[self::SDB_LECTURE_DATA]);
     }
 
     /**

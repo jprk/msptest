@@ -879,4 +879,35 @@ function mutexUnlock($class, $resourceId)
     return $ret;
 }
 
+/**
+ * Remove everything below the given path in the directory tree.
+ * The function does not handle dot files.
+ * @param $dirPath string Base directory. Will not be deleted.
+ */
+function removeDirContent($dirPath)
+{
+    if (! is_dir($dirPath))
+    {
+        throw new InvalidArgumentException("$dirPath must be a directory");
+    }
+
+    if (substr($dirPath, strlen($dirPath) - 1, 1) != '/')
+    {
+        $dirPath .= '/';
+    }
+
+    $files = glob($dirPath . '*', GLOB_MARK);
+    foreach ($files as $file)
+    {
+        if (is_dir($file))
+        {
+            removeDirContent($file);
+            rmdir($file);
+        }
+        else
+        {
+            unlink($file);
+        }
+    }
+}
 ?>

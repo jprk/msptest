@@ -434,7 +434,7 @@ class ExerciseBean extends DatabaseBean
     {
         /* Get the information about the lecture we are listing exercises
            for ... */
-        $lectureBean = new LectureBean ($this->id, $this->_smarty, "", "");
+        $lectureBean = new LectureBean ($this->id, $this->_smarty, null, null);
         $lectureBean->assignSingle();
 
         /* Get the list of all exercises for the given lecture id and the

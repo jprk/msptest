@@ -99,6 +99,7 @@ switch ($object)
     case "section":
     case "solution":
     case "student":
+    case "studentgroup":
     case "stupass":
     case "stuexe":
     case "stulec":
@@ -128,13 +129,13 @@ $loginNeeded = false;
 switch ($action)
 {
     case "realdelete":
-        if ($object == "repbooking")
+        if ($object == "repbooking" || $object == "studentgroup")
         {
             $studentNeeded = true;
             break;
         }
     case "edit":
-        if ($object == "formsolution" || $object == "repbooking")
+        if ($object == "formsolution" || $object == "repbooking" || $object == "studentgroup")
         {
             $studentNeeded = true;
             break;
@@ -150,7 +151,7 @@ switch ($action)
         break;
     case "delete":
         if ($object == "login") break;
-        if ($object == "repbooking")
+        if ($object == "repbooking" || $object == "studentgroup")
         {
             $studentNeeded = true;
             break;
@@ -435,6 +436,9 @@ switch ($object)
         break;
     case "student":
         $bean = new StudentBean ($id, $smarty, $action, $object);
+        break;
+    case "studentgroup":
+        $bean = new StudentGroupBean ($id, $smarty, $action, $object);
         break;
     case "stuexe":
         $bean = new StudentExerciseBean ($id, $smarty, $action, $object);

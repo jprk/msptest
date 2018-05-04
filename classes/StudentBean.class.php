@@ -1408,7 +1408,15 @@ class StudentBean extends DatabaseBean
         if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
         {
             $grpb = new StudentGroupBean(null, $this->_smarty, null, null);
-            $grpb->assignGroupAndGroupStudentsOfStudent($this->id);
+            $data = $grpb->assignGroupAndGroupStudentsOfStudent($this->id);
+            /* If the student is not member of any student group, the content of `$data` are two empty lists.
+               In that case, fetch the list of free student groups (but only in case that the student is not
+               a member, as an attempt to fetch a list when all group places are already taken -- which could
+               happen if the student is already a member -- results in an exception). */
+            if (empty($data[0]))
+            {
+                $grpb->assignFreeGroupsList();
+            }
         }
 
         /* Check the replacement exercises. */

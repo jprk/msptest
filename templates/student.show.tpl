@@ -27,7 +27,7 @@
 {/english}
 </p>
 <h2>{czech}Údaje o Vás{/czech}{english}Your data{/english}</h2>
-<p>
+<p style="display: inline;">
 {if $student.id > 100000 }
     ČVUT id: {$student.id}<br>
 {/if}
@@ -37,9 +37,20 @@
     email: {$student.email}
 {if $lecture.do_groups}
     <br>{czech}studentská skupina v tomto předmětu{/czech}{english}student group id in this lecture{/english}:
-    {if $group_data}{$group_data.name}{else}{czech}nepřiřazena{/czech}{english}not yet assigned{/english}{/if}
+    {if $group_data}
+        {$group_data.name}
+        <form style="display: inline;" action="?act=delete,studentgroup,{$group_data.id}" method="post">
+        <input type="submit" value="{czech}Zrušit členství{/czech}{english}Remove{/english}">
+        </form>
     <br>{czech}studenti ve skupině{/czech}{english}members of your group{/english}:
     {foreach from=$group_students item=grps name=grp_students}{$grps.firstname} {$grps.surname}{if not $smarty.foreach.grp_students.last}, {/if}{/foreach}
+    {else}
+        {czech}nepřiřazena, vyberte si{/czech}{english}not yet assigned, select{/english}:&nbsp;
+        <form style="display: inline;" action="?act=edit,studentgroup,{$lecture.id}" method="post">
+        <select name="group_id">{html_options options=$free_groups}</select>
+        <input type="submit" value="{czech}Uložit{/czech}{english}Save{/english}">
+        </form>
+    {/if}
 {/if}
 </p>
 <h2>{czech}Samostatné úlohy{/czech}{english}Assignments{/english}</h2>

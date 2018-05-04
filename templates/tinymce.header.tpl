@@ -21,6 +21,11 @@
             {title: 'Table cell gray left aligned', selector: 'td', classes: 'grayLeft'},
             {title: 'Table cell gray right aligned', selector: 'td', classes: 'grayRight'},
             {title: 'Table cell week number', selector: 'td', classes: 'week'}
-        ]
+        ],
+        invalid_styles: {
+            'tr' : 'width height',
+            'th' : 'width height',
+            'td' : 'width height'
+        }
     });</script>
 {/literal}

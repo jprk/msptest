@@ -16,7 +16,8 @@
 <td class="center">{$subtaskList[aId].ttitle}</td>
 <td class="center">{$subtaskList[aId].count}</td>
 <td class="center">{$subtaskList[aId].generated}</td>
-<td width="96" class="smaller" valign="middle"
+<td width="112" class="smaller" valign="middle"
+  ><a href="?act=edit,formassign,{$subtaskList[aId].id}&pdfimport=1" ><img src="images/pdf.png"                        alt="[import pdf]"          title="import zadání v PDF"              width="16" height="16"></a
   ><a href="?act=edit,formassign,{$subtaskList[aId].id}"             ><img src="images/famfamfam/database.png"         alt="[import]"              title="import zadání"                    width="16" height="16"></a
   ><a href="?act=show,formassign,{$subtaskList[aId].id}"             ><img src="images/famfamfam/database_refresh.png" alt="[generate]"            title="generuj zadání"                   width="16" height="16"></a
   ><a href="?act=show,formassign,{$subtaskList[aId].id}&regenerate=1"><img src="images/famfamfam/database_error.png"   alt="[regenerate]"          title="regeneruj zadání"                 width="16" height="16"></a

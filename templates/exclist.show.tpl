@@ -5,6 +5,7 @@
 <th>Den</th>
 <th>Od-do</th>
 <th>Místnost</th>
+  <th>Skupina</th>
 <th>Cvičící</th>
 <th{if $isStudent || $isAnonymous} style="width: 6ex;"{/if}>&nbsp;</th>
 </tr>
@@ -19,6 +20,7 @@
 <td class="center">{$exercise.day.name}</td>
 <td class="center">{$exercise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$exercise.to|date_format:"%H:%M"}</td>
 <td class="center">{$exercise.room}</td>
+  <td class="center">{if $exercise.groupno > 0}{$exercise.groupno}{else}&ndash;{/if}</td>
 <td class="center">
   {* current storage of tutors, ordered list of persons per exercise*}
   {strip}
@@ -34,10 +36,10 @@
     ><img src="images/famfamfam/application_view_detail.png" alt="[ukázat]"
           title="ukázat detail cvičení"></a
 {if $isAdmin || $isLecturer}
-  > <a href="?act=show,exercise,{$exerciseList[excPos].id}&displaynames=true"
+  > <a href="?act=show,exercise,{$exercise.id}&displaynames=true"
     ><img src="images/famfamfam/group.png" alt="[seznam]"
           title="ukázat seznam studentů na cvičení"></a
-  > <a href="?act=edit,points,{$exerciseList[excPos].id}&type=exc"
+  > <a href="?act=edit,points,{$exercise.id}&type=exc"
     ><img src="images/famfamfam/award_star_add.png" alt="[body]"
           title="bodování studentů"></a
 {/if}

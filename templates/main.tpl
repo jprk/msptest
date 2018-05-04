@@ -36,7 +36,7 @@ var ON_LOAD = [];
   <tr id="pgrow_title">
     <td class="rightbordersolid">
     <a href="?act=show,home,{$lecture.id}">{*<img src="ex/{$lecture.id}/title.gif" alt="" width="410" height="40" border="0" align="left">*}<img src="ex/{$lecture.id}/title.gif" alt="{$lecture.code}" border="0" align="left"></a>
-    <img src="ex/{$lecture.id}/login.gif" alt="" width="112" height="40" border="0" align="right" ismap="ismap" usemap="#loginmap" >
+        {if $lecture.id > 0}<img src="ex/{$lecture.id}/login.gif" alt="" width="112" height="40" border="0" align="right" ismap="ismap" usemap="#loginmap" >{/if}
     </td>
   </tr>
   <tr>

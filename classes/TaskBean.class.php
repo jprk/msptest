@@ -142,9 +142,9 @@ class TaskBean extends DatabaseBean
         return $seq;
     }
 
-    static function assignTypeSelect()
+    function assignTaskTypeSelect()
     {
-        self::assign('taskTypeSelect', self::getTaskTypes());
+        $this->assign('taskTypeSelect', self::getTaskTypes());
     }
 
     function assignFullTaskList($taskIdList)
@@ -198,7 +198,7 @@ class TaskBean extends DatabaseBean
             $tdBean = new TaskDatesBean ($lectureId, $this->_smarty, NULL, NULL);
             $datetimes = $tdBean->getTaskDates($rs, $this->schoolyear);
             /* Get the list of the task types. */
-            $ttypes = $this->_getTaskTypes();
+            $ttypes = self::getTaskTypes();
             /* Loop over all tasks and update data what will be displayed. */
             foreach ($rs as $key => $val)
             {
@@ -237,7 +237,7 @@ class TaskBean extends DatabaseBean
             }
         }
 
-        $this->_smarty->assign('taskList', $rs);
+        $this->assign('taskList', $rs);
         return $rs;
     }
 

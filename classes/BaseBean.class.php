@@ -51,7 +51,7 @@ class BaseBean
     /** Retun a list of available task types.
      * TODO: Remove this instance, it belongs to TaskBean.
      */
-    function _getTaskTypes()
+    /*function _getTaskTypes()
     {
         return array(
             0 => "Vyberte ze seznamu ...",
@@ -66,7 +66,7 @@ class BaseBean
             TT_SEMESTRAL => "Semestrální úloha",
             TT_SEMESTRAL_IND => "Semestrální úloha s individuálním zadáním"
         );
-    }
+    }*/
 
     /* -------------------------------------------------------------------
 	   CONSTRUCTOR
@@ -245,10 +245,13 @@ class BaseBean
         }
     }
 
+    /*
+
     function assignTaskTypeSelect()
     {
-        $this->_smarty->assign('taskTypeSelect', $this->_getTaskTypes());
+        $this->assign('taskTypeSelect', $this->_getTaskTypes());
     }
+    */
 
     function updateId()
     {

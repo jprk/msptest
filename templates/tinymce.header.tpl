@@ -1,13 +1,14 @@
 {literal}
 <script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
+<script src="js/tinymce.sectionfile.plugin.js"></script>
 <script>tinymce.init({
         selector:'textarea',
         plugins: [
-            'advlist autolink lists link image charmap print preview anchor',
+            'advlist autolink lists link sectionfile image charmap print preview anchor',
             'searchreplace visualblocks code fullscreen',
             'insertdatetime media table contextmenu paste code'
         ],
-        toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+        toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link sectionfile image',
         style_formats: [
             {title: 'Inactive text', classes: 'inactive_text'},
             {title: 'Alert text', classes: 'alert_text'},

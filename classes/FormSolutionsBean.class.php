@@ -984,8 +984,7 @@ class FormSolutionsBean extends DatabaseBean
 
         /* Get the lecture description, just to fill in some more-or-less
            useful peieces of information. */
-        $lectureBean = SessionDataBean::getLecture();
-        $lectureBean->assignSingle();
+        $lecture_data = SessionDataBean::getLecture();
 
         /* Now create an array that contains student id as an key and _index_ to
            the $exerciseList as a value (that is, not the exercise ID, but the
@@ -998,8 +997,8 @@ class FormSolutionsBean extends DatabaseBean
            that contains text ' checked="checked"' on the position of the exercise
            that the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-        $studentList = $studentBean->assignStudentListWithExercises($lectureBean->id, count($exerciseList), $exerciseBinding);
-
+        $studentList = $studentBean->assignStudentListWithExercises($lecture_data['id'], count($exerciseList), $exerciseBinding);
+        
         $this->generateAssignments($this->id, $studentList);
     }
 

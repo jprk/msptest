@@ -188,7 +188,7 @@
     </tr>
     <tr>
         <td valign="top">-&nbsp;</td>
-        <td><a href="?act=admin,formassign,{$lecture.id}">Nahrát týdenní úlohy</a></td>
+        <td><a href="?act=admin,formassign,{$lecture.id}">Nahrát zadání úloh</a></td>
     </tr>
 </table>
 <br/>

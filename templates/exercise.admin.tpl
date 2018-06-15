@@ -1,17 +1,25 @@
 <p>
+  Nahrát CSV se seznamem cvičení a cvičených skupin:
+  <form action="?act=save,exercise,0" method="post" enctype="multipart/form-data">
+    <input type="file" name="csv_exercises">
+    <input type="submit" value="Nahrát">
+  </form>
+
+</p><p>
 <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
-<td colspan="5">&nbsp;Přidat cvičení</td>
+<td colspan="6">&nbsp;Přidat cvičení</td>
 <td width="40" class="smaller" valign="middle"
   ><a href="?act=edit,exercise,0&lecture_id={$lecture.id}"><img src="images/add.gif" title="přidat cvičení" alt="[nové cvičení]" width="16" height="16"></a></td>
 </tr>
 {if $exerciseList}
 <tr>
-<th>den</th>
-<th>od</th>
-<th>do</th>
-<th>kde</th>
-<th>cvičící</th>
+  <th>Den</th>
+  <th>Od</th>
+  <th>Do</th>
+  <th>Místnost</th>
+  <th>Skupina</th>
+  <th>Cvičící</th>
 <th>&nbsp;</th>
 </tr>
 {foreach from=$exerciseList item=exercise name=exl}
@@ -24,6 +32,7 @@
 <td class="center">{$exercise.from|date_format:"%H:%M"}</td>
 <td class="center">{$exercise.to|date_format:"%H:%M"}</td>
 <td class="center">{$exercise.room}</td>
+  <td class="center">{if $exercise.groupno > 0}{$exercise.groupno}{else}&ndash;{/if}</td>
   <td class="center">
     {* current storage of tutors, ordered list of persons per exercise*}
     {strip}

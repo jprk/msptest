@@ -15,6 +15,7 @@ class TaskBean extends DatabaseBean
     const TT_SEMESTRAL_IND = 201; /* TODO: rename to TT_SEMEESTRAL_INDIV_PDF */
     const TT_ACTIVITY = 300;
     const TT_WRITTEN = 400;
+    const TT_NO_TOTAL_POINTS = 500; /**> A necessary condition without any points added to the total. */
 
     var $type;
     var $title;
@@ -45,7 +46,8 @@ class TaskBean extends DatabaseBean
             self::TT_LECTURE_PDF => "Hromadná týdenní úloha (jeden soubor *.pdf)",
             self::TT_WEEKLY_TF => "Povinná týdenní úloha (formulář s přenosovou fcí)",
             self::TT_SEMESTRAL => "Semestrální úloha",
-            self::TT_SEMESTRAL_IND => "Semestrální úloha s individuálním zadáním"
+            self::TT_SEMESTRAL_IND => "Semestrální úloha s individuálním zadáním",
+            self::TT_NO_TOTAL_POINTS => "Podmínka zápočtu bez připsání bodů"
         );
     }
 
@@ -139,16 +141,16 @@ class TaskBean extends DatabaseBean
         return $seq;
     }
 
-    static function assignTypeSelect()
+    function assignTaskTypeSelect()
     {
-        self::assign('taskTypeSelect', self::getTaskTypes());
+        $this->assign('taskTypeSelect', self::getTaskTypes());
     }
 
-    function assignFullTaskList($taskList)
+    function assignFullTaskList($taskIdList)
     {
-        $dbList = arrayToDBString($taskList);
+        $dbList = arrayToDBString($taskIdList);
 
-        $this->dumpVar('taskList', $taskList);
+        $this->dumpVar('taskList', $taskIdList);
         $this->dumpVar('dbList', $dbList);
 
         $rs = DatabaseBean::dbQuery(
@@ -165,7 +167,7 @@ class TaskBean extends DatabaseBean
         }
 
         $this->dumpVar('fullTaskList', $rs);
-        $this->_smarty->assign('taskList', $rs);
+        $this->assign('taskList', $rs);
         return $rs;
     }
 
@@ -195,7 +197,7 @@ class TaskBean extends DatabaseBean
             $tdBean = new TaskDatesBean ($lectureId, $this->_smarty, NULL, NULL);
             $datetimes = $tdBean->getTaskDates($rs, $this->schoolyear);
             /* Get the list of the task types. */
-            $ttypes = $this->_getTaskTypes();
+            $ttypes = self::getTaskTypes();
             /* Loop over all tasks and update data what will be displayed. */
             foreach ($rs as $key => $val)
             {
@@ -234,7 +236,7 @@ class TaskBean extends DatabaseBean
             }
         }
 
-        $this->_smarty->assign('taskList', $rs);
+        $this->assign('taskList', $rs);
         return $rs;
     }
 
@@ -264,7 +266,7 @@ class TaskBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doAdmin()
     {
-        /* Get the list of all tasks for the exercises of this lecture. */
+        /* Get the list of all tasks for the excersises of this lecture. */
         $this->assignFull($this->id);
         /* Get a lecture that this subtask is related to. */
         $lectureBean = new LectureBean ($this->id, $this->_smarty, "", "");

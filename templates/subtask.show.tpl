@@ -1,17 +1,18 @@
-<h2>Informace o úloze</h2>
+<h2>{czech}Informace o úloze{/czech}{english}Information about the task{/english}</h2>
 <p>
-<strong>Aktivní od:</strong> {$subtask.datefrom|date_format:"%d.%m.%Y"}<br>
-<strong>Aktivní do:</strong> {$subtask.dateto|date_format:"%d.%m.%Y"}<br>
-<strong>Bodové maximum:</strong> {$subtask.maxpts}
+<strong>{czech}Aktivní od:{/czech}{english}Active from:{/english}</strong> {$subtask.datefrom|date_format:"%d.%m.%Y"}<br>
+<strong>{czech}Aktivní do:{/czech}{english}Deadline:{/english}</strong> {$subtask.dateto|date_format:"%d.%m.%Y"}<br>
+<strong>{czech}Bodové maximum:{/czech}{english}Maximum points:{/english}</strong> {$subtask.maxpts}
 </p>
-<h3>Text zadání</h3>
+<h3>{czech}Text zadání{/czech}{english}Problem formulation{/english}</h3>
 {$subtask.assignment}
 {if $assignment.file_id}
 <p>
-Soubor se zadáním si stáhněte <a href="?act=show,file,{$assignment.file_id}">zde</a>.
+{czech}Soubor se zadáním si stáhněte{/czech}{english}Download the text from{/english}
+    <a href="?act=show,file,{$assignment.file_id}">{czech}zde{/czech}{english}here{/english}</a>.
 </p>
 {/if}
-<h3>Odevzdání</h3>
+<h3>{czech}Odevzdání{/czech}{english}Submission{/english}</h3>
 <p>
 {if $subtask.active}
 {if $subtask.isformassignment}
@@ -24,15 +25,23 @@ Při odevzdání simulinkového modelu postupujte následujícím způsobem:
 </ol>
 Formulář pro odevzdání úlohy je <a href="?act=edit,formsolution,{$subtask.id}">zde</a>.
 {elseif $subtask.ispdfassignment}
-Při odevzdání PDF souboru postupujte následujícím způsobem:
-<ol>
+    {czech}Při odevzdání PDF souboru postupujte následujícím způsobem:
+        <ol>
     <li>Vytvořte ve Vašem oblíbeném textovém procesoru soubor odpovídající
         požadavkům zadání.
-    <li>Tento soubor zkonvertujte do PDF (MS Word 2007 a novější, OpenOffice nebo LyX to umí rovnou,
+            <li>Tento soubor zkonvertujte do PDF (OpenOffice nebo Lyx to umí rovnou,
         jinak použijte virtuální tiskárnu do PDF, jako je například PDFCreator).
     <li>Tento soubor nahrajte pomocí formuláře pod tímto textem.
-</ol>
-Formulář pro odevzdání úlohy je <a href="?act=edit,formsolution,{$subtask.id}">zde</a>.
+        </ol>
+        Formulář pro odevzdání úlohy je <a href="?act=edit,formsolution,{$subtask.id}">zde</a>.{/czech}
+    {english}When submitting a PDF file, please follow the following rules:
+        <ol>
+            <li>Use your favorite text editor to create a document containing the solution of the task.
+            <li>Convert this file into PDF format (all major text editors are now able to do so, in the
+                case of problems you may try to use a virtual PDF printer as PDFCreator).
+            <li>Upload this PDF file using the form that is available by clicking on the link below.
+        </ol>
+        The form for submitting the solution to this task is <a href="?act=edit,formsolution,{$subtask.id}">here</a>.{/english}
 {elseif $subtask.islpdfassignment}
 <p>
 Vložte PDF soubor s vypracovaným řešením zadání. Odpovídat můžete pouze jednou.

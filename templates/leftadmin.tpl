@@ -162,6 +162,10 @@
         <td valign="top">-&nbsp;</td>
         <td><a href="?act=admin,studentgroup,{$lecture.id}&forcegroup=1">Nucené přidělení skupiny</a></td>
     </tr>
+    <tr class="mlevel1">
+        <td valign="top">-&nbsp;</td>
+        <td><a href="?act=show,studentgroup,{$lecture.id}">Výpis studentských skupin</a></td>
+    </tr>
     <tr>
         <td valign="top">-&nbsp;</td>
         <td><a href="?act=admin,subtask,{$lecture.id}">Dílčí úkoly</a></td>

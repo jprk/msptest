@@ -7,13 +7,96 @@ class ExerciseBean extends DatabaseBean
     var $to;
     var $room;
     var $lecture_id;
-    private $lecturer_id;  /** @var  int Lecturer/tutor id. Not used anymore but kept for compatibility reasons. */
-    private $tutor_ids;  /** @var array Tutor identifiers. */
-    private $tutors;  /** @var array Tutor records. */
+    /** @var int Lecturer/tutor id. Not used anymore but kept for compatibility reasons. */
+    private $lecturer_id;
+    /** @var array Tutor identifiers. */
+    private $tutor_ids;
+    /** @var array Tutor records. */
+    private $tutors;
+    /** @var int Student group that has this exercise in their schedule. */
+    private $groupno;
+    /** @var ExerciseTutorsBean Instance of ExerciseTutorBean. */
     private $extutBean;
     private $displayNames;
 
-    /** @var ExerciseTutorsBean */
+    /**
+     * @param $week_str
+     * @param $day_str
+     * @return int
+     * @throws Exception
+     */
+    function make_day($week_str, $day_str)
+    {
+        $day_str = iconv("windows-1250", "utf-8", trim($day_str, " \t\n\r\"\xa0"));
+
+        $this->dumpVar('week_str', $week_str);
+        $this->dumpVar('day_str', $day_str);
+
+        $week_str = strtolower($week_str);
+        $day_str = mb_strtolower($day_str, "utf-8");
+
+        if ( empty($week_str) || $week_str == '-' )
+        {
+            $day_offset = 0;
+        }
+        elseif ( $week_str == 's' || $week_str == 'e' )
+        {
+            /* Even week */
+            $day_offset = 10;
+        }
+        elseif ( $week_str == 'l' || $week_str == 'o' )
+        {
+            /* Odd week */
+            $day_offset = 20;
+        }
+        else
+        {
+            throw new Exception("incorrect week string '$week_str'");
+        }
+
+        $days = array(
+            'po' => 1,
+            'pondeli' => 1,
+            'pondělí' => 1,
+            'mo' => 1,
+            'monday' => 1,
+            //
+            'ut' => 2,
+            'út' => 2,
+            'utery' => 2,
+            'úterý' => 2,
+            'tue' => 2,
+            'tuesday' => 2,
+            //
+            'st' => 3,
+            'streda' => 3,
+            'středa' => 3,
+            'wed' => 3,
+            'wednesday' => 3,
+            //
+            'c' => 4,
+            'č' => 4,
+            'ct' => 4,
+            'čt' => 4,
+            'ctvrtek' => 4,
+            'čtvrtek' => 4,
+            'thu' => 4,
+            'thursday' => 4,
+            //
+            'pa' => 5,
+            'pá' => 5,
+            'patek' => 5,
+            'pátek' => 5,
+            'fri' => 5,
+            'friday' => 5
+            );
+        if ( ! array_key_exists($day_str, $days))
+        {
+            throw new Exception("invalid day string '$day_str'");
+        }
+
+        return $days[$day_str] + $day_offset;
+    }
 
     function _setDefaults()
     {
@@ -23,6 +106,7 @@ class ExerciseBean extends DatabaseBean
         $this->room = "";
         $this->lecture_id = SessionDataBean::getLectureId();
         $this->lecturer_id = 0;
+        $this->groupno = 0;
         $this->tutor_ids = array();
         $this->tutors = array();
         $this->_update_rs();
@@ -56,6 +140,10 @@ class ExerciseBean extends DatabaseBean
         $this->extutBean->setTutorsIdsForExercise($this->tutor_ids, $this->id);
     }
 
+    /**
+     * @param int $alt_id
+     * @throws Exception
+     */
     function dbQuerySingle($alt_id = 0)
     {
         DatabaseBean::dbQuerySingle($alt_id);
@@ -64,6 +152,7 @@ class ExerciseBean extends DatabaseBean
         $this->from = $this->rs['from'];
         $this->to = $this->rs['to'];
         $this->room = $this->rs['room'];
+        $this->groupno = $this->rs['groupno'];
         $this->lecture_id = $this->rs['lecture_id'];
         $this->lecturer_id = $this->rs['lecturer_id'];
         $this->schoolyear = $this->rs['schoolyear'] = $this->rs['year'];
@@ -81,11 +170,10 @@ class ExerciseBean extends DatabaseBean
         $this->from = trimStrip($_POST['from']);
         $this->to = trimStrip($_POST['to']);
         $this->room = trimStrip($_POST['room']);
+        $this->groupno = trimStrip($_POST['groupno']);
 
         /* Array of tutor ids does not need string trimming. */
         $this->tutor_ids = $_POST['tutor_ids']; /**> @var array */
-
-        //$this->schoolyear = trimStrip($_POST['schoolyear']);
     }
 
     /**
@@ -390,11 +478,81 @@ class ExerciseBean extends DatabaseBean
         $newsBean->assignNewsForTypes(0, $this->lecturer_id, $this->id, $this->lecture_id);
     }
 
-    /* -------------------------------------------------------------------
+    /** -------------------------------------------------------------------
        HANDLER: SAVE
-       ------------------------------------------------------------------- */
+       -------------------------------------------------------------------
+     * @throws Exception for file upload
+     */
     function doSave()
     {
+        /* Check for file upload. */
+        $this->dumpVar('FILES', $_FILES);
+        if (isset ($_FILES['csv_exercises']))
+        {
+            $file_data = $_FILES['csv_exercises'];
+            if (is_uploaded_file($file_data['tmp_name']))
+            {
+                $handle = @fopen($file_data['tmp_name'], "r");
+                if ($handle)
+                {
+                    /* We have to skip the first line of the imported CSV file - it contains header information. */
+                    $skipHeader = true;
+                    /* First row of the resulting list. */
+                    $row = 1;
+                    /* And loop while we have something to chew on ... */
+                    while (!feof($handle))
+                    {
+                        /* Read a line of text from the submitted file. */
+                        $buffer = fgets($handle, 4096);
+                        /* The file contains sometimes also form feed character (^L, 0x0c) which shall be
+                           removed as well. */
+                        $trimmed = trim($buffer, " \t\n\r\0\x0b\x0c\xa0");
+                        /* The file may also contain some empty lines, and trimming the form feed will
+                           generate another empty line. */
+                        if (empty ($trimmed))
+                        {
+                            /* Skip empty lines. */
+                            continue;
+                        }
+                        if ($skipHeader)
+                        {
+                            /* Skip header row. */
+                            $skipHeader = false;
+                            continue;
+                        }
+                        /* The line contains several fields separated by semicolon. */
+                        $la = explode(";", $trimmed);
+                        self::dumpVar('la', $la);
+                        /* Stucture is as follows:
+                            0 ... group number, integer
+                            1 ... week type: empty or -/S or E/L or O
+                            2 ... day (Pondělí-Neděle)
+                            3 ... from
+                            4 ... to
+                            5 ... room no
+                        */
+                        if ( empty($la[1]) || empty($la[2]) || empty($la[3]) || empty($la[4]))
+                        {
+                            continue;
+                        }
+                        $this->id = 0;
+                        $this->groupno = intval($la[0]);
+                        $this->day = self::make_day($la[1],$la[2]);
+                        $this->from = $la[3];
+                        $this->to = $la[4];
+                        $this->room = $la[5];
+                        /* Store the record into database */
+                        $this->dbReplace();
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception('possible file upload attack when importing exercises');
+            }
+        }
+        else
+        {
         /* Assign POST variables to internal variables of this class and
            remove evil tags where applicable. */
         $this->processPostVars();
@@ -405,6 +563,7 @@ class ExerciseBean extends DatabaseBean
            handler. Admin mode expects to have the value of $this->id set
            to lecture_id.
         */
+        }
         $this->id = $this->lecture_id;
         $this->doAdmin();
     }

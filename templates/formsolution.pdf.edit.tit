@@ -1,1 +1,1 @@
-Vložte řešení úlohy {$subtask.title} ({$subtask.ttitle})
+{czech}Vložte řešení úlohy{/czech}{english}Submit solution to{/english} {$subtask.title} ({$subtask.ttitle})

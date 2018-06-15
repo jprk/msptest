@@ -24,6 +24,11 @@ class StudentGroupBean extends DatabaseBean
     const ERR_SEMACQ = 66;
     const ERR_MUTEX = 67;
 
+    /* Sorting */
+    const GRP_SORT_BY_GRP = 1;
+    const GRP_SORT_BY_NAME = 2;
+    const GRP_SORT_BY_LOGIN = 3;
+
     /* Static project resource identifier for ftok().
        Has to be a single character. */
     static private $projectId = 'A';
@@ -151,20 +156,25 @@ class StudentGroupBean extends DatabaseBean
         return $rs;
     }
 
+    /**
+     * Get a list of student groups where a student may still join the group.
+     */
     function getFreeGroupsList()
     {
         /* Initialize the free group list */
         $free_groups = array();
-        /* This will always return a list of groups. */
+        /* This will always return a non-empty list of groups. */
         $rs = $this->getGroupsOccupancy();
         foreach ($rs as $group)
         {
+            /* Get the number of free places in this group. */
             $free_places = $this->max_places - $group['cs'];
             if ($free_places > 0)
             {
                 $id = $group['id'];
-                $name = $group['name'] . " (free: $free_places)";
-                $free_groups[$id] = $name;
+                $group['free_places'] = $free_places;
+                $group['namef'] = $group['name'] . " (free: $free_places)";
+                $free_groups[$id] = $group;
             }
         }
         $this->dumpVar('free student groups', $free_groups);
@@ -172,6 +182,9 @@ class StudentGroupBean extends DatabaseBean
         return $free_groups;
     }
 
+    /**
+     * Get a list of student groups that are completely empty.
+     */
     function getEmptyGroupsList()
     {
         /* Initialize the free group list */
@@ -182,8 +195,7 @@ class StudentGroupBean extends DatabaseBean
         {
             if (intval($group['cs']) == 0)
             {
-                $id = $group['id'];
-                $empty_groups[] = $id;
+                $empty_groups[] = $group;
             }
         }
         $this->dumpVar('empty student groups', $empty_groups);
@@ -191,34 +203,44 @@ class StudentGroupBean extends DatabaseBean
         return $empty_groups;
     }
 
+    /**
+     * Get a list of students that are not assigned to any student group.
+     * @return array Student data of unassigned students.
+     */
     function getUnassignedStudentList()
     {
         $rs = $this->dbQuery(
-            "SELECT sl.student_id FROM stud_lec AS sl" .
-            "  LEFT JOIN stud_group AS sp ON sl.student_id=sp.student_id AND sp.cancel_stamp IS NULL" .
-            "  LEFT JOIN studentgroup AS sg ON sp.group_id=sg.id " .
-            "WHERE sl.lecture_id=" . $this->lecture_id . " AND sl.year=" . $this->schoolyear .
-            "      AND sp.group_id IS NULL");
+            "SELECT st.* " .
+            "FROM stud_lec AS sl " .
+            "LEFT JOIN stud_group AS sp ON sl.student_id=sp.student_id AND sp.cancel_stamp IS NULL " .
+            "LEFT JOIN studentgroup AS sg ON sp.group_id=sg.id " .
+            "LEFT JOIN student AS st ON st.id=sl.student_id " .
+            "WHERE sl.lecture_id=" . $this->lecture_id . " " .
+            "AND sl.year=" . $this->schoolyear . " " .
+            "AND sp.group_id IS NULL");
 
-        $students = array();
-        if (!empty($rs))
-        {
-            foreach ($rs as $row)
-            {
-                $students[] = $row['student_id'];
-            }
-        }
-        return $students;
+        return $rs;
     }
 
-    function forceGroupAssignment($unassignedStudents,$emptyGroups)
+    /**
+     * Assign selected students to selected groups using round-robbin assignment.
+     * Used to force group assignment for students that did not select a student group by themselves.
+     * @param $unassignedStudents array Student ids for students that did not select a student group.
+     * @param $emptyGroups array Empty group identifiers.
+     * @return array The list of assigned groups and their students.
+     * @throws Exception in case that we do not have enough free places
+     */
+    function forceGroupAssignment($unassignedStudents, $emptyGroups)
     {
         $numStudents = count($unassignedStudents);
         if ($numStudents > count($emptyGroups)*$this->max_places)
         {
-            throw new Exception('Number of unassigned students higher than number of free places in empty groups');
+            throw new Exception(
+                'Number of unassigned students is higher than the number of free places in empty groups');
         }
 
+        /* We have enough places, duplicate the list of empty groups at most `max_places` times to accommodate the
+           given number of unassigned students. */
         $groupList = $emptyGroups;
         while (count($groupList) < $numStudents)
         {
@@ -226,14 +248,22 @@ class StudentGroupBean extends DatabaseBean
         }
 
         $i = 0;
+        $forced_groups = array();
         while ($i < $numStudents)
         {
-            $student_id = $unassignedStudents[$i];
-            $group_id = $groupList[$i];
-            $this->dumpVar('setting student to group', array($student_id, $group_id));
-            $this->setGroupIdForStudent($student_id, $group_id);
+            $student = $unassignedStudents[$i];
+            $group = $groupList[$i];
+            $group_id = $group['id'];
+            if (!array_key_exists($group_id, $forced_groups))
+                $forced_groups[$group_id] = array( 'group' => $group, 'students' => array());
+            $forced_groups[$group_id]['students'][] = $student;
+            $this->dumpVar('setting student to group', array($student, $group));
+            // $this->setGroupIdForStudent($student['id'], $group_id, true);
             $i++;
         }
+
+        $this->dumpVar('forced groups', $forced_groups);
+        return $forced_groups;
     }
 
     function getFreePlaces($group_id)
@@ -251,7 +281,9 @@ class StudentGroupBean extends DatabaseBean
         }
         else
         {
-            trigger_error("Cannot determing free places for $this->lecture_id, student group $group_id", E_WARNING);
+            trigger_error(
+                "Cannot determine free places for $this->lecture_id, student group $group_id",
+                E_WARNING);
             $free_places = -1;
         }
         return $free_places;
@@ -272,9 +304,10 @@ class StudentGroupBean extends DatabaseBean
      * Set the student group ID for the given student.
      * @param $student_id int Student identifier.
      * @param $group_id int Group ID of the student group.
+     * @param bool $forced True if the assignment was forced (pseudo)-automatically.
      * @return int Error code or self::ERR_OK
      */
-    function setGroupIdForStudent($student_id, $group_id)
+    function setGroupIdForStudent($student_id, $group_id, $forced=false)
     {
         /* Check that the student is not a member of another group in this lecture and this school year. */
         $group_data = $this->getGroupForStudent($student_id);
@@ -481,6 +514,74 @@ class StudentGroupBean extends DatabaseBean
     }
 
     /**
+     * Provide a full list of student groups with membership info.
+     * @param int $sort_type
+     * @return array Hierarchical array of groups and studens
+     * @throws Exception in case of unimplemented view
+     */
+    function assignFullGroupList($sort_type = self::GRP_SORT_BY_GRP)
+    {
+        $this->dumpVar('lecture group type',SessionDataBean::getLectureGroupType());
+        $group_list = array();
+        switch (SessionDataBean::getLectureGroupType())
+        {
+            case self::GRPTYPE_NONE:
+                $this->action = 'e_grptypenone';
+                break;
+            case self::GRPTYPE_EXERCISE:
+                throw new Exception('This view has not been implemented yet.');
+            case self::GRPTYPE_LECTURE:
+                $object_id = SessionDataBean::getLectureId();
+                $rs = self::dbQuery("SELECT " .
+                    "sg.id AS group_id, sg.year AS group_year, sg.name AS group_name, sg.object_id, " .
+                    "sp.entry_stamp, sp.cancel_stamp, " .
+                    "st.id, st.firstname, st.surname, st.yearno, st.groupno, st.email, st.calendaryear " .
+                    "FROM studentgroup AS sg " .
+                    "LEFT JOIN stud_group AS sp ON sg.id=sp.group_id " .
+                    "LEFT JOIN student AS st ON sp.student_id=st.id " .
+                    "WHERE sg.year=" . SessionDataBean::getSchoolYear() . " " .
+                    "AND sg.object_id=$object_id " .
+                    "ORDER BY sg.id, st.surname, st.firstname, entry_stamp");
+                $this->dumpVar('lecture group rs',$rs);
+                /* Now group the list by group */
+                $grp_id0 = null;
+                $grp_id1 = null;
+                $group_data = array();
+                $group = null;
+                /* Reverse the array so that we can access the contents starting from the first element using
+                   array_pop(). */
+                $rs = array_reverse($rs);
+                while (true)
+                {
+                    /* Get the element off the tail of the reversed array. */
+                    $val = array_pop($rs);
+                    /* In case that we are not at the end of the array, get the group id. */
+                    if (isset($val)) $grp_id1 = intval($val['group_id']);
+                    if ($val === null || $grp_id0 != $grp_id1)
+                    {
+                        /* Store the old group? */
+                        if ($grp_id0 !== null)
+                        {
+                            $group['students'] = $group_data;
+                            $group_list[$grp_id0] = $group;
+                        }
+                        /* Break out of the loop? */
+                        if ($val === null) break;
+                        /* If not, create a new group storage */
+                        $group = array( 'id' => $grp_id1, 'name' => $val['group_name'], 'students' => null);
+                        $group_data = array();
+                        $grp_id0 = $grp_id1;
+                    }
+                    /* Append student data in case that there is a student assigned to this group. */
+                    if (isset($val['id'])) $group_data[] = $val;
+                }
+        }
+        $this->assign('groupList', $group_list);
+        $this->assign('groupListSort', $sort_type);
+        return $group_list;
+    }
+
+    /**
      * Pass information about student's group and group students to Smarty templates.
      * Creates Smarty variables `group_data` and `group_students`.
      * @param $student_id int Identifier of the student.
@@ -508,6 +609,20 @@ class StudentGroupBean extends DatabaseBean
         return $free_groups;
     }
 
+    /**
+     * Handle `show` event.
+     */
+    function doShow()
+    {
+        $this->assignFullGroupList();
+    }
+
+    /**
+     * Handle `admin` event.
+     * The admin handler is used to either display interface for specifying the number of student groups to generate,
+     * or it is used to force group assignment for students that did not choose a group for themselves.
+     * @throws Exception
+     */
     function doAdmin()
     {
         assignGetIfExists($this->forcegroup, $this->rs, 'forcegroup');
@@ -516,9 +631,8 @@ class StudentGroupBean extends DatabaseBean
             /* Force group assignment for unassigned students. */
             $unassignedStudents = $this->getUnassignedStudentList();
             $emptyGroups = $this->getEmptyGroupsList();
-            $this->forceGroupAssignment($unassignedStudents, $emptyGroups);
-            /* TODO: Get full infor for every student */
-            /* TODO: Get list of assigned group-sudent pairs. */
+            $forced_groups = $this->forceGroupAssignment($unassignedStudents, $emptyGroups);
+            $this->assign('forced_groups', $forced_groups);
             $this->action = 'forcegroup';
         }
     }

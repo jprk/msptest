@@ -5,6 +5,7 @@
 <th>Den</th>
 <th>Od-do</th>
 <th>Místnost</th>
+  <th>Skupina</th>
 <th>Cvičící</th>
 <th{if $isStudent || $isAnonymous} style="width: 6ex;"{/if}>&nbsp;</th>
 </tr>
@@ -19,6 +20,7 @@
 <td class="center">{$exercise.day.name}</td>
 <td class="center">{$exercise.from|date_format:"%H:%M"}&nbsp;-&nbsp;{$exercise.to|date_format:"%H:%M"}</td>
 <td class="center">{$exercise.room}</td>
+  <td class="center">{if $exercise.groupno > 0}{$exercise.groupno}{else}&ndash;{/if}</td>
 <td class="center">
   {* current storage of tutors, ordered list of persons per exercise*}
   {strip}

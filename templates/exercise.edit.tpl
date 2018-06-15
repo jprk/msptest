@@ -41,10 +41,14 @@
                      onClick="getTimeSelectFor(document.exerciseForm.to);"></td>
         </tr>
         <tr class="rowB">
-            <td class="itemtitle">Místnost</td>
-            <td><input type="text" name="room" maxlength="32" size="8" value="{$exercise.room}"></td>
+            <td class="itemtitle">Skupina</td>
+            <td><input type="text" name="groupno" maxlength="2" size="2" value="{$exercise.groupno}"></td>
         </tr>
         <tr class="rowA">
+            <td class="itemtitle">Místnost</td>
+            <td><input type="text" name="room" maxlength="16" size="8" value="{$exercise.room}"></td>
+        </tr>
+        <tr class="rowB">
             <td class="itemtitle">Cvičící</td>
             <td>
                 {if $lectureLecturers}
@@ -56,7 +60,7 @@
                 {/if}
             </td>
         </tr>
-        <tr class="rowB">
+        <tr class="rowA">
             <td>&nbsp;</td>
             <td>
                 <input type="submit" value="Uložit">

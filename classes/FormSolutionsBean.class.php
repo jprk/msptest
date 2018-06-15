@@ -990,8 +990,6 @@ class FormSolutionsBean extends DatabaseBean
            that the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
         $studentList = $studentBean->assignStudentListWithExercises($lecture_data['id'], count($exerciseList), $exerciseBinding);
-        $studentList = $studentBean->assignStudentListWithExercises($lecture_data['id'], count($exerciseList), $exerciseBinding);
-
         $this->generateAssignments($this->id, $studentList);
     }
 

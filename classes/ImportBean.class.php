@@ -85,9 +85,10 @@ class ImportBean extends DatabaseBean
         return RET_OK;
     }
 
-    /* -------------------------------------------------------------------
-       HANDLER: EDIT
-       ------------------------------------------------------------------- */
+    /**
+     * Edit handler.
+     * @throws Exception
+     */
     function doEdit()
     {
         /* Check the version of the imported data.
@@ -106,7 +107,10 @@ class ImportBean extends DatabaseBean
            passwords that is stored in configuration files of the application. */
         $proxy_cn = $this->_smarty->getConfig('ldap_proxy_cn');
         $proxy_pw = $this->_smarty->getConfig('ldap_proxy_pw');
-        $ldap->bind($proxy_cn, $proxy_pw);
+        if (! $ldap->bind($proxy_cn, $proxy_pw))
+        {
+            throw new Exception("Cannot bind to LDAP server as `$proxy_cn`!");
+        }
 
         /* Initialise the list of students that will be imported. */
         $studentList = array();
@@ -233,7 +237,7 @@ class ImportBean extends DatabaseBean
                                 if (is_null($info))
                                 {
                                     throw new Exception (
-                                        'LDAP info neobsahuje záznam pro ČVUT ID ' . $cvutid
+                                        "Row $row: LDAP info neobsahuje záznam pro ČVUT ID `$cvutid`"
                                     );
                                 }
 
@@ -284,8 +288,18 @@ class ImportBean extends DatabaseBean
                                 /* Manually extended WebKOS output with login and e-mail information. */
                                 $i = $idx[$format]['manual_login'];
                                 $data['login'] = $la[$i];
+                                /* Check that the data contains something meaningful */
+                                if (empty ($data['login']))
+                                {
+                                    throw new Exception("Row $row: Expected field $i to contain login, but the field is empty.");
+                                }
                                 $i = $idx[$format]['manual_email'];
                                 $data['email'] = $la[$i];
+                                /* Check that the data contains something meaningful */
+                                if (empty ($data['login']))
+                                {
+                                    throw new Exception("Row $row: Expected field $i to contain e-mail address, but the field is empty.");
+                                }
                             }
 
                             break;

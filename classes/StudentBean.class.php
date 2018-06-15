@@ -912,7 +912,6 @@ class StudentBean extends DatabaseBean
 
                 /* Now add subtask points (array $sPoints) and sum the task points according
                    to task definition (array $xPoints). */
-                $sumPoints = 0;
                 $sPoints = array();
 
                 $xPoints = array();
@@ -972,8 +971,9 @@ class StudentBean extends DatabaseBean
                             $avgSubtaskData[$sKey] = $avgSubtaskData[$sKey] + $numPoints;
                             $parSubCount[$sKey] = $parSubCount[$sKey] + 1;
 
-                            /* Increase the total sum of points for this student. */
-                            $sumPoints += $numPoints;
+                            /* TODO: Do not!
+                               Increase the total sum of points for this student. */
+                            //$sumPoints += $numPoints;
                         }
                         else
                         {
@@ -994,12 +994,16 @@ class StudentBean extends DatabaseBean
 
                 $this->dumpVar('xPoints (cumulative subtask points)', $xPoints);
 
+                $sumPoints = 0;
+
                 if (isset ($taskList))
                 {
                     foreach ($taskList as $sKey => $sVal)
                     {
                         $this->dumpVar('sVal', $sVal);
                         $tskId = $sVal['id'];
+                        $tskType = $sVal['type'];
+                        /* Fetch the previously accumulated points for this task. */
                         $gotPoints = $xPoints[$tskId];
                         /* $gotPoints is a number or '-'. Assure $numPoints will be a number. */
                         $numPoints = 0 + $gotPoints;
@@ -1060,7 +1064,18 @@ class StudentBean extends DatabaseBean
                                or negative. */
                             $finalResult = false;
                         }
+
+                        /* Finally update the total points of the student, but only in case that this
+                           task adds to the total. */
+                        if ($tskType != TaskBean::TT_NO_TOTAL_POINTS)
+                        {
+                            $sumPoints += $gotPoints;
+                        }
                     }
+                }
+                else
+                {
+                    throw new UnexpectedValueException('Task list cannot be empty!');
                 }
 
                 $this->dumpVar('$parTaskCount', $parTaskCount);

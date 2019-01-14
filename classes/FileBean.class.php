@@ -324,18 +324,24 @@ class FileBean extends DatabaseBean
      */
     function addFile($type, $objid, $uid, $filename, $origname, $description, $position = 0)
     {
+        if (empty($filename))
+        {
+            /* Completely new file. The system file name will be generated after the actual
+               id is known. */
+            $this->id = 0;
+        }
+        else
+        {
+            /* Make sure that we will not create a dupicate record of an existing file. This has
+               one unwelcome side-effect though:
+               should we try to add a new file with the file name of an existing file, the existing
+               file gets overwritten and it vanishes also from our database.
+               @TODO: Add another parameter stating whether we shall silently
+                      overwrite existing file (current default).
+             */
+            $this->id = $this->dbQueryFname($filename);
+        }
 
-        /*
-           Make sure that we will not create a dupicate record of an
-           existing file. This has one unwelcome side-effect though:
-           should we try to add a new file with the file name of an existing
-           file, the existing file gets overwritten and it vanishes also from
-           our database.
-
-           @TODO@: Add another parameter stating whether we shall silently
-                   overwrite existing file (current default).
-         */
-        $this->id = $this->dbQueryFname($filename);
         $this->type = $type;
         $this->objid = $objid;
         $this->uid = $uid;
@@ -345,6 +351,13 @@ class FileBean extends DatabaseBean
         $this->position = $position;
 
         $this->dbReplace();
+
+        if (empty($filename))
+        {
+            /* @TODO: Need to address the 'a' or 's' or whatever */
+            $this->fname = sprintf('%06d@_%s', $this->id, $origname);
+            $this->dbReplace();
+        }
 
         return $this->id;
     }

@@ -26,6 +26,8 @@ class CPPSmarty extends Smarty
     private $_locale;
 
     public $debug;
+    public $upload_max_filesize;
+    public $post_max_size;
 
     /* Create mapping array for HTML <select> containing year as a key and school year
        identification as a value. */
@@ -115,6 +117,11 @@ class CPPSmarty extends Smarty
             ini_set('display_errors', 1);
             error_reporting(E_ALL | E_STRICT);
         }
+
+        /* File upload handler needs information about maximum file upload size and
+           maximum post size. */
+        $this->upload_max_filesize = ini_get_bytes('upload_max_filesize');
+        $this->post_max_size = ini_get_bytes('post_max_size');
     }
 
     /**

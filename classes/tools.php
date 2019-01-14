@@ -910,4 +910,45 @@ function removeDirContent($dirPath)
         }
     }
 }
-?>
+
+/**
+ * Return INI variable value represented as a number of bytes.
+ * Converts shorthand strings like "128k", "16M" into exact number of bytes.
+ * See also https://stackoverflow.com/questions/2133652/how-to-gracefully-handle-files-that-exceed-phps-post-max-size
+ * @param $var_name string Variable name with value that may be a shorthand string.
+ * @return int|null Input string as an integer number of bytes, null in case of an error.
+ */
+function ini_get_bytes($var_name)
+{
+    // Remove empty space
+    $val = trim(ini_get($var_name));
+    // If there was some value specified ...
+    if ($val != '')
+    {
+        /* ... find its last character and convert it to lowercase,
+           plus make the value to be an integer. In case that the
+           $val does not contain a number, the result of conversion is zero. */
+        $last = strtolower($val[strlen($val) - 1]);
+        $val = intval($val);
+        switch($last)
+        {
+            // The 'G' modifier is available since PHP 5.1.0
+            case 'g':
+                $val *= 1024;
+                // fall-thru
+            case 'm':
+                $val *= 1024;
+                // fall-thru
+            case 'k':
+                $val *= 1024;
+                // fall-thru
+        }
+    }
+    else
+    {
+        /* TODO: We may want to generate an exception here. */
+        $val = null;
+    }
+
+    return $val;
+}

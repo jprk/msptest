@@ -1,7 +1,7 @@
 <?php
 define("UPLOAD_ERR_EMPTY", 5);
 
-function smarty_modifier_fcodes($file_upload_errno)
+function smarty_modifier_uperrstr($file_upload_errno)
 {
     $upload_errors = array(
         UPLOAD_ERR_OK => "No errors.",

@@ -1,7 +1,7 @@
 <?php
 define("UPLOAD_ERR_EMPTY", 5);
 
-function smarty_modifier_uperrstr($zip_errno)
+function smarty_modifier_ziperrstr($zip_errno)
 {
     $zip_errors = array(
         ZipArchive::ER_MULTIDISK => 'Multi-disk zip archives not supported.',

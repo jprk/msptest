@@ -36,6 +36,21 @@ require_once('external/zipstream.php');
 
 class FileBean extends DatabaseBean
 {
+    const ERR_FU_OK = 0;
+    const ERR_FU_UPLOAD_ERR = 1;
+    const ERR_FU_REQUEST_ABOVE_LIMIT = 2;
+    const ERR_FU_EMPTY_REQUEST = 3;
+    const ERR_FU_NO_FILE = 4;
+
+    const DEFAULT_FILE_ID = array(
+        FT_S_DATA => 0,
+        FT_S_IMAGE_L => 402,
+        FT_S_IMAGE_R => 403,
+        FT_A_DATA => 0,
+        FT_A_IMAGE => 0,
+        FT_LAB_IMAGE => 0,
+        FT_LAB_THUMB => 0);
+
     var $type;
     var $objid;
     var $uid;
@@ -48,7 +63,7 @@ class FileBean extends DatabaseBean
     private $dozip;
     private $doall;
     private $stulec;
-    private $finfo; // file info for determining MIME type
+    private $finfo;  //> file info for determining MIME type
 
     /* Fill in reasonable defaults. */
     function _setDefaults()
@@ -78,6 +93,25 @@ class FileBean extends DatabaseBean
             FT_S_IMAGE => "Obrázek k sekci",
         );
     }
+
+    public static function fileUploadStatusString($upload_status)
+    {
+        switch ($upload_status)
+        {
+            case self::ERR_FU_OK:
+                return 'No error occurred.';
+            case self::ERR_FU_UPLOAD_ERR:
+                return 'One of uploaded files has an error, see file info.';
+            case self::ERR_FU_REQUEST_ABOVE_LIMIT:
+                return 'File upload request is larger than the maximum allowed request size.';
+            case self::ERR_FU_EMPTY_REQUEST:
+                return 'The upload request seems to be empty.';
+            case self::ERR_FU_NO_FILE:
+                return 'The list of uploaded files is empty.';
+        }
+        return "Unknown error status code $upload_status.";
+    }
+
 
     /* Return an object type corresponding to the file type. */
     function _getObjectTypeString()
@@ -109,15 +143,17 @@ class FileBean extends DatabaseBean
         /* Call parent's constructor first */
         parent::__construct($id, $smarty, "file", $action, $object);
         /* Create a default file ID array */
+        /* Replaced with constant of the same name, see above.
         $this->DEFAULT_FILE_ID = array();
         $this->DEFAULT_FILE_ID [FT_S_DATA] = 0;
         $this->DEFAULT_FILE_ID [FT_S_IMAGE_L] = 402;
         $this->DEFAULT_FILE_ID [FT_S_IMAGE_R] = 403;
         $this->DEFAULT_FILE_ID [FT_A_DATA] = 0;
-        $this->DEFAULT_FILE_ID [FT_A_IMAGE] = 0;
+        $this->DEFAULT_FILE_ID [FT_A_IMAGE] = 0; */
 
         /* FINFO does not work with the new XML MS Office files ...
            $this->finfo = finfo_open(FILEINFO_MIME_TYPE); */
+        $this->finfo = null;
     }
 
     function dbReplace()
@@ -135,7 +171,7 @@ class FileBean extends DatabaseBean
             . $this->position . ")"
         );
 
-        /* Update $this->id in case that REPLACE actually inserten a new record. */
+        /* Update $this->id in case that REPLACE actually inserted a new record. */
         $this->updateId();
     }
 
@@ -312,6 +348,72 @@ class FileBean extends DatabaseBean
 
         return $this->id;
     }
+
+    /**
+     * Determine a status of file upload.
+     */
+    function fileUploadStatus()
+    {
+        $post_empty = empty($_POST);
+        $file_empty = empty($_FILES);
+        $content_length = intval($_SERVER['CONTENT_LENGTH']);
+
+        /* In case that the POST request contains more than `post_max_size` bytes, both $_POST
+           and $_FILE are empty. In this case, the $_SERVER['CONTENT_LENGTH'] should indicate
+           a value greater than `post_max_size`. */
+        if ($post_empty && $file_empty)
+        {
+            if ($content_length > $this->_smarty->post_max_size)
+            {
+                /* Request above the limit */
+                return self::ERR_FU_REQUEST_ABOVE_LIMIT;
+            }
+
+            return self::ERR_FU_EMPTY_REQUEST;
+        }
+
+        if (! $file_empty)
+        {
+            $file_err = UPLOAD_ERR_OK;
+            foreach ($_FILES as $key => $val)
+            {
+                $file_err = $val['error'];
+                $this->dumpVar('file_err', $file_err);
+                if (is_array($file_err))
+                {
+                    /* An array of file to upload, i.e. upload[1], upload[2], ... */
+                    foreach ($file_err as $err_item)
+                    {
+                        $this->dumpVar('err_item', $err_item);
+                        if ($err_item != UPLOAD_ERR_OK)
+                        {
+                            $file_err = $err_item;
+                            break;
+                        }
+                    }
+                    $file_err = UPLOAD_ERR_OK;
+                }
+                else
+                {
+                    if ($file_err != UPLOAD_ERR_OK) break;
+                }
+            }
+
+            $this->dumpVar('file_err at end', $file_err);
+            if ($file_err == UPLOAD_ERR_OK)
+            {
+                return self::ERR_FU_OK;
+            }
+            else
+            {
+                return self::ERR_FU_UPLOAD_ERR;
+            }
+        }
+
+        return self::ERR_FU_NO_FILE;
+    }
+
+
 
     /**
      * Find whether an fname exists.
@@ -533,7 +635,7 @@ class FileBean extends DatabaseBean
         }
         /* If there was no matching file, return a default. */
         $defRet = ($default == IMPLICIT_DEFAULT_VAL) ?
-            $this->DEFAULT_FILE_ID [$fileType] :
+            self::DEFAULT_FILE_ID[$fileType] :
             $default;
         //$this->dumpVar ( "defRet", $defRet );
         //$this->dumpVar ( "DEFAULT_FILE_ID", $this->DEFAULT_FILE_ID );
@@ -661,6 +763,7 @@ class FileBean extends DatabaseBean
 
     /**
      * Show a single file from the satabase reference by id.
+     * @throws Exception
      */
     function showSingleFile()
     {
@@ -858,6 +961,12 @@ class FileBean extends DatabaseBean
         return true;
     }
 
+    /**
+     * Generate a CSV file with student results.
+     * Returns `false` in case of an error, and leaves it to handler to display an error page.
+     * @return bool
+     * @throws Exception
+     */
     function showStudentResultsCSV()
     {
         $studentLectureBean = new StudentLectureBean($this->id, $this->_smarty, NULL, NULL);
@@ -1023,7 +1132,7 @@ class FileBean extends DatabaseBean
                     /* Should the subtask type be the TT_WEEKLY_SIMU type, remove
                        the extension of the file as it has been converted to EPS/PDF
                        format prior to calling this function. */
-                    if ($sType == TT_WEEKLY_SIMU)
+                    if ($sType == TaskBean::TT_WEEKLY_SIMU)
                     {
                         $lname = substr($lname, 0, $separPos);
                     }
@@ -1205,7 +1314,7 @@ class FileBean extends DatabaseBean
                 copy($fn, CMSFILES . '/' . $dbname);
 
                 /* And reflect the change in the database. */
-                $this->dbQuery("UPDATE file SET fname='" . $dbname . "' WHERE id=" . $this->id);
+                $this->dbQuery("UPDATE file SET fname='" . mysql_real_escape_string($dbname) . "' WHERE id=" . $this->id);
             }
             else
             {
@@ -1228,9 +1337,9 @@ class FileBean extends DatabaseBean
                 /* And reflect the change in the database. */
                 DatabaseBean::dbQuery(
                     "UPDATE file SET " .
-                    "type=" . $_POST['type'] . ", " .
-                    "objid=" . $_POST['objid'] . ", " .
-                    "position=" . $_POST['position'] . ", " .
+                    "type=" . mysql_real_escape_string($_POST['type']) . ", " .
+                    "objid=" . mysql_real_escape_string($_POST['objid']) . ", " .
+                    "position=" . mysql_real_escape_string($_POST['position']) . ", " .
                     "description='" . mysql_escape_string($_POST['description']) . "' " .
                     "WHERE id=" . $this->id);
             }

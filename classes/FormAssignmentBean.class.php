@@ -120,7 +120,7 @@ class FormAssignmentBean extends DatabaseBean
         $this->dumpVar('task type', $type);
 
         $match = 0;
-        if ($type == TT_WEEKLY_FORM)
+        if ($type == TaskBean::TT_WEEKLY_FORM)
         {
             if ($rs['d'] == 0)
             {
@@ -203,7 +203,7 @@ class FormAssignmentBean extends DatabaseBean
                 }
             }
         }
-        elseif ($type == TT_WEEKLY_TF)
+        elseif ($type == TaskBean::TT_WEEKLY_TF)
         {
             /* Candidate pairs. */
             $cand = array(
@@ -1034,12 +1034,12 @@ class FormAssignmentBean extends DatabaseBean
         /* Get a list of subtask types. */
         $subtaskBean = new SubtaskBean(0, $this->_smarty, "", "");
         $subtaskList = $subtaskBean->getForLecture($this->id, array(
-            TT_WEEKLY_FORM,
-            TT_WEEKLY_SIMU,
-            TT_WEEKLY_PDF,
-            TT_WEEKLY_ZIP,
-            TT_WEEKLY_TF,
-            TT_SEMESTRAL_IND
+            TaskBean::TT_WEEKLY_FORM,
+            TaskBean::TT_WEEKLY_SIMU,
+            TaskBean::TT_WEEKLY_PDF,
+            TaskBean::TT_WEEKLY_ZIP,
+            TaskBean::TT_WEEKLY_TF,
+            TaskBean::TT_SEMESTRAL_INDIV_PDF
         ));
         /* Add count and publish it. */
         $subtaskList = $this->updateSubtaskList($subtaskList);

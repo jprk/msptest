@@ -1,21 +1,5 @@
 <?php
-
-/* Task types.
- * Copy of this list is a list of constants in TaskBean. This place is
- * considered deprecated but unless a significant redesign of the system
- * takes place we still need these constants here. */
-define('TT_WEEKLY_FORM', 100);
-define('TT_WEEKLY_SIMU', 101);
-define('TT_WEEKLY_ZIP', 102);
-define('TT_WEEKLY_PDF', 103);
-define('TT_WEEKLY_TF', 104);
-define('TT_LECTURE_PDF', 105);
-define('TT_SEMESTRAL', 200);
-define('TT_SEMESTRAL_IND', 201);
-define('TT_ACTIVITY', 300);
-define('TT_WRITTEN', 400);
-
-/* Handler return values. */
+/* Router (handler) returns the following status values. */
 define('RET_OK', 0);
 define('ERR_INVALID_ACTION', 1);
 define('ERR_FILE_UPLOAD_ATTACK', 2);
@@ -44,29 +28,6 @@ class BaseBean
     protected $errmsg;
     protected $schoolyear;
 
-
-    /* -------------------------------------------------------------------
-       INTERNAL FUNCTIONS
-       ------------------------------------------------------------------- */
-    /** Retun a list of available task types.
-     * TODO: Remove this instance, it belongs to TaskBean.
-     */
-    function _getTaskTypes()
-    {
-        return array(
-            0 => "Vyberte ze seznamu ...",
-            TT_ACTIVITY => "Aktivita na cvičeních",
-            TT_WRITTEN => "Písemný test",
-            TT_WEEKLY_FORM => "Individuální týdenní úloha (vyplňovací formulář A-F)",
-            TT_WEEKLY_SIMU => "Individuální týdenní úloha (Simulink *.mdl + *.pdf)",
-            TT_WEEKLY_ZIP => "Individuální týdenní úloha (kód jako *.zip + *.pdf)",
-            TT_WEEKLY_PDF => "Individuální týdenní úloha (jeden soubor *.pdf)",
-            TT_LECTURE_PDF => "Hromadná týdenní úloha (jeden soubor *.pdf)",
-            TT_WEEKLY_TF => "Povinná týdenní úloha (formulář s přenosovou fcí)",
-            TT_SEMESTRAL => "Semestrální úloha",
-            TT_SEMESTRAL_IND => "Semestrální úloha s individuálním zadáním"
-        );
-    }
 
     /* -------------------------------------------------------------------
 	   CONSTRUCTOR
@@ -243,11 +204,6 @@ class BaseBean
         {
             $this->_smarty->assign($name, $var);
         }
-    }
-
-    function assignTaskTypeSelect()
-    {
-        $this->_smarty->assign('taskTypeSelect', $this->_getTaskTypes());
     }
 
     function updateId()

@@ -187,8 +187,8 @@ class SubtaskBean extends DatabaseBean
     {
         switch ($sType)
         {
-            case TT_LECTURE_PDF:
-            case TT_SEMESTRAL:
+            case TaskBean::TT_LECTURE_PDF:
+            case TaskBean::TT_SEMESTRAL_ZIP:
                 return true;
         }
 
@@ -224,14 +224,14 @@ class SubtaskBean extends DatabaseBean
             "LEFT JOIN tsksub AS ts " .
             "ON ( su.id=ts.subtask_id ) " .
             "WHERE type IN (" .
-            TT_WEEKLY_FORM . "," .
-            TT_WEEKLY_SIMU . "," .
-            TT_WEEKLY_TF . "," .
-            TT_WEEKLY_ZIP . "," .
-            TT_WEEKLY_PDF . "," .
-            TT_LECTURE_PDF . "," .
-            TT_SEMESTRAL . "," .
-            TT_SEMESTRAL_IND . ") " .
+            TaskBean::TT_WEEKLY_FORM . "," .
+            TaskBean::TT_WEEKLY_SIMU . "," .
+            TaskBean::TT_WEEKLY_TF . "," .
+            TaskBean::TT_WEEKLY_ZIP . "," .
+            TaskBean::TT_WEEKLY_PDF . "," .
+            TaskBean::TT_LECTURE_PDF . "," .
+            TaskBean::TT_SEMESTRAL_ZIP . "," .
+            TaskBean::TT_SEMESTRAL_INDIV_PDF . ") " .
             "AND lecture_id=" . $lectureId . " " .
             "AND ts.year=" . $this->schoolyear . " " .
             "ORDER BY position,title");
@@ -281,7 +281,7 @@ class SubtaskBean extends DatabaseBean
             $sdBean = new SubtaskDatesBean ($lectureId, $this->_smarty, NULL, NULL);
             $datetimes = $sdBean->getSubtaskDates($rs, $this->schoolyear);
             /* Get the list of the task types. */
-            $ttypes = $this->_getTaskTypes();
+            $ttypes = TaskBean::getTaskTypes();
             /* Loop over all subtasks and update data what will
                be displayed. */
             foreach ($rs as $key => $val)
@@ -293,14 +293,14 @@ class SubtaskBean extends DatabaseBean
                 /* If the subtask type does not denote a subtask that
                    has activity deadlines, replace the date string with
                    value that indicates this. */
-                if ($type != TT_WEEKLY_FORM &&
-                    $type != TT_WEEKLY_SIMU &&
-                    $type != TT_WEEKLY_ZIP &&
-                    $type != TT_WEEKLY_PDF &&
-                    $type != TT_WEEKLY_TF &&
-                    $type != TT_LECTURE_PDF &&
-                    $type != TT_SEMESTRAL &&
-                    $type != TT_SEMESTRAL_IND
+                if ($type != TaskBean::TT_WEEKLY_FORM &&
+                    $type != TaskBean::TT_WEEKLY_SIMU &&
+                    $type != TaskBean::TT_WEEKLY_ZIP &&
+                    $type != TaskBean::TT_WEEKLY_PDF &&
+                    $type != TaskBean::TT_WEEKLY_TF &&
+                    $type != TaskBean::TT_LECTURE_PDF &&
+                    $type != TaskBean::TT_SEMESTRAL_ZIP &&
+                    $type != TaskBean::TT_SEMESTRAL_INDIV_PDF
                 )
                 {
                     $rs[$key]['datefrom'] = '-';
@@ -359,23 +359,23 @@ class SubtaskBean extends DatabaseBean
             $this->rs = $this->rs[0];
             $this->_updateFromResultSet();
 
-            if ($this->type == TT_WEEKLY_FORM || $this->type == TT_WEEKLY_TF)
+            if ($this->type == TaskBean::TT_WEEKLY_FORM || $this->type == TaskBean::TT_WEEKLY_TF)
             {
                 $this->rs['isformassignment'] = true;
             }
-            else if ($this->type == TT_WEEKLY_SIMU)
+            else if ($this->type == TaskBean::TT_WEEKLY_SIMU)
             {
                 $this->rs['issimuassignment'] = true;
             }
-            else if ($this->type == TT_WEEKLY_PDF)
+            else if ($this->type == TaskBean::TT_WEEKLY_PDF)
             {
                 $this->rs['ispdfassignment'] = true;
             }
-            else if ($this->type == TT_LECTURE_PDF || $this->type == TT_SEMESTRAL_IND)
+            else if ($this->type == TaskBean::TT_LECTURE_PDF || $this->type == TaskBean::TT_SEMESTRAL_INDIV_PDF)
             {
                 $this->rs['islpdfassignment'] = true;
             }
-            else if ($this->type == TT_WEEKLY_ZIP || $this->type == TT_SEMESTRAL)
+            else if ($this->type == TaskBean::TT_WEEKLY_ZIP || $this->type == TaskBean::TT_SEMESTRAL_ZIP)
             {
                 $this->rs['iszipassignment'] = true;
             }
@@ -450,7 +450,7 @@ class SubtaskBean extends DatabaseBean
         $this->assignSingle();
 
         /* Publish a list of task types. */
-        $this->assignTaskTypeSelect();
+        TaskBean::assignTypeSelect();
 
         /* Get a list of lectures. */
         $lectureBean = new LectureBean (0, $this->_smarty, "", "");

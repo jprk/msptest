@@ -13,10 +13,10 @@ class FormSolutionsBean extends DatabaseBean
     private $confirmed;
 
     private static $templateMap = array(
-        TT_WEEKLY_SIMU => 'formsolution.simu',
-        TT_WEEKLY_PDF => 'formsolution.pdf',
-        TT_WEEKLY_ZIP => 'formsolution.zip',
-        TT_WEEKLY_TF => 'formsolution.tf'
+        TaskBean::TT_WEEKLY_SIMU => 'formsolution.simu',
+        TaskBean::TT_WEEKLY_PDF => 'formsolution.pdf',
+        TaskBean::TT_WEEKLY_ZIP => 'formsolution.zip',
+        TaskBean::TT_WEEKLY_TF => 'formsolution.tf'
     );
 
     private static $stabilityMap = array(
@@ -318,7 +318,7 @@ class FormSolutionsBean extends DatabaseBean
                 self::dumpVar('copy src', $fn);
                 self::dumpVar('copy dst', CMSFILES . '/' . $solFile);
 
-                if ($subtaskBean->type == TT_LECTURE_PDF)
+                if ($subtaskBean->type == TaskBean::TT_LECTURE_PDF)
                 {
                     $fileDesc = "Řešení hromadné úlohy " .
                         $suCode . ", student " . $stFullName;
@@ -453,8 +453,8 @@ class FormSolutionsBean extends DatabaseBean
                     /* Save the submitted file or files. */
                     switch ($subtaskBean->type)
                     {
-                        case TT_LECTURE_PDF:
-                        case TT_WEEKLY_PDF:
+                        case TaskBean::TT_LECTURE_PDF:
+                        case TaskBean::TT_WEEKLY_PDF:
                             $this->saveSolutionPDF($subtaskBean, 'solutions', $assignmentId, $studentBean);
                             break;
                         default:
@@ -535,7 +535,7 @@ class FormSolutionsBean extends DatabaseBean
         {
             switch ($subtaskBean->type)
             {
-                case TT_WEEKLY_TF:
+                case TaskBean::TT_WEEKLY_TF:
                     /* Form assignment.
                        This is the total number of matches. */
                     $match = 0;
@@ -584,7 +584,7 @@ class FormSolutionsBean extends DatabaseBean
                         /* Evaluate the answer.
                            The value of `$match` will be from 0 to 7. */
                         $match += $faBean->matchSolution(
-                            $assignmentId, $this->part, TT_WEEKLY_TF,
+                            $assignmentId, $this->part, TaskBean::TT_WEEKLY_TF,
                             $a, $b, $c, $d, $e, $f, $g);
                         $this->dumpVar('match', $match);
                     }
@@ -614,7 +614,7 @@ class FormSolutionsBean extends DatabaseBean
                     $this->object = 'formsolution.tf';
                     break;
 
-                case TT_WEEKLY_SIMU:
+                case TaskBean::TT_WEEKLY_SIMU:
                     /* Construct the file bean that implements also all operations on 
                        assigment files. */
                     $fileBean = new FileBean(0, $this->_smarty, "", "");
@@ -670,9 +670,9 @@ class FormSolutionsBean extends DatabaseBean
                     }
                     break;
 
-                case TT_WEEKLY_PDF:
-                case TT_LECTURE_PDF:
-                case TT_SEMESTRAL_IND:
+                case TaskBean::TT_WEEKLY_PDF:
+                case TaskBean::TT_LECTURE_PDF:
+                case TaskBean::TT_SEMESTRAL_INDIV_PDF:
                     /* Construct the file bean that implements also all operations on 
                        assigment files. */
                     $fileBean = new FileBean(null, $this->_smarty, null, null);
@@ -725,7 +725,7 @@ class FormSolutionsBean extends DatabaseBean
                                 @ mkdir(CMSFILES . '/' . $solPath, 0777, TRUE);
                                 copy($fn, CMSFILES . '/' . $solFile);
 
-                                if ($subtaskBean->type == TT_LECTURE_PDF)
+                                if ($subtaskBean->type == TaskBean::TT_LECTURE_PDF)
                                 {
                                     $fileDesc = "Řešení hromadné úlohy " .
                                         $sCode . ", student " . $u8name;
@@ -757,7 +757,7 @@ class FormSolutionsBean extends DatabaseBean
                                 /* And store the data. */
                                 $this->dbReplace();
 
-                                if ($subtaskBean->type == TT_SEMESTRAL_IND &&
+                                if ($subtaskBean->type == TaskBean::TT_SEMESTRAL_INDIV_PDF &&
                                     SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
                                 {
                                     /* Send a confirmation e-mail to the whole group */
@@ -777,11 +777,10 @@ class FormSolutionsBean extends DatabaseBean
                     }
                     break;
 
-                case TT_WEEKLY_ZIP:
-                case TT_SEMESTRAL:
-                    /* Construct the file bean that implements also all operations on 
-                       assigment files. */
-                    $fileBean = new FileBean(0, $this->_smarty, "", "");
+                case TaskBean::TT_WEEKLY_ZIP:
+                case TaskBean::TT_SEMESTRAL_ZIP:
+                    /* Construct the file bean that implements also all operations on assigment files. */
+                    $fileBean = new FileBean(0, $this->_smarty, null, null);
 
                     /* Student name and login is stored in the session. */
                     $u8name = SessionDataBean::getUserFullName();
@@ -869,7 +868,7 @@ class FormSolutionsBean extends DatabaseBean
                     }
                     break;
 
-                case TT_WEEKLY_FORM:
+                case TaskBean::TT_WEEKLY_FORM:
                     /* Form assignment.
                        This is the total number of matches. */
                     $match = 0;

@@ -227,7 +227,7 @@ class AssignmentsBean extends DatabaseBean
         $lectureBean->assignSingle();
         /* Get a list of subtask types. */
         $subtaskBean = new SubtaskBean (0, $this->_smarty, "", "");
-        $subtaskList = $subtaskBean->getForLecture(1, array(TT_WEEKLY_FORM, TT_WEEKLY_SIMU));
+        $subtaskList = $subtaskBean->getForLecture(1, array(TaskBean::TT_WEEKLY_FORM, TaskBean::TT_WEEKLY_SIMU));
         /* Add count and publish it. */
         $subtaskList = $this->updateSubtaskList($subtaskList);
         $this->_smarty->assign('subtaskList', $subtaskList);

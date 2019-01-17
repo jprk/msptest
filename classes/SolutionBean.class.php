@@ -90,7 +90,10 @@ class SolutionBean extends DatabaseBean
     }
 
 
-    /* Assign a full list of solution records. */
+    /**
+     * Assign a list of solution records.
+     * Assigns a full list of solutions for this year.
+     */
     function assignAdminList()
     {
         /* List all subtasks of the current lecture that are candidates for
@@ -102,17 +105,17 @@ class SolutionBean extends DatabaseBean
            used when listing active/inactive subtasks for students.
            */
         $ta = array(
-            TT_WEEKLY_SIMU,
-            TT_WEEKLY_PDF,
-            TT_WEEKLY_ZIP,
-            TT_LECTURE_PDF,
-            TT_SEMESTRAL,
-            TT_SEMESTRAL_IND);
+            TaskBean::TT_WEEKLY_SIMU,
+            TaskBean::TT_WEEKLY_PDF,
+            TaskBean::TT_WEEKLY_ZIP,
+            TaskBean::TT_LECTURE_PDF,
+            TaskBean::TT_SEMESTRAL_ZIP,
+            TaskBean::TT_SEMESTRAL_INDIV_PDF);
         $tLst = arrayToDBString($ta);
         $lId = SessionDataBean::getLectureId();
         /* TODO: Very awkward hack to display only solutions submitted this year
          * via `fi.fname LIKE '/<year>/'. The same is used below.
-         * 2012/02/14 jprk corrected the join so that also subtask with zero
+         * 2012/02/14 jprk corrected the join so that also subtasks with zero
          * submitted solutions are listed */
         $rs = DatabaseBean::dbQuery(
             'SELECT ' .

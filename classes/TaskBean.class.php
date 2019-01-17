@@ -11,10 +11,11 @@ class TaskBean extends DatabaseBean
     const TT_WEEKLY_PDF = 103;
     const TT_WEEKLY_TF = 104;
     const TT_LECTURE_PDF = 105;
-    const TT_SEMESTRAL = 200;
-    const TT_SEMESTRAL_IND = 201; /* TODO: rename to TT_SEMEESTRAL_INDIV_PDF */
+    const TT_SEMESTRAL_ZIP = 200;
+    const TT_SEMESTRAL_INDIV_PDF = 201;
     const TT_ACTIVITY = 300;
     const TT_WRITTEN = 400;
+    const TT_NO_TOTAL_POINTS = 500; /**> A necessary condition without any points added to the total. */
 
     var $type;
     var $title;
@@ -41,11 +42,12 @@ class TaskBean extends DatabaseBean
             self::TT_WEEKLY_FORM => "Individuální týdenní úloha (vyplňovací formulář A-F)",
             self::TT_WEEKLY_SIMU => "Individuální týdenní úloha (Simulink *.mdl + *.pdf)",
             self::TT_WEEKLY_ZIP => "Individuální týdenní úloha (kód jako *.zip + *.pdf)",
-            self::TT_WEEKLY_PDF => "Individuální týdenní úloha (jeden soubor *.pdf)",
-            self::TT_LECTURE_PDF => "Hromadná týdenní úloha (jeden soubor *.pdf)",
+            self::TT_WEEKLY_PDF => "Individuální týdenní úloha (odevzdává se jeden soubor *.pdf)",
+            self::TT_LECTURE_PDF => "Hromadně zadaná úloha všem (odevzdává se jeden soubor *.pdf)",
             self::TT_WEEKLY_TF => "Povinná týdenní úloha (formulář s přenosovou fcí)",
-            self::TT_SEMESTRAL => "Semestrální úloha",
-            self::TT_SEMESTRAL_IND => "Semestrální úloha s individuálním zadáním"
+            self::TT_SEMESTRAL_ZIP => "Semestrální úloha (odevzdává se jeden soubor *.zip)",
+            self::TT_SEMESTRAL_INDIV_PDF => "Semestrální úloha s individuálním zadáním (odevzdává se jeden soubor *.pdf)",
+            self::TT_NO_TOTAL_POINTS => "Podmínka zápočtu bez připsání bodů"
         );
     }
 
@@ -140,9 +142,9 @@ class TaskBean extends DatabaseBean
         return $seq;
     }
 
-    static function assignTypeSelect()
+    function assignTypeSelect()
     {
-        self::assign('taskTypeSelect', self::getTaskTypes());
+        $this->assign('taskTypeSelect', self::getTaskTypes());
     }
 
     function assignFullTaskList($taskList)
@@ -196,7 +198,7 @@ class TaskBean extends DatabaseBean
             $tdBean = new TaskDatesBean ($lectureId, $this->_smarty, NULL, NULL);
             $datetimes = $tdBean->getTaskDates($rs, $this->schoolyear);
             /* Get the list of the task types. */
-            $ttypes = $this->_getTaskTypes();
+            $ttypes = self::getTaskTypes();
             /* Loop over all tasks and update data what will be displayed. */
             foreach ($rs as $key => $val)
             {
@@ -207,12 +209,12 @@ class TaskBean extends DatabaseBean
                 /* If the task type does not denote a task that has activity
                    deadlines, replace the date string with value that indicates
                    this. */
-                if ($type != TT_WEEKLY_FORM &&
-                    $type != TT_WEEKLY_SIMU &&
-                    $type != TT_WEEKLY_ZIP &&
-                    $type != TT_WEEKLY_PDF &&
-                    $type != TT_WEEKLY_TF &&
-                    $type != TT_SEMESTRAL
+                if ($type != self::TT_WEEKLY_FORM &&
+                    $type != self::TT_WEEKLY_SIMU &&
+                    $type != self::TT_WEEKLY_ZIP &&
+                    $type != self::TT_WEEKLY_PDF &&
+                    $type != self::TT_WEEKLY_TF &&
+                    $type != self::TT_SEMESTRAL_ZIP
                 )
                 {
                     $rs[$key]['datefrom'] = '-';

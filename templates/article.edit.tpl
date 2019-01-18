@@ -1,4 +1,3 @@
-<h1>Editace článku</h1>
 <form action="?act=save,article,{$article.id}" method="post">
 <input type="hidden" name="id" value="{$article.id}">
 <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1" width="100%">

@@ -1,4 +1,3 @@
-<h1>Èlánek byl zmìnen</h1>
 <p>
 Èlánek s názvem <i>{$article.title}</i> byl zmìnìn.
 </p>

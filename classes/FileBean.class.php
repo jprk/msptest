@@ -447,7 +447,7 @@ class FileBean extends DatabaseBean
         }
         if (count($rs) > 1)
         {
-            trigger_error('More than one files for assignment and student');
+            trigger_error('More than one files with the same name found (fname=`' . $fname . '`)');
         }
         return $rs[0]['id'];
     }
@@ -620,12 +620,12 @@ class FileBean extends DatabaseBean
         /* Left header image with implicit default value. */
         $leftHeaderId = $this->_dbQueryObjectListForFirstFileId(
             $nodePath, FT_S_IMAGE_L);
-        $this->_smarty->assign('leftHeaderId', $leftHeaderId);
+        $this->assign('leftHeaderId', $leftHeaderId);
 
         /* Right header image with implicit default value. */
         $rightHeaderId = $this->_dbQueryObjectListForFirstFileId(
             $nodePath, FT_S_IMAGE_R);
-        $this->_smarty->assign('rightHeaderId', $rightHeaderId);
+        $this->assign('rightHeaderId', $rightHeaderId);
     }
 
     /* Travel node path and look for first existing file of given

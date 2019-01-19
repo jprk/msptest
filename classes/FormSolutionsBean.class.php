@@ -4,7 +4,7 @@ class FormSolutionsBean extends DatabaseBean
 {
     var $student_id;
     var $subtask_id;
-    var $assignmnt_id;
+    var $assignment_id;
     var $part;
     var $a, $b, $c, $d, $e, $f, $g, $h;
     var $timestamp;
@@ -30,7 +30,7 @@ class FormSolutionsBean extends DatabaseBean
     {
         $this->student_id = $this->rs['student_id'] = 0;
         $this->subtask_id = $this->rs['subtask_id'] = 0;
-        $this->assignmnt_id = $this->rs['assignmnt_id'] = 0;
+        $this->assignment_id = $this->rs['assignmnt_id'] = 0;
         $this->part = $this->rs['part'] = '';
 
         $this->a = $this->aa = $this->rs['a'] = NULL;
@@ -70,8 +70,8 @@ class FormSolutionsBean extends DatabaseBean
             "REPLACE formsolutions VALUES ("
             . $this->student_id . ","
             . $this->subtask_id . ","
-            . $this->assignmnt_id . ",'"
-            . mysql_escape_string($this->part) . "',"
+            . $this->assignment_id . ",'"
+            . mysql_real_escape_string($this->part) . "',"
             . $this->a . ","
             . $this->b . ","
             . $this->c . ","
@@ -344,7 +344,7 @@ class FormSolutionsBean extends DatabaseBean
                 $this->e = 0;
                 $this->f = 0;
                 $this->subtask_id = $suId;
-                $this->assignmnt_id = $assignmentId;
+                $this->assignment_id = $assignmentId;
                 $this->part = $part;
                 $this->student_id = $stId;
                 /* And store the data. */
@@ -422,30 +422,34 @@ class FormSolutionsBean extends DatabaseBean
            submission. */
         if (!array_key_exists('solutions', $_FILES))
         {
-            throw new Exception('No applicable solution data found.');
+            throw new Exception('The request does not contain applicable solution data.');
         }
 
-        /* Loop over the contents of $_FILES and look what has been actually
-           submitted. Some of the form fields may be empty. */
+        /* Dump what has been submitted if in debug mode. */
         $this->dumpVar('_FILES', $_FILES);
 
         /* Initialise the result container */
         $res = array();
-
+        /* Loop over the contents of $_FILES and look what has been actually submitted. Some of
+           the form fields may be empty. */
         foreach ($_FILES['solutions']['error'] as $subtaskId => $parts)
         {
-            /* This is a possibly uploaded file. The value of $subtaskId
-               contains the subtask that the file is related to. We have
-               to aslo find out the appropriate $assignemntId. */
+            /* This is a possibly uploaded file. The value of $subtaskId contains the subtask that
+               the file is related to, $parts is an array of subtask parts (there will be at least one).
+               From the value of $subtaskId and the ID of the student, which is $this->id, we have to
+               also find out the appropriate $assignmentId. */
             $subtaskBean->assignSingle($subtaskId);
             $assignmentId = $assignmentBean->getAssignmentId($this->id, $subtaskId, $subtaskBean->type);
+
+            /* Again, dump the information if in debug mode. */
             self::dumpVar('subtask', $subtaskBean);
             self::dumpVar('assignment id', $assignmentId);
 
-            /* Initialise the result container holding information about
-               individual parts of the submitted solution. */
+            /* Initialise the result container holding information about parts of the submitted
+               solution that have been really submitted ... */
             $pres = array();
-
+            /* ... and loop over all parts. Every part will have an error code assigned, see the PHP
+               documentation at http://php.net/manual/en/features.file-upload.post-method.php */
             foreach ($parts as $partId => $status)
             {
                 if ($status == UPLOAD_ERR_OK)
@@ -472,6 +476,8 @@ class FormSolutionsBean extends DatabaseBean
                 'assignmentId' => $assignmentId,
                 'parts' => $pres);
         }
+
+        /* Make the set of saved solutions public. */
         $this->assign('saveSet', $res);
     }
 
@@ -575,7 +581,7 @@ class FormSolutionsBean extends DatabaseBean
 
                         /* Subtask id and part number and assignment id. */
                         $this->subtask_id = $this->id;
-                        $this->assignmnt_id = $assignmentId;
+                        $this->assignment_id = $assignmentId;
                         $this->part = $key;
                         $this->student_id = SessionDataBean::getUserId();
                         /* And store the data. */
@@ -655,7 +661,7 @@ class FormSolutionsBean extends DatabaseBean
                         $this->e = 0;
                         $this->f = 0;
                         $this->subtask_id = $this->id;
-                        $this->assignmnt_id = $assignmentId;
+                        $this->assignment_id = $assignmentId;
                         $this->part = 'a';
                         $this->student_id = SessionDataBean::getUserId();
                         /* And store the data. */
@@ -751,7 +757,7 @@ class FormSolutionsBean extends DatabaseBean
                                 $this->e = 0;
                                 $this->f = 0;
                                 $this->subtask_id = $this->id;
-                                $this->assignmnt_id = $assignmentId;
+                                $this->assignment_id = $assignmentId;
                                 $this->part = $key;
                                 $this->student_id = SessionDataBean::getUserId();
                                 /* And store the data. */
@@ -889,7 +895,7 @@ class FormSolutionsBean extends DatabaseBean
                             /* Save information about this submission - set subtask
                                   id and part number and assignment id. */
                             $this->subtask_id = $this->id;
-                            $this->assignmnt_id = $assignmentId;
+                            $this->assignment_id = $assignmentId;
                             $this->part = $key;
                             $this->student_id = SessionDataBean::getUserId();
                             /* And store the data. */
@@ -898,7 +904,7 @@ class FormSolutionsBean extends DatabaseBean
                             /* Evaluate the answer.
                                The value of `$match` will be from 0 to 6. */
                             $match += $faBean->matchSolution(
-                                $assignmentId, $this->part, TT_WEEKLY_FORM,
+                                $assignmentId, $this->part, TaskBean::TT_WEEKLY_FORM,
                                 $this->a, $this->b, $this->c, $this->d, $this->e, $this->f);
 
                             self::dumpVar('key', $key);
@@ -997,7 +1003,7 @@ class FormSolutionsBean extends DatabaseBean
            that the particular student visits, and '' otherwise. */
         $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
         $studentList = $studentBean->assignStudentListWithExercises($lecture_data['id'], count($exerciseList), $exerciseBinding);
-        
+
         $this->generateAssignments($this->id, $studentList);
     }
 
@@ -1093,24 +1099,24 @@ class FormSolutionsBean extends DatabaseBean
     /**
      * Handle the SAVE event.
      * This handler is called in two different configurations: (1) when some
-     * student saves her or his solution of an enxcersise, or (2) when some
+     * student saves her or his solution of an exercise, or (2) when some
      * lecturer or administrator saves a subset of solutions on behalf of some
      * student.
+     * @throws Exception
      */
     function doSave()
     {
         /* Check user role. */
         if (UserBean::isRoleAtLeast(SessionDataBean::getUserRole(), USR_LECTURER))
         {
-            $this->saveSolutionSet();
             /* Change the template. Do not change the action, as the contents
                of the left column may be action dependent. */
             $this->object .= ".set";
+            $this->saveSolutionSet();
         }
         else
         {
-            /* This is the origininal code, it will use its original
-               template. */
+            /* This is the original code, it will use its original template. */
             $this->saveSingleSolutionAsStudent();
         }
         $this->assign('confirmed', $this->confirmed);

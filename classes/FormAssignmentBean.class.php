@@ -38,6 +38,13 @@ class FormAssignmentBean extends DatabaseBean
     }
 
     /* Constructor */
+    /**
+     * FormAssignmentBean constructor.
+     * @param $id
+     * @param $smarty
+     * @param $action
+     * @param $object
+     */
     function __construct($id, & $smarty, $action, $object)
     {
         /* Call parent's constructor first */
@@ -46,6 +53,9 @@ class FormAssignmentBean extends DatabaseBean
         $this->_setDefaults();
     }
 
+    /**
+     *
+     */
     function dbReplace()
     {
         DatabaseBean:: dbQuery("DELETE FROM formassignmnt WHERE " . "subtask_id=" . $this->subtask_id . " AND " . "assignmnt_id=" . $this->assignment_id . " AND part='" . mysql_escape_string($this->part) . "'");
@@ -75,6 +85,9 @@ class FormAssignmentBean extends DatabaseBean
         assignPostIfExists($this->pdfimport, $this->rs, 'pdfimport');
     }
 
+    /**
+     *
+     */
     function processGetVars()
     {
         assignGetIfExists($this->regenerate, $this->rs, 'regenerate');
@@ -86,6 +99,8 @@ class FormAssignmentBean extends DatabaseBean
 
     /**
      * Fetch a complete list of assigments for a list of subtasks.
+     * @param $subtaskList
+     * @return array
      */
     function getFullSubtaskList($subtaskList)
     {
@@ -96,6 +111,8 @@ class FormAssignmentBean extends DatabaseBean
 
     /**
      * Get the number of assignment parts for the guiven subtask.
+     * @param $subtaskId
+     * @return array
      */
     function getParts($subtaskId)
     {
@@ -108,6 +125,17 @@ class FormAssignmentBean extends DatabaseBean
 
     /**
      * Match the submitted solution with the solution in database.
+     * @param $assignmntId
+     * @param $part
+     * @param $type
+     * @param $a
+     * @param $b
+     * @param $c
+     * @param $d
+     * @param $e
+     * @param $f
+     * @param null $g
+     * @return float|int
      */
     function matchSolution($assignmntId, $part, $type, $a, $b, $c, $d, $e, $f, $g = NULL)
     {
@@ -246,6 +274,8 @@ class FormAssignmentBean extends DatabaseBean
 
     /**
      * Assign the list of assignment parts to Smarty variable 'parts'.
+     * @param $subtaskId
+     * @return array
      */
     function assignParts($subtaskId)
     {

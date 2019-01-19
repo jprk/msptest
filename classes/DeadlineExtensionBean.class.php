@@ -96,6 +96,10 @@ class DeadlineExtensionBean extends DatabaseBean
         }
     }
 
+    /**
+     * @param int $alt_id
+     * @throws Exception
+     */
     function dbQuerySingle($alt_id = 0)
     {
         throw new Exception ('Method not implemented in this context!');

@@ -168,7 +168,7 @@ class TaskBean extends DatabaseBean
         }
 
         $this->dumpVar('fullTaskList', $rs);
-        $this->_smarty->assign('taskList', $rs);
+        $this->assign('taskList', $rs);
         return $rs;
     }
 
@@ -237,7 +237,7 @@ class TaskBean extends DatabaseBean
             }
         }
 
-        $this->_smarty->assign('taskList', $rs);
+        $this->assign('taskList', $rs);
         return $rs;
     }
 
@@ -267,7 +267,7 @@ class TaskBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doAdmin()
     {
-        /* Get the list of all tasks for the exercises of this lecture. */
+        /* Get the list of all tasks for the excersises of this lecture. */
         $this->assignFull($this->id);
         /* Get a lecture that this subtask is related to. */
         $lectureBean = new LectureBean ($this->id, $this->_smarty, "", "");

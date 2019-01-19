@@ -17,7 +17,7 @@ class SessionDataBean
     }
 
     /**
-     * Contidionally initialise some parts of session storage.
+     * Conditionally initialise some parts of session storage.
      */
     static function conditionalInit($schoolYearStart)
     {

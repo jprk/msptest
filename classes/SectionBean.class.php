@@ -71,12 +71,12 @@ class SectionBean extends DatabaseBean
             $this->id . "," .
             $this->parent . "," .
             $this->lecture_id . ",'" .
-            mysql_escape_string($this->type) . "','" .
-            mysql_escape_string($this->title) . "','" .
-            mysql_escape_string($this->mtitle) . "','" .
-            mysql_escape_string($this->text) . "'," .
+            mysql_real_escape_string($this->type) . "','" .
+            mysql_real_escape_string($this->title) . "','" .
+            mysql_real_escape_string($this->mtitle) . "','" .
+            mysql_real_escape_string($this->text) . "'," .
             $this->position . ",'" .
-            mysql_escape_string($this->redirect) . "'," .
+            mysql_real_escape_string($this->redirect) . "'," .
             "NULL" . "," .
             $this->ival1 . ")"
         );

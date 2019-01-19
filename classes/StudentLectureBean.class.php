@@ -138,7 +138,11 @@ class StudentLectureBean extends DatabaseBean
 
     /**
      * Prepare the list of students and their points for the lecture.
+     * Throws an Exception with code self::E_INIT_FAILED in case of missing evaluation scheme.
+     * Throws an Exception with code self::E_NO_SUBTASKS in case of missing subtasks.
      * This is very similar to prepareExerciseData() in ExerciseBean.
+     * TODO: SB_SORT_BY_NAME is a global define, should be a constant.
+     * @throws Exception in case that the evaluation scheme does not exit or the subtask map is empty.
      */
     function prepareStudentLectureData($sortType = SB_SORT_BY_NAME)
     {

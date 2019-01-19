@@ -4,7 +4,7 @@
 {/if}
 {$section.text}
 {if $articleList}
-<h2>Články</h2>
+<h2>{czech}Články{/czech}{english}Articles{/english}</h2>
 <div class="article">
 <table>
 {section name=articlePos loop=$articleList}
@@ -25,7 +25,7 @@
 </div>
 {/if}
 {if $sectionFileList}
-<h2>Soubory</h2>
+<h2>{czech}Soubory{/czech}{english}Files{/english}</h2>
 <div class="file">
     <ul id="filelist-sortable">
         {section name=filePos loop=$sectionFileList}

@@ -91,6 +91,8 @@ class FileBean extends DatabaseBean
             FT_A_IMAGE => "Obrázek ke článku",
             FT_A_DATA => "Soubor ke článku",
             FT_S_IMAGE => "Obrázek k sekci",
+            FT_LAB_IMAGE => "Obrázek k laboratorní úloze",
+            FT_LAB_THUMB => "Náhled obrázku k laboratorní úloze"
         );
     }
 

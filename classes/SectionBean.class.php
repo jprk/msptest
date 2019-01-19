@@ -6,7 +6,6 @@ define('HOME_PAGE', 1);
 /* Define different section types. */
 define('ST_NORMAL', "section");
 define('ST_TASKS', "tasks");
-define('ST_TASKS_EN', "tasks_en");
 define('ST_URLS', "urls");
 define('ST_DOWNLOAD', "download");
 define('ST_EXCLIST', "exclistsect");
@@ -46,11 +45,10 @@ class SectionBean extends DatabaseBean
     {
         return array(
             ST_NORMAL => "Běžná sekce",
-            ST_TASKS => "Úkoly (česky)",
-            ST_TASKS_EN => "Úkoly (anglicky)",
             ST_URLS => "Odkazy",
             ST_DOWNLOAD => "Download",
             ST_EXCLIST => "Seznam cvičení",
+            ST_TASKS => "Seznam úkolů",
             ST_PHYLAB => "Laboratorní cvičení"
         );
     }
@@ -535,6 +533,33 @@ class SectionBean extends DatabaseBean
         $this->assign('section_parents', $parents);
     }
 
+    /**
+     * Add new section.
+     * @param $parent_id
+     * @param $lecture_id
+     * @param $type
+     * @param $title
+     * @param $mtitle
+     * @param $text
+     * @param $position
+     * @param $redirect
+     * @param $ival0
+     */
+    function addSection($parent_id, $lecture_id, $type, $title, $mtitle, $text, $position, $redirect, $ival0)
+    {
+        $this->id = 0;
+        $this->parent = $parent_id;
+        $this->lecture_id = $lecture_id;
+        $this->type = $type;
+        $this->title = $title;
+        $this->mtitle = $mtitle;
+        $this->text = $text;
+        $this->position = $position;
+        $this->redirect = $redirect;
+        $this->ival1 = $ival0;
+        $this->dbReplace();
+        $this->updateId();
+    }
     /* -------------------------------------------------------------------
        Assign this section record to the smarty variable $section.
        ------------------------------------------------------------------- */
@@ -636,7 +661,7 @@ class SectionBean extends DatabaseBean
         /* Assign all articles that are bound to this section to Smarty
            variable 'articleList'. For some section types this list will
            be augmented with article file information. */
-        if ($this->type == ST_TASKS || $this->type == ST_TASKS_EN)
+        if ($this->type == ST_TASKS)
         {
             /* Create a SubtaskBean instance that will be used to fetch
                a list of tasks that shall be displayed. */
@@ -669,6 +694,10 @@ class SectionBean extends DatabaseBean
                a list of exercises for the lecture given as the $id parameter. */
             $exclistBean = new ExerciseListBean ($this->ival1, $this->_smarty, "x", "x");
             $exclistBean->doShow();
+        }
+        else if ($this->type == ST_PHYLAB)
+        {
+            $articleBean->assignSectionArticlesWithFiles($this->id);
         }
         else
         {
@@ -708,20 +737,29 @@ class SectionBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doSave()
     {
-        /* Assign POST variables to internal variables of this class and
-           remove evil tags where applicable. */
-        $this->processPostVars();
-        /* Update the record */
-        $this->dbReplace();
-        /* Create the counter record, if necessary */
-        if ((integer)$_POST['id'] == 0)
+        /* If the connection breaks (i.e. when editing pages over slow or unreliable connection),
+           the POST request will not arrive in full. Usually it is empty. */
+        if ($this->saveRequestIsValid())
         {
-            DatabaseBean::dbCreateCounterById();
+            /* Assign POST variables to internal variables of this class and
+               remove evil tags where applicable. */
+            $this->processPostVars();
+            /* Update the record */
+            $this->dbReplace();
+            /* Create the counter record, if necessary */
+            if ((integer)$_POST['id'] == 0)
+            {
+                DatabaseBean::dbCreateCounterById();
+            }
+            /* Now we have to decide where to go for the next page. We can either
+               return to the 'admin' page or 'show' the edited section. This
+               method has been defined in BaseBean class. */
+            $this->doShowOrAdmin();
         }
-        /* Now we have to decide where to go for the next page. We can either
-           return to the 'admin' page or 'show' the edited section. This
-           method has been defined in BaseBean class. */
-        $this->doShowOrAdmin();
+        else
+        {
+            $this->action = 'e_invalid_save';
+        }
     }
 
     /* -------------------------------------------------------------------

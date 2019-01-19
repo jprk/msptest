@@ -29,7 +29,7 @@ function displayCorrespondingSelect ( obj )
 {
 	this.sval = obj.options[obj.selectedIndex].value;
 		
-	if ( this.sval != "4" && this.sval != "5" )
+	if ( this.sval != "4" && this.sval != "5" && this.sval != "7" && this.sval != "8" )
 	{
 	  // Display section selection in element "in_row_s"
 	  // and hide selection in element "in_row_a"

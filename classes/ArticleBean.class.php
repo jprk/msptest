@@ -97,10 +97,10 @@ class ArticleBean extends DatabaseBean
             . $this->id . ","
             . $this->type . ","
             . $this->parent . ",'"
-            . mysql_escape_string($this->title) . "','"
+            . mysql_real_escape_string($this->title) . "','"
             . $this->authorid . "','"
-            . mysql_escape_string($this->abstract) . "','"
-            . mysql_escape_string($this->text) . "',"
+            . mysql_real_escape_string($this->abstract) . "','"
+            . mysql_real_escape_string($this->text) . "',"
             . $this->position . ","
             . "NULL,'"
             . $this->activefrom . "','"
@@ -108,6 +108,40 @@ class ArticleBean extends DatabaseBean
         );
     }
 
+    /**
+     * Add new article.
+     * @param $id
+     * @param $type
+     * @param $parent
+     * @param $title
+     * @param $authorid
+     * @param $abstract
+     * @param $text
+     * @param $position
+     * @param $activefrom
+     * @param $activeto
+     */
+    function addArticle($id, $type, $parent, $title, $authorid, $abstract, $text, $position, $activefrom, $activeto)
+    {
+        $this->id = $id;
+        $this->type = $type;
+        $this->parent = $parent;
+        $this->title = $title;
+        $this->authorid = $authorid;
+        $this->abstract = $abstract;
+        $this->text = $text;
+        $this->position = $position;
+        $this->activefrom = $activefrom;
+        $this->activeto = $activeto;
+
+        $this->dbReplace();
+        $this->updateId();
+    }
+
+    /**
+     * @param int $alt_id
+     * @throws Exception
+     */
     function dbQuerySingle($alt_id = 0)
     {
         /* Query the data of this section (ID has been already specified) */
@@ -144,17 +178,16 @@ class ArticleBean extends DatabaseBean
         );
     }
 
-    /* -------------------------------------------------------------------
-       Assign list of articles corresponding to particular sections into
-       a Smarty variable 'articleList'.
-       ------------------------------------------------------------------- */
+    /**
+     * List all articles for all sections of a lecture.
+     * Assign the list of articles corresponding to sections of the current lecture into
+     * a Smarty variable 'articleList'.
+     */
     function assignArticleList()
     {
-        /* Some preparatory work will be necessary. */
-        $sectionBean = new SectionBean (0, $this->_smarty, "x", "x");
-
-        /* Get a hierarchical list of all sections. */
-        $sectionBean->dbQuerySectionIdSetH(0, "", $sectionSet);
+        /* Get the list of all sections that belong to the current lecture. */
+        $sectionBean = new SectionBean (0, $this->_smarty, null, null);
+        $sectionSet = $sectionBean->dbQuerySectionIdSetLecture();
 
         $output = array();
 
@@ -162,7 +195,8 @@ class ArticleBean extends DatabaseBean
         {
             foreach ($sectionSet as $key => $val)
             {
-                $resultset = $this->dbQuery('SELECT id,title FROM article WHERE parent=' . $key . ' ORDER BY position,title');
+                $resultset = $this->dbQuery(
+                    "SELECT id,title FROM article WHERE parent=$key ORDER BY position,title");
                 if (!empty ($resultset))
                 {
                     foreach ($resultset as $rkey => $rval)
@@ -178,7 +212,7 @@ class ArticleBean extends DatabaseBean
             }
         }
 
-        $this->_smarty->assign('articleList', $output);
+        $this->assign('articleList', $output);
     }
 
     /* -------------------------------------------------------------------

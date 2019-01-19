@@ -57,36 +57,36 @@ class ExerciseBean extends DatabaseBean
         $days = array(
             'po' => 1,
             'pondeli' => 1,
-            'pondìlí' => 1,
+            'pondÄ›lÃ­' => 1,
             'mo' => 1,
             'monday' => 1,
             //
             'ut' => 2,
-            'út' => 2,
+            'Ãºt' => 2,
             'utery' => 2,
-            'úterý' => 2,
+            'ÃºterÃ½' => 2,
             'tue' => 2,
             'tuesday' => 2,
             //
             'st' => 3,
             'streda' => 3,
-            'støeda' => 3,
+            'stÅ™eda' => 3,
             'wed' => 3,
             'wednesday' => 3,
             //
             'c' => 4,
-            'è' => 4,
+            'Ä' => 4,
             'ct' => 4,
-            'èt' => 4,
+            'Ät' => 4,
             'ctvrtek' => 4,
-            'ètvrtek' => 4,
+            'Ätvrtek' => 4,
             'thu' => 4,
             'thursday' => 4,
             //
             'pa' => 5,
-            'pá' => 5,
+            'pÃ¡' => 5,
             'patek' => 5,
-            'pátek' => 5,
+            'pÃ¡tek' => 5,
             'fri' => 5,
             'friday' => 5
             );
@@ -527,7 +527,7 @@ class ExerciseBean extends DatabaseBean
                         /* Stucture is as follows:
                             0 ... group number, integer
                             1 ... week type: empty or -/S or E/L or O
-                            2 ... day (Pondìlí-Nedìle)
+                            2 ... day (PondÄ›lÃ­-NedÄ›le)
                             3 ... from
                             4 ... to
                             5 ... room no

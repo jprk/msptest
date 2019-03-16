@@ -267,8 +267,9 @@ class StudentBean extends DatabaseBean
      *     from the new interface) student;
      * (c) student id is >0 and there is a corresponding entry in the database
      *     based on the hash - this is an existing student.
+     * @param null $pw_field_text
      */
-    function dbReplace($pw_field_text = NULL)
+    function dbReplace($pw_field_text = null)
     {
         /* Temporary storage for student id based on the hash query. */
         $dbId = 0;
@@ -468,19 +469,19 @@ class StudentBean extends DatabaseBean
            This is the case of demonstration users and external users that
            cannot be verified against LDAP. */
         $rs = DatabaseBean::dbQuery(
-            "SELECT * FROM student " .
+            "SELECT id FROM student " .
             "WHERE login='" . $eLogin . "' " .
             "AND password=MD5('" . $ePass . "')"
         );
 
-        $this->dumpVar('studentbean rs nonempty after db query', $rs);
+        $this->dumpVar('studentbean rs after db query', $rs);
 
-        /* In case that the LDAP server is down for some reason, we have the
-           possibility to skip the LDAP check. */
+        /* In case that the returned resultset is empty, we will continue with checking the LDAP database.
+           In case that the LDAP server is down for some reason, we have the possibility to skip the LDAP
+           check. */
         if (empty ($rs) && (LDAPConnection::isActive($this->_smarty)))
         {
-            /* As a last resort, try to contact the LDAP server and verify
-               the user. */
+            /* Try to contact the LDAP server and verify the user. */
             $rs = DatabaseBean::dbQuery(
                 "SELECT * FROM student WHERE login='" . $eLogin . "'");
             if (!empty ($rs))
@@ -492,7 +493,7 @@ class StudentBean extends DatabaseBean
             }
         }
 
-        /* Empty $rs now signalls that the student could not be verified. */
+        /* Empty resultset at this point means that the student could not be verified. */
         if (!empty ($rs))
         {
             $this->dumpVar('studentbean rs nonempty after ldap', $rs);
@@ -538,6 +539,22 @@ class StudentBean extends DatabaseBean
         $this->role = $this->rs['role'] = USR_STUDENT;
         /* Set the hashed/encrypted id. */
         $this->rs['twistid'] = $this->twistId($this->id);
+    }
+
+    /**
+     * Get student data as an associative array.
+     * @param $rs array Associative array containing also data about the student
+     * @return array
+     */
+    static function getArray(&$rs)
+    {
+        $ret = array();
+        $fields = array('id', 'firstname', 'surname', 'login', 'email', 'yearno', 'groupno');
+        foreach ($fields as $field)
+        {
+            $ret[$field] = safe_array_elem($rs, $field);
+        }
+        return $ret;
     }
 
     /**
@@ -889,6 +906,13 @@ class StudentBean extends DatabaseBean
 
         /* What is the number of tasks? */
         $numTskLst = count($taskList);
+        /* Extract task types from the $taskList. We will need them when summing points accumulated by particular
+           tasks. */
+        $taskTypes = array();
+        foreach ($taskList as $ti)
+        {
+            $taskTypes[$ti['id']] = $ti['type'];
+        }
 
         /* Data storage used for statistics */
         $negTaskCount = ($numTskLst > 0) ? array_fill(0, $numTskLst, 0) : array();
@@ -919,7 +943,6 @@ class StudentBean extends DatabaseBean
 
                 /* Now add subtask points (array $sPoints) and sum the task points according
                    to task definition (array $xPoints). */
-                $sumPoints = 0;
                 $sPoints = array();
 
                 $xPoints = array();
@@ -979,8 +1002,9 @@ class StudentBean extends DatabaseBean
                             $avgSubtaskData[$sKey] = $avgSubtaskData[$sKey] + $numPoints;
                             $parSubCount[$sKey] = $parSubCount[$sKey] + 1;
 
-                            /* Increase the total sum of points for this student. */
-                            $sumPoints += $numPoints;
+                            /* TODO: Do not!
+                               Increase the total sum of points for this student. */
+                            //$sumPoints += $numPoints;
                         }
                         else
                         {
@@ -1001,12 +1025,16 @@ class StudentBean extends DatabaseBean
 
                 $this->dumpVar('xPoints (cumulative subtask points)', $xPoints);
 
+                $sumPoints = 0;
+
                 if (isset ($taskList))
                 {
                     foreach ($taskList as $sKey => $sVal)
                     {
                         $this->dumpVar('sVal', $sVal);
                         $tskId = $sVal['id'];
+                        $tskType = $sVal['type'];
+                        /* Fetch the previously accumulated points for this task. */
                         $gotPoints = $xPoints[$tskId];
                         /* $gotPoints is a number or '-'. Assure $numPoints will be a number. */
                         $numPoints = 0 + $gotPoints;
@@ -1067,7 +1095,18 @@ class StudentBean extends DatabaseBean
                                or negative. */
                             $finalResult = false;
                         }
+
+                        /* Finally update the total points of the student, but only in case that this
+                           task adds to the total. */
+                        if ($tskType != TaskBean::TT_NO_TOTAL_POINTS)
+                        {
+                            $sumPoints += $gotPoints;
+                        }
                     }
+                }
+                else
+                {
+                    throw new UnexpectedValueException('Task list cannot be empty!');
                 }
 
                 $this->dumpVar('$parTaskCount', $parTaskCount);
@@ -1415,7 +1454,7 @@ class StudentBean extends DatabaseBean
                happen if the student is already a member -- results in an exception). */
             if (empty($data[0]))
             {
-                $grpb->assignFreeGroupsList();
+                $grpb->assignFreeGroupsHtmlOptions();
             }
         }
 

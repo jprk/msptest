@@ -42,7 +42,7 @@ class StudentGroupBean extends DatabaseBean
     static function GRPTYPE_LIST()
     {
         return array(
-            self::GRPTYPE_NONE => 'Vyberte ze seznamu...',
+            self::GRPTYPE_NONE => 'Bez skupin',
             self::GRPTYPE_EXERCISE => 'Pouze v rámci cvičení',
             self::GRPTYPE_LECTURE => 'V rámci předmětu');
     }
@@ -606,6 +606,23 @@ class StudentGroupBean extends DatabaseBean
     {
         $free_groups = $this->getFreeGroupsList();
         $this->assign('free_groups', $free_groups);
+        return $free_groups;
+    }
+
+    /**
+     * Pass option information about free student groups to Smarty templates.
+     * Creates Smarty variable `free_group_options`.
+     * @throws Exception in case that there is no free place available
+     * @return array Array of free group options indexed by group id
+     */
+    function assignFreeGroupsHtmlOptions()
+    {
+        $free_groups = $this->getFreeGroupsList();
+        $free_groups = array_column($free_groups, 'namef', 'id');
+        $this->assign('free_group_options', $free_groups);
+        $this->dumpVar('free student group options', $free_groups);
+        // TODO: Hack, remove once the deadlines are implemented
+        $this->assign('group_open_to', date('2019-03-15'));
         return $free_groups;
     }
 

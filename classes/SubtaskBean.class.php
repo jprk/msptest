@@ -41,9 +41,9 @@ class SubtaskBean extends DatabaseBean
             "REPLACE subtask VALUES ('"
             . $this->id . "','"
             . $this->type . "','"
-            . mysql_escape_string($this->title) . "','"
-            . mysql_escape_string($this->ttitle) . "','"
-            . mysql_escape_string($this->assignment) . "','"
+            . mysql_real_escape_string($this->title) . "','"
+            . mysql_real_escape_string($this->ttitle) . "','"
+            . mysql_real_escape_string($this->assignment) . "','"
             . $this->maxpts . "','"
             . $this->position . "','"
             . $this->lecture_id . "')"
@@ -261,7 +261,7 @@ class SubtaskBean extends DatabaseBean
     {
         if ($lectureId <= 0) $lectureId = SessionDataBean::getLectureId();
         $list = $this->getStudentSubtaskList($lectureId, $studentId);
-        $this->_smarty->assign('studentSubtaskList', $list);
+        $this->assign('studentSubtaskList', $list);
         return $list;
     }
 
@@ -453,7 +453,7 @@ class SubtaskBean extends DatabaseBean
         TaskBean::assignTypeSelect();
 
         /* Get a list of lectures. */
-        $lectureBean = new LectureBean (0, $this->_smarty, "", "");
+        $lectureBean = new LectureBean (0, $this->_smarty, null, null);
         $lectureBean->assignSelectMap();
     }
 

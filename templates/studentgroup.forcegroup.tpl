@@ -1,3 +1,4 @@
+{if $forced_groups}
 <p>
     Do volných skupin byli umístěni následující studenti:
 </p>
@@ -10,3 +11,8 @@
     </li>
 {/foreach}
 </ul>
+{else}
+<p>
+    Všichni studenti jsou již rozřazení do skupin, není třeba nikoho nuceně přiřazovat.
+</p>
+{/if}

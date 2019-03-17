@@ -39,17 +39,29 @@
     <br>{czech}studentská skupina v tomto předmětu{/czech}{english}student group id in this lecture{/english}:
     {if $group_data}
         {$group_data.name}
+        {if $group_open}
         <form style="display: inline;" action="?act=delete,studentgroup,{$group_data.id}" method="post">
         <input type="submit" value="{czech}Zrušit členství{/czech}{english}Remove{/english}">
         </form>
+        {else}
+        {czech}(již nelze změnit){/czech}{english}(cannot be altered anymore){/english}
+        {/if}
     <br>{czech}studenti ve skupině{/czech}{english}members of your group{/english}:
     {foreach from=$group_students item=grps name=grp_students}{$grps.firstname} {$grps.surname}{if not $smarty.foreach.grp_students.last}, {/if}{/foreach}
     {else}
+        {if $group_open}
         {czech}nepřiřazena, vyberte si{/czech}{english}not yet assigned, select{/english}:&nbsp;
         <form style="display: inline;" action="?act=edit,studentgroup,{$lecture.id}" method="post">
-        <select name="group_id">{html_options options=$free_groups}</select>
+        <select name="group_id">{html_options options=$free_group_options}</select>
         <input type="submit" value="{czech}Uložit{/czech}{english}Save{/english}">
         </form>
+        {else}
+            {if $group_open_to}
+                {czech}volba skupiny byla možná pouze do {$group_open_to|date_format:"%d.%m.%Y"}, bude vám připřazena automaticky{/czech}{english}group selection was possible only until {$group_open_to}; we will select one group for you soon{/english}
+            {else}
+                {czech}přiřazování bude aktivní od {$group_open_from|date_format:"%d.%m.%Y"}{/czech}{english}group selection opens on {$group_open_from}{/english}
+            {/if}
+        {/if}
     {/if}
 {/if}
 </p>

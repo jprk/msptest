@@ -239,8 +239,8 @@ class StudentGroupBean extends DatabaseBean
                 'Number of unassigned students is higher than the number of free places in empty groups');
         }
 
-        /* We have enough places, duplicate the list of empty groups at most `max_places` times to accommodate the
-           given number of unassigned students. */
+        /* We have enough places, duplicate the list of empty groups at most `max_places` times to
+           accommodate the given number of unassigned students. */
         $groupList = $emptyGroups;
         while (count($groupList) < $numStudents)
         {
@@ -258,7 +258,7 @@ class StudentGroupBean extends DatabaseBean
                 $forced_groups[$group_id] = array( 'group' => $group, 'students' => array());
             $forced_groups[$group_id]['students'][] = $student;
             $this->dumpVar('setting student to group', array($student, $group));
-            // $this->setGroupIdForStudent($student['id'], $group_id, true);
+            $this->setGroupIdForStudent($student['id'], $group_id, true);
             $i++;
         }
 
@@ -636,8 +636,9 @@ class StudentGroupBean extends DatabaseBean
 
     /**
      * Handle `admin` event.
-     * The admin handler is used to either display interface for specifying the number of student groups to generate,
-     * or it is used to force group assignment for students that did not choose a group for themselves.
+     * The admin handler is used to either display interface for specifying the number of student groups
+     * to generate, or it is used to force group assignment for students that did not choose a group
+     * for themselves.
      * @throws Exception
      */
     function doAdmin()

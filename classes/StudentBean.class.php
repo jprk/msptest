@@ -1327,7 +1327,7 @@ class StudentBean extends DatabaseBean
             "SELECT id FROM student LEFT JOIN stud_lec ON stud_lec.student_id=student.id " .
             "WHERE lecture_id=$lecture_id AND groupno=$group_no AND year=$school_year");
         $ids = array_column($rs, 'id');
-        $this->dumpVar(ids, $ids);
+        $this->dumpVar('ids', $ids);
         return $ids;
     }
 

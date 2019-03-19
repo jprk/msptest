@@ -1,4 +1,4 @@
-<?php
+ <?php
 
 class StudentExerciseBean extends DatabaseBean
 {
@@ -28,20 +28,14 @@ class StudentExerciseBean extends DatabaseBean
            as a parameter of "IN" clause. */
         $elst = array2ToDBString($ers, 'id');
 
-        foreach ($this->relation as $key => $val)
+        foreach ($this->relation as $student_id => $exercise_id)
         {
+            /* Remove all possible references to previous exercises. */
             $this->dbQuery(
-                "DELETE FROM stud_exc " .
-                "WHERE student_id=" . $key . " " .
-                "AND exercise_id IN (" . $elst . ")");
+                "DELETE FROM stud_exc WHERE student_id=$student_id AND exercise_id IN ($elst)");
             $this->dbQuery(
-                "REPLACE stud_exc VALUES ("
-                . $key . ","
-                . $val . ")"
-            );
+                "REPLACE stud_exc VALUES ($student_id,$exercise_id)");
         }
-
-        // echo "<!-- replace ok -->\n";
     }
 
     /* Assign POST variables to internal variables of this class and
@@ -129,6 +123,78 @@ class StudentExerciseBean extends DatabaseBean
         return $studentList;
     }
 
+    /**
+     * Find students of that are not assigned to any exercise in this school year.
+     * Given a list of students, finds those of them that are not assigned to any
+     * exercise. Assumes that the list is valid, does not check that the students
+     * did not e.g. enroll for the given lecture.
+     * @param $id_list array Array of student ids.
+     * @return array Array of unassigned student ids.
+     */
+    function getUnassignedStudents($id_list)
+    {
+        $ids = arrayToDBString($id_list);
+        $rs = self::dbQuery(
+            "SELECT id FROM student st LEFT JOIN stud_exc se ON st.id=se.student_id " .
+            "WHERE st.id IN ($ids) AND se.student_id IS NULL AND se.exercise_id IS NULL");
+        $uids = array_column($rs, 'id');
+        $this->dumpVar('uids', $uids);
+        return $uids;
+    }
+
+    /**
+     * Assing students to an exercise based on their study group info.
+     * @param $exercise ExerciseBean Object defining the exercise.
+     */
+    function assignStudentsToExercise($exercise)
+    {
+        /* Fetch a list of students of the actual lecture in the actual school year that have the same
+           student group as the exercise. */
+        $sb = new StudentBean (0, $this->_smarty, null, null);
+        $stid_list = $sb->dbQueryStudentIdsByGroup($exercise->lecture_id, $exercise->getGroupNo(), $exercise->schoolyear);
+
+        /* Remove the students that are already assigned to some exercise. */
+        $stid_list = $this->getUnassignedStudents($stid_list);
+        /* Assign the students to the exercise.
+           For this we need an array of the form student_id => exercise_id. We have the list of students
+           that need to be assigned, and we have the exercise id. The array may be constructed using
+           a PHP function `array_fill_keys`.
+           TODO: Ever `dbReplace()` call queries current list of exercises and deletes old entries before inserting.
+           In our case the old entries do not exist and it is therefore not necessary to delete them ...
+         */
+        $this->relation = array_fill_keys($stid_list, $exercise->id);
+        $this->dbReplace();
+    }
+
+    /**
+     * Prepare a map holding student-exercise info.
+     * @return array
+     */
+    function prepareStudentExerciseMap()
+    {
+        /* Get the list of all exercises that have been defined for the current
+           school year, assign it to the Smarty variable 'exerciseList' and
+           return it to us as well, we will need it later. The value of
+           $this->id holds the lecture_id in this case. */
+        $exerciseBean = new ExerciseBean (0, $this->_smarty, null, null);
+        $exerciseList = $exerciseBean->assignFull($this->id, $this->schoolyear);
+
+        /* Now create an array that contains student id as an key and _index_ to
+           the $exerciseList as a value (that is, not the exercise ID, but the
+           true index into the array. */
+        $exerciseBinding = $this->getExerciseBinding($exerciseList);
+        $this->dumpVar('exerciseBinding', $exerciseBinding);
+
+        /* Get the list of all students. Additionally, create a field 'checked'
+           that contains text ' checked="checked"' on the position of the exercise
+           that the particular student visits, and '' otherwise. */
+        $studentBean = new StudentBean (0, $this->_smarty, null, null);
+        $map = $studentBean->assignStudentListWithExercises(
+            $this->id, count($exerciseList), $exerciseBinding);
+
+        return $map;
+    }
+
     /* -------------------------------------------------------------------
        HANDLER: SHOW
        ------------------------------------------------------------------- */
@@ -192,30 +258,12 @@ class StudentExerciseBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doAdmin()
     {
-        /* Get the list of all exercises that have been defined for the current
-           school year, assign it to the Smarty variable 'exerciseList' and
-           return it to us as well, we will need it later. The value of
-           $this->id holds the lecture_id in this case. */
-        $exerciseBean = new ExerciseBean (0, $this->_smarty, "x", "x");
-        $exerciseList = $exerciseBean->assignFull($this->id, $this->schoolyear);
-
         /* Get the lecture description, just to fill in some more-or-less
            useful peieces of information. */
-        $lectureBean = new LectureBean ($this->id, $this->_smarty, "x", "x");
+        $lectureBean = new LectureBean ($this->id, $this->_smarty, null, null);
         $lectureBean->assignSingle();
 
-        /* Now create an array that contains student id as an key and _index_ to
-           the $exerciseList as a value (that is, not the exercise ID, but the
-           true index into the array. */
-        $exerciseBinding = $this->getExerciseBinding($exerciseList);
-        $this->dumpVar('exerciseBinding', $exerciseBinding);
-
-        /* Get the list of all students. Additionally, create a field 'checked'
-           that contains text ' checked="checked"' on the position of the exercise
-           that the particular student visits, and '' otherwise. */
-        $studentBean = new StudentBean (0, $this->_smarty, "x", "x");
-        $studentBean->assignStudentListWithExercises(
-            $this->id, count($exerciseList), $exerciseBinding);
+        $this->prepareStudentExerciseMap();
 
         /* It could have been that doAdmin() has been called from another
            handler. Change the action to "admin" so that ctrl.php will
@@ -242,11 +290,11 @@ class StudentExerciseBean extends DatabaseBean
         /* Both above functions set $this->rs to values that shall be
            displayed. By assigning $this->rs to Smarty variable 'user'
            we can fill the values of $this->rs into a template. */
-        $this->_smarty->assign('user', $this->rs);
+        $this->assign('user', $this->rs);
         /* Get the list of all possible person categories. */
-        $this->_smarty->assign('roles', $this->_getUserRoles());
+        $this->assign('roles', $this->_getUserRoles());
         /* Left column contains administrative menu */
-        $this->_smarty->assign('leftcolumn', "leftadmin.tpl");
+        $this->assign('leftcolumn', "leftadmin.tpl");
     }
 }
 

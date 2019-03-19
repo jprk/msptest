@@ -1313,6 +1313,24 @@ class StudentBean extends DatabaseBean
         $this->assign('statData', $statData);
     }
 
+    /**
+     * Find ids of all students that belong to a study group for a lecture.
+     * @param $lecture_id int Lecture identifier.
+     * @param $group_no int Group identifier.
+     * @param $school_year int Year when the school year started.
+     * @return array List of student ids for the given lecture and group.
+     */
+    function dbQueryStudentIdsByGroup($lecture_id, $group_no, $school_year)
+    {
+        /* We need just a list of id values. */
+        $rs = self::dbQuery(
+            "SELECT id FROM student LEFT JOIN stud_lec ON stud_lec.student_id=student.id " .
+            "WHERE lecture_id=$lecture_id AND groupno=$group_no AND year=$school_year");
+        $ids = array_column($rs, 'id');
+        $this->dumpVar(ids, $ids);
+        return $ids;
+    }
+
     /* ---------------------------------------------------------------------
        Query a list of student records for the given list of ids.
        --------------------------------------------------------------------- */

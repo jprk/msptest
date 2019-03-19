@@ -103,6 +103,33 @@ class LecturerBean extends DatabaseBean
     }
 
     /**
+     * Try to find a corresponding lecturer based on surname and initials.
+     * Initials are allowed to taker
+     * @param $surname string Surname of the person.
+     * @param $initials string Initials
+     * @return array List of suitable lecturer names
+     */
+    function mapScheduleName($surname, $initials)
+    {
+        // TODO: Allow for complete set of initials, i.e. H.-J. or H.J. or H.J. or E.T.A. ...
+        $first_initial = mb_substr($initials, 0,1);
+        $rs = DatabaseBean::dbQuery(
+            "SELECT id, surname, firstname, room, email " .
+            "FROM lecturer WHERE surname='$surname' AND firstname LIKE '$first_initial%' " .
+            "ORDER BY surname,firstname");
+        $res = array();
+        if (!empty($rs))
+        {
+            foreach($rs as $val)
+            {
+                $res[$val['id']] = $val;
+            }
+        }
+        $this->dumpVar('lecturer_map', $res);
+        return $res;
+    }
+
+    /**
      * Return a full list of lecturer records for given array of associative arrays.
      * The identifiers are assumed to be 'id' elements at the second level. Returned array is
      * indexed by lecturer id.

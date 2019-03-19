@@ -101,6 +101,7 @@ class ExerciseTutorsBean extends DatabaseBean
             $ids_to_insert .= $comma . "($exercise_id,$tutor,0)";
             $comma = ",";
         }
+        $this->dumpVar('ids_to_insert', $ids_to_insert);
         /* Add tutors given by the tutor list. */
         if (!empty($ids_to_insert))
         {

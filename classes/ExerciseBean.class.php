@@ -2,6 +2,8 @@
 
 class ExerciseBean extends DatabaseBean
 {
+    const EB_SESSION_DATA = 'eb_session_data';
+
     var $day;
     var $from;
     var $to;
@@ -18,6 +20,7 @@ class ExerciseBean extends DatabaseBean
     /** @var ExerciseTutorsBean Instance of ExerciseTutorBean. */
     private $extutBean;
     private $displayNames;
+    private $csv_upload;
 
     /**
      * @param $week_str
@@ -122,8 +125,32 @@ class ExerciseBean extends DatabaseBean
         $this->_setDefaults();
     }
 
+
+    /**
+     * Return groupno of the exercise.
+     * @return int Group number of the exercise.
+     */
+    function getGroupNo()
+    {
+        return $this->groupno;
+    }
+
     function dbReplace()
     {
+        /*
+         * In case of using Dibi ...
+         $args = [
+            'id' => $this->id,
+            'day' => $this->day,
+            'from' => $this->from,
+            'to' => $this->to,
+            'room' => $this->room,
+            'lecture_id' => $this->lecture_id,
+            'lecturer' => 0,
+            'year' => $this->schoolyear
+         ];
+         dibi::query('REPLACE `exercise`', $args);
+         */
         DatabaseBean::dbQuery(
             "REPLACE exercise VALUES ("
             . $this->id . ",'"
@@ -166,15 +193,18 @@ class ExerciseBean extends DatabaseBean
        evil attributes et cetera, but this will be done later if ever. */
     function processPostVars()
     {
-        $this->id = $_POST['id'];
-        $this->day = trimStrip($_POST['day']);
-        $this->from = trimStrip($_POST['from']);
-        $this->to = trimStrip($_POST['to']);
-        $this->room = trimStrip($_POST['room']);
-        $this->groupno = trimStrip($_POST['groupno']);
+        assignPostIfExists($this->id, $this->rs,'id');
+        assignPostIfExists($this->day, $this->rs,'day', true);
+        assignPostIfExists($this->from, $this->rs, 'from', true);
+        assignPostIfExists($this->to, $this->rs, 'to', true);
+        assignPostIfExists($this->room,$this->rs, 'room', true);
+        assignPostIfExists($this->groupno, $this->rs, 'groupno', true);
 
         /* Array of tutor ids does not need string trimming. */
-        $this->tutor_ids = $_POST['tutor_ids']; /**> @var array */
+        assignPostIfExists($this->tutor_ids, $this->rs, 'tutor_ids'); /**> @var array */
+
+        /* Flag indicating CSV input */
+        assignPostIfExists($this->csv_upload, $this->rs, 'csv');
     }
 
     /**
@@ -399,7 +429,7 @@ class ExerciseBean extends DatabaseBean
     function assignFull($lectureId = 0, $schoolYear = 0)
     {
         $rs = $this->getFull($lectureId, $schoolYear);
-        $this->_smarty->assign('exerciseList', $rs);
+        $this->assign('exerciseList', $rs);
         return $rs;
     }
 
@@ -486,85 +516,55 @@ class ExerciseBean extends DatabaseBean
      */
     function doSave()
     {
-        /* Check for file upload. */
-        $this->dumpVar('FILES', $_FILES);
-        if (isset ($_FILES['csv_exercises']))
+        /* Assign POST variables to internal variables of this class and
+           remove evil tags where applicable. */
+        $this->processPostVars();
+
+        /* We may have a CSV upload ... */
+        if ($this->csv_upload)
         {
-            $file_data = $_FILES['csv_exercises'];
-            if (is_uploaded_file($file_data['tmp_name']))
+            /* We have the data stored in session ... */
+            $csv_data = $_SESSION[self::EB_SESSION_DATA];
+            /* ... and we will clear them immediately. */
+            $_SESSION[self::EB_SESSION_DATA] = null;
+            assert(!is_null($csv_data), 'CSV data cannot be NULL');
+            assert(is_array($csv_data), 'CSV data has to be an array');
+            assert(!empty($csv_data), 'CSV data cannot be empty');
+            /* Create tutor object so that we can assign a tutor */
+            $etb = new ExerciseTutorsBean(0, $this->_smarty, null, null);
+            /* Create student-excercise binding object so that we can assign students to exercise. */
+            $seb = new StudentExerciseBean(0, $this->_smarty, null, null);
+            // $this->dumpThis();
+            foreach ($csv_data as $exercise)
             {
-                $handle = @fopen($file_data['tmp_name'], "r");
-                if ($handle)
-                {
-                    /* We have to skip the first line of the imported CSV file - it contains header information. */
-                    $skipHeader = true;
-                    /* First row of the resulting list. */
-                    $row = 1;
-                    /* And loop while we have something to chew on ... */
-                    while (!feof($handle))
-                    {
-                        /* Read a line of text from the submitted file. */
-                        $buffer = fgets($handle, 4096);
-                        /* The file contains sometimes also form feed character (^L, 0x0c) which shall be
-                           removed as well. */
-                        $trimmed = trim($buffer, " \t\n\r\0\x0b\x0c\xa0");
-                        /* The file may also contain some empty lines, and trimming the form feed will
-                           generate another empty line. */
-                        if (empty ($trimmed))
-                        {
-                            /* Skip empty lines. */
-                            continue;
-                        }
-                        if ($skipHeader)
-                        {
-                            /* Skip header row. */
-                            $skipHeader = false;
-                            continue;
-                        }
-                        /* The line contains several fields separated by semicolon. */
-                        $la = explode(";", $trimmed);
-                        self::dumpVar('la', $la);
-                        /* Stucture is as follows:
-                            0 ... group number, integer
-                            1 ... week type: empty or -/S or E/L or O
-                            2 ... day (Pondělí-Neděle)
-                            3 ... from
-                            4 ... to
-                            5 ... room no
-                        */
-                        if ( empty($la[1]) || empty($la[2]) || empty($la[3]) || empty($la[4]))
-                        {
-                            continue;
-                        }
-                        $this->id = 0;
-                        $this->groupno = intval($la[0]);
-                        $this->day = self::make_day($la[1],$la[2]);
-                        $this->from = $la[3];
-                        $this->to = $la[4];
-                        $this->room = $la[5];
-                        /* Store the record into database */
-                        $this->dbReplace();
-                    }
-                }
-            }
-            else
-            {
-                throw new Exception('possible file upload attack when importing exercises');
+                $this->dumpVar('exercise', $exercise);
+                $this->day = $exercise['day']['num'];
+                $this->from = $exercise['from'];
+                $this->to = $exercise['to'];
+                $this->room = $exercise['room'];
+                $this->groupno = $exercise['groupno'];
+                /* Force creation of a new database record by explicitly setting `id` to zero. */
+                $this->id = 0;
+                $this->dbReplace();
+                /* And now assign the tutor(s). We will need a list of tutor ids. */
+                $tutor_ids = array_keys($exercise['tutors']);
+                $this->dumpVar('tutor_ids', $tutor_ids);
+                $etb->setTutorsIdsForExercise($tutor_ids, $this->id);
+                /* Finally assign students of the given group (in case that they are already in the system
+                   _and_ they are not manually registered for some exercise). */
+                $seb->assignStudentsToExercise($this);
             }
         }
         else
         {
-        /* Assign POST variables to internal variables of this class and
-           remove evil tags where applicable. */
-        $this->processPostVars();
-        /* Update the record, but do not update the password. */
-        $this->dbReplace();
+            /* Update a single record. */
+            $this->dbReplace();
+        }
         /* Saving can occur only in admin mode. Now that we have saved the
            data, return to the admin view by calling the appropriate action
            handler. Admin mode expects to have the value of $this->id set
            to lecture_id.
         */
-        }
         $this->id = $this->lecture_id;
         $this->doAdmin();
     }
@@ -612,33 +612,133 @@ class ExerciseBean extends DatabaseBean
        ------------------------------------------------------------------- */
     function doEdit()
     {
-        /* If id == 0, we shall create a new record. */
-        if ($this->id)
+        /* Initialise session storage. */
+        $_SESSION[self::EB_SESSION_DATA] = null;
+
+        /* Check for file upload. */
+        $this->dumpVar('FILES', $_FILES);
+        if (isset ($_FILES['csv_exercises']))
         {
-            /* Query data of this exercise. */
-            $this->dbQuerySingle();
+            /* Initialise the list of exercises imported from the CSV that will be displayed before saving. */
+            $exe_list = array();
+            $file_data = $_FILES['csv_exercises'];
+            if (is_uploaded_file($file_data['tmp_name']))
+            {
+                $handle = @fopen($file_data['tmp_name'], "r");
+                if ($handle)
+                {
+                    /* We need an instance of ExerciseTutorBean to assign tutor ids to exercises. */
+                    $lctb = new LecturerBean(0, $this->_smarty, null, null);
+                    $lctlecb = new LectureLecturerBean(0, $this->_smarty, null, null);
+                    /* We have to skip the first line of the imported CSV file - it contains header information. */
+                    $skipHeader = true;
+                    /* First row of the resulting list. */
+                    $row = 1;
+                    /* And loop while we have something to chew on ... */
+                    while (!feof($handle))
+                    {
+                        /* Read a line of text from the submitted file. */
+                        $buffer = fgets($handle, 4096);
+                        /* The file contains sometimes also form feed character (^L, 0x0c) which shall be
+                           removed as well. */
+                        $trimmed = trim($buffer, " \t\n\r\0\x0b\x0c\xa0");
+                        /* The file may also contain some empty lines, and trimming the form feed will
+                           generate another empty line. */
+                        if (empty ($trimmed))
+                        {
+                            /* Skip empty lines. */
+                            continue;
+                        }
+                        if ($skipHeader)
+                        {
+                            /* Skip header row. */
+                            $skipHeader = false;
+                            continue;
+                        }
+                        /* The line contains several fields separated by semicolon. */
+                        $la = explode(";", $trimmed);
+                        self::dumpVar('la', $la);
+                        /*
+                         *  Stucture is as follows:
+                                0 ... group number (integer)
+                                1 ... room no (string)
+                                2 ... from (hour:minute, mandatory)
+                                3 ... to (hour:minute, mandatory)
+                                4 ... week type (empty or -/S or E/L or O, mandatory)
+                                5 ... day (Pondělí-Po-po-Mo-mo/.../Neděle-Ne-ne-Su-su, mandatory)
+                                6 ... tutor surname (string)
+                                7 ... tutor initials (string)
+                            The mandatory fields are denoted above, "week type" may be empty denoting an action that
+                            occurs every week.
+
+                            Check that the mandatory fields are not empty and that
+                        */
+                        $message = '';
+                        if ( empty($la[1]) || empty($la[2]) || empty($la[3]) || empty($la[4]))
+                        {
+                            continue;
+                        }
+                        /* Text in CSV is assumed to be in Windows-1250 encoding (this is the standard for MS Excel) */
+                        $convert_indices = array(4,5,6,7);
+                        foreach ($convert_indices as $idx)
+                        {
+                            $la[$idx] = iconv(
+                                "windows-1250", "utf-8",
+                                trim($la[$idx], " \t\n\r\"\xa0"));
+                        }
+                        $info = array(
+                            "groupno" => intval($la[0]),
+                            "room" => $la[1],
+                            "from" => $la[2],
+                            "to" => $la[3],
+                            "day" => numToDay(self::make_day($la[4],$la[5])),
+                            "tutors" => $lctb->mapScheduleName($la[6], $la[7])
+                        );
+                        $exe_list[] = $info;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception('possible file upload attack when importing exercises');
+            }
+
+            $this->assign('exerciseList', $exe_list);
+            /* And store the list as a session variable so that we do not have to parse the CSV again. */
+            $_SESSION[self::EB_SESSION_DATA] = $exe_list;
+            /* And make sure that we will display the correct template instead of the standard "edit". */
+            $this->action = 'edit.csv';
         }
         else
         {
-            /* Initialize default values. */
-            $this->_setDefaults();
+            /* If id == 0, we shall create a new record. */
+            if ($this->id)
+            {
+                /* Query data of this exercise. */
+                $this->dbQuerySingle();
+            }
+            else
+            {
+                /* Initialize default values. */
+                $this->_setDefaults();
+            }
+
+            /* Both above functions set $this->rs to values that shall be
+               displayed. By assigning $this->rs to Smarty variable 'user'
+               we can fill the values of $this->rs into a template. */
+            $this->_smarty->assign('exercise', $this->rs);
+
+            /* Get a list of lectures. */
+            $lectureBean = new LectureBean (0, $this->_smarty, "", "");
+            $lectureBean->assignSelectMap();
+
+            /* Get a list of lecturers assigned to this lecture in this schoolyear. */
+            $leleBean = new LectureLecturerBean(null, $this->_smarty, null, null);
+            $leleBean->assignSelectMap();
+
+            /* Get a map of schoolyears. */
+            //$this->assignYearMap ()
         }
-
-        /* Both above functions set $this->rs to values that shall be
-           displayed. By assigning $this->rs to Smarty variable 'user'
-           we can fill the values of $this->rs into a template. */
-        $this->_smarty->assign('exercise', $this->rs);
-
-        /* Get a list of lectures. */
-        $lectureBean = new LectureBean (0, $this->_smarty, "", "");
-        $lectureBean->assignSelectMap();
-
-        /* Get a list of lecturers assigned to this lecture in this schoolyear. */
-        $leleBean = new LectureLecturerBean(null, $this->_smarty, null, null);
-        $leleBean->assignSelectMap();
-
-        /* Get a map of schoolyears. */
-        //$this->assignYearMap ();
     }
 }
 

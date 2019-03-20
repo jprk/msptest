@@ -62,6 +62,15 @@ class SchoolYearBean extends BaseBean
             2017 => array(
                 self::TERMTYPE_WINTER => array('from' => '2017-09-25', 'to' => '2018-01-10'),
                 self::TERMTYPE_SUMMER => array('from' => '2018-02-17', 'to' => '2018-05-16')
+            ),
+            2018 => array(
+                self::TERMTYPE_WINTER => array('from' => '2018-10-01', 'to' => '2019-01-11'),
+                self::TERMTYPE_SUMMER => array('from' => '2019-02-18', 'to' => '2019-05-24')
+            ),
+            /* Dummy, there is no official info yet. */
+            2019 => array(
+                self::TERMTYPE_WINTER => array('from' => '2019-10-01', 'to' => '2020-01-11'),
+                self::TERMTYPE_SUMMER => array('from' => '2020-02-18', 'to' => '2020-05-24')
             ));
 
         if (array_key_exists($schoolyear, $_dates))
@@ -75,6 +84,12 @@ class SchoolYearBean extends BaseBean
         return NULL;
     }
 
+    /**
+     * @param $schoolyear
+     * @param $term
+     * @return array|null
+     * @throws Exception In case that school year data is missing.
+     */
     static function getTermLimits($schoolyear, $term)
     {
         switch ($term)
@@ -87,9 +102,8 @@ class SchoolYearBean extends BaseBean
                    not available yet. In such a case we will raise an exception. */
                 if (!isset ($termEnd))
                 {
-                    throw new Exception (
-                        'Chybí údaje o školním roce ' .
-                        $schoolyear + 1 . '/' . $schoolyear + 2);
+                    $message = 'Chybí údaje o školním roce ' . ($schoolyear + 1) . '/' . ($schoolyear + 2);
+                    throw new Exception ($message);
                 }
                 return array('from' => $termBegin['from'], 'to' => $termEnd['from']);
             case self::TERMTYPE_SUMMER :
@@ -100,9 +114,8 @@ class SchoolYearBean extends BaseBean
                    not available yet. In such a case we will raise an exception. */
                 if (!isset ($termEnd))
                 {
-                    throw new Exception (
-                        'Chybí údaje o školním roce ' .
-                        $schoolyear + 1 . '/' . $schoolyear + 2);
+                    $message = 'Chybí údaje o školním roce ' . ($schoolyear + 1) . '/' . ($schoolyear + 2);
+                    throw new Exception ($message);
                 }
                 return array('from' => $termBegin['from'], 'to' => $termEnd['from']);
         }

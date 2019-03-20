@@ -389,7 +389,10 @@ class ExerciseBean extends DatabaseBean
     function getExercisesForLecture($lectureId = 0, $schoolYear = 0)
     {
         $where = $this->_lectureIdToWhereClause($lectureId, $schoolYear);
-        return $this->_getFullList($where);
+        $this->dumpVar('where', $where);
+        $exercise_list = $this->_getFullList($where);
+        $this->dumpVar('exercise_list', $exercise_list);
+        return $exercise_list;
     }
 
     function fetchTutors()
@@ -533,7 +536,7 @@ class ExerciseBean extends DatabaseBean
             /* Create tutor object so that we can assign a tutor */
             $etb = new ExerciseTutorsBean(0, $this->_smarty, null, null);
             /* Create student-excercise binding object so that we can assign students to exercise. */
-            $seb = new StudentExerciseBean(0, $this->_smarty, null, null);
+            $seb = new StudentExerciseBean(SessionDataBean::getLectureId(), $this->_smarty, null, null);
             // $this->dumpThis();
             foreach ($csv_data as $exercise)
             {

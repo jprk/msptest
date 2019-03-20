@@ -124,37 +124,48 @@ class StudentExerciseBean extends DatabaseBean
     }
 
     /**
-     * Find students of that are not assigned to any exercise in this school year.
+     * Remove students assigned to an exercise from a list of students.
      * Given a list of students, finds those of them that are not assigned to any
      * exercise. Assumes that the list is valid, does not check that the students
      * did not e.g. enroll for the given lecture.
      * @param $id_list array Array of student ids.
+     * @param $exercise_list array List of exercises to check for assigned students
      * @return array Array of unassigned student ids.
      */
-    function getUnassignedStudents($id_list)
+    function removeAssignedStudents($id_list, $exercise_list)
     {
         $ids = arrayToDBString($id_list);
+        $eids = arrayToDBString($exercise_list);
         $rs = self::dbQuery(
-            "SELECT id FROM student st LEFT JOIN stud_exc se ON st.id=se.student_id " .
+            "SELECT id FROM student st " .
+            "LEFT JOIN stud_exc se ON st.id=se.student_id AND se.exercise_id IN ($eids) " .
             "WHERE st.id IN ($ids) AND se.student_id IS NULL AND se.exercise_id IS NULL");
         $uids = array_column($rs, 'id');
-        $this->dumpVar('uids', $uids);
+        $this->dumpVar('unassigned ids', arrayToDBString($uids));
         return $uids;
     }
 
     /**
-     * Assing students to an exercise based on their study group info.
+     * Assign students to an exercise based on their study group info.
      * @param $exercise ExerciseBean Object defining the exercise.
      */
     function assignStudentsToExercise($exercise)
     {
+        /* Find out which exercise ids are currently valid for this school year and the active lecture.
+           TODO: Check if we can use the $exercise for this. Probably yes.
+         */
+        $eb = new ExerciseBean (0, $this->_smarty, NULL, NULL);
+        $ers = $eb->getExercisesForLecture($this->id, $this->schoolyear);
+        /* We have to get a list of IDs */
+        $eid_list = array_column($ers, 'id');
+
         /* Fetch a list of students of the actual lecture in the actual school year that have the same
            student group as the exercise. */
         $sb = new StudentBean (0, $this->_smarty, null, null);
         $stid_list = $sb->dbQueryStudentIdsByGroup($exercise->lecture_id, $exercise->getGroupNo(), $exercise->schoolyear);
 
         /* Remove the students that are already assigned to some exercise. */
-        $stid_list = $this->getUnassignedStudents($stid_list);
+        $stid_list = $this->removeAssignedStudents($stid_list, $eid_list);
         /* Assign the students to the exercise.
            For this we need an array of the form student_id => exercise_id. We have the list of students
            that need to be assigned, and we have the exercise id. The array may be constructed using

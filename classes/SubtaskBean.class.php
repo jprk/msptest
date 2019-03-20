@@ -397,7 +397,7 @@ class SubtaskBean extends DatabaseBean
             $this->processGetVars();
         }
 
-        if ($this->type == TT_WEEKLY_TF)
+        if ($this->type == TaskBean::TT_WEEKLY_TF)
         {
             /* Transfer function task needs a way to encode 'p' and 'z' */
             $this->assign('varList', self::$varList);

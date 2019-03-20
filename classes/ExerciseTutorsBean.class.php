@@ -84,8 +84,9 @@ class ExerciseTutorsBean extends DatabaseBean
 
     /**
      * Set tutors for the given exercise.
+     * If the list of tutor is empty, it will only delete existing tutors from an exercise.
      * TODO: Implement ordering so that the first tutor is tne person responsible for the given exercise.
-     * @param $tutors array Array of tutor identifiers.
+     * @param $tutors array Array of tutor identifiers. May be empty.
      * @param $exercise_id int Identifier of the exercise.
      */
     function setTutorsIdsForExercise($tutors, $exercise_id)

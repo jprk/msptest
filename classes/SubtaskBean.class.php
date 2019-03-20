@@ -418,9 +418,24 @@ class SubtaskBean extends DatabaseBean
     {
         /* Get the subtask data. */
         $this->assignSingle();
+
         /* Get the assignment information. */
         $assignmentBean = new AssignmentsBean ($this->id, $this->_smarty, null, null);
         $assignmentBean->assignSingle();
+
+        /* Get student group */
+        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
+        {
+            $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+            $students = $sgb->getGroupStudentsOfStudent(SessionDataBean::getUserId());
+            /* Check that the student is really member of a student group.
+               If so, the $students will contain at least his/her student id. */
+            if (empty($students))
+            {
+                $this->action = 'e_nogroup';
+                return;
+            }
+        }
     }
 
     /* -------------------------------------------------------------------

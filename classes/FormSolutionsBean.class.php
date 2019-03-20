@@ -519,6 +519,13 @@ class FormSolutionsBean extends DatabaseBean
         {
             $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
             $students = $sgb->getGroupStudentsOfStudent($studentId);
+            /* Check that the student is really member of a student group.
+               If so, the $students will contain at least his/her student id. */
+            if (empty($students))
+            {
+                $this->action = 'e_nogroup';
+                return;
+            }
         }
         else
         {

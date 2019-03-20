@@ -643,13 +643,27 @@ class StudentGroupBean extends DatabaseBean
      */
     function doAdmin()
     {
-        assignGetIfExists($this->forcegroup, $this->rs, 'forcegroup');
-        if ($this->forcegroup)
+        $force_confirm = false;
+        assignPostIfExists($force_confirm, $this->rs, 'force_confirm');
+        if (! $force_confirm)
         {
-            /* Force group assignment for unassigned students. */
-            $unassignedStudents = $this->getUnassignedStudentList();
-            $emptyGroups = $this->getEmptyGroupsList();
-            $forced_groups = $this->forceGroupAssignment($unassignedStudents, $emptyGroups);
+            /* Check if we are generating student groups or forcing group assignments. */
+            assignGetIfExists($this->forcegroup, $this->rs, 'forcegroup');
+            if ($this->forcegroup)
+            {
+                /* Display a list of unassigned students. Those students will be assigned to their own groups
+                   in the next step. */
+                $unassigned_students = $this->getUnassignedStudentList();
+                $this->assign('unassigned_students', $unassigned_students);
+                $this->action = 'forcelist';
+            }
+        }
+        else
+        {
+            /* Second stage of forcing a group. */
+            $unassigned_students = $this->getUnassignedStudentList();
+            $empty_groups = $this->getEmptyGroupsList();
+            $forced_groups = $this->forceGroupAssignment($unassigned_students, $empty_groups);
             $this->assign('forced_groups', $forced_groups);
             $this->action = 'forcegroup';
         }

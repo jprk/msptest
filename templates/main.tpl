@@ -87,7 +87,7 @@ var ON_LOAD = [];
 {if $newsList}
             <tr>
               <td valign="top">
-                <br><img id="newstitle" src="hg.php?text=Novinky" alt="[Novinky]" border="0">
+                <br><img id="newstitle" src="hg.php?text={czech}Novinky{/czech}{english}News{/english}" alt="[Novinky]" border="0">
                 <div id="news" valign="top" style="border-top: 1px solid #eeeeee;">
 {* ----- NEWS ----- *}
 {include file="news.tpl"}
@@ -116,9 +116,9 @@ var ON_LOAD = [];
         <td align="right">
           <div class="backcolor" style="padding: 4px 10px; color: white;">
           <p style="margin: 0px;"><small>
-          Školní rok: {$schoolyear}.
+          {czech}Školní rok:{/czech}{english}Schoolyear:{/english} {$schoolyear}.
 {if $section.lastmodified}
-          Poslední změna obsahu: {$section.lastmodified|date_format:"%d.%m.%Y %H:%M:%S"}.
+          {czech}Poslední změna obsahu:{/czech}{english}Last modified:{/english} {$section.lastmodified|date_format:"%d.%m.%Y %H:%M:%S"}.
 {/if}
           Vzniklo díky podpoře grantu FRVŠ 1344/2007{$lecture.thanks}.</small></p>
           </div>

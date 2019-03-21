@@ -1,10 +1,23 @@
 <p>
   Nahrát CSV se seznamem cvičení a cvičených skupin:
-  <form action="?act=save,exercise,0" method="post" enctype="multipart/form-data">
+  <form action="?act=edit,exercise,0" method="post" enctype="multipart/form-data">
     <input type="file" name="csv_exercises">
     <input type="submit" value="Nahrát">
   </form>
-
+  Seznam cvičení je CSV soubor v následujícím formátu:
+</p><pre>
+groupno;room;from;to;week;day;turor_surname;tutor_initials
+97;B106;9:45;11:15;-;st;Kárná;L
+50;B106;11:30;13:00;-;st;Kárná;L
+51;B106;13:15;14:45;-;st;Kárná;L
+83;B101;11:30;13:00;-;ct;Kovář;B
+61;B106;13:15;14:45;-;ct;Kárná;L
+99;B101;9:45;11:15;-;ct;Kovář;B
+60;B106;11:30;13:00;-;ct;Kárná;L
+80;B106;15:00;16:30;-;ct;Alexeeva;E
+-81;B106;16:45;18:15;-;ct;Alexeeva;E
+</pre><p>
+  Cvičení lze samozřejmě ale i přidat ručně:
 </p><p>
 <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="newobject">
@@ -20,7 +33,7 @@
   <th>Místnost</th>
   <th>Skupina</th>
   <th>Cvičící</th>
-<th>&nbsp;</th>
+  <th>&nbsp;</th>
 </tr>
 {foreach from=$exerciseList item=exercise name=exl}
 {if $smarty.foreach.exl.iteration is even}
@@ -31,7 +44,7 @@
 <td class="center">{$exercise.day.name}</td>
 <td class="center">{$exercise.from|date_format:"%H:%M"}</td>
 <td class="center">{$exercise.to|date_format:"%H:%M"}</td>
-<td class="center">{$exercise.room}</td>
+  <td class="center">{$exercise.room}</td>
   <td class="center">{if $exercise.groupno > 0}{$exercise.groupno}{else}&ndash;{/if}</td>
   <td class="center">
     {* current storage of tutors, ordered list of persons per exercise*}

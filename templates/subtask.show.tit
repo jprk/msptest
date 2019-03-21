@@ -1,1 +1,1 @@
-Zadání úlohy {$subtask.title} ({$subtask.ttitle})
+{czech}Zadání úlohy{/czech}{english}Task entry for{/english} {$subtask.title} ({$subtask.ttitle})

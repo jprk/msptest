@@ -4,8 +4,10 @@
 <strong>{czech}Aktivní do:{/czech}{english}Deadline:{/english}</strong> {$subtask.dateto|date_format:"%d.%m.%Y"}<br>
 <strong>{czech}Bodové maximum:{/czech}{english}Maximum points:{/english}</strong> {$subtask.maxpts}
 </p>
+{if $subtask.assignment}
 <h3>{czech}Text zadání{/czech}{english}Problem formulation{/english}</h3>
 {$subtask.assignment}
+{/if}
 {if $assignment.file_id}
 <p>
 {czech}Soubor se zadáním si stáhněte{/czech}{english}Download the text from{/english}
@@ -29,7 +31,7 @@ Formulář pro odevzdání úlohy je <a href="?act=edit,formsolution,{$subtask.i
         <ol>
     <li>Vytvořte ve Vašem oblíbeném textovém procesoru soubor odpovídající
         požadavkům zadání.
-            <li>Tento soubor zkonvertujte do PDF (OpenOffice nebo Lyx to umí rovnou,
+            <li>Tento soubor zkonvertujte do PDF (MS Word, OpenOffice nebo Lyx to umí rovnou,
         jinak použijte virtuální tiskárnu do PDF, jako je například PDFCreator).
     <li>Tento soubor nahrajte pomocí formuláře pod tímto textem.
         </ol>
@@ -44,13 +46,14 @@ Formulář pro odevzdání úlohy je <a href="?act=edit,formsolution,{$subtask.i
         The form for submitting the solution to this task is <a href="?act=edit,formsolution,{$subtask.id}">here</a>.{/english}
 {elseif $subtask.islpdfassignment}
 <p>
-Vložte PDF soubor s vypracovaným řešením zadání. Odpovídat můžete pouze jednou.
+    {czech}Vložte PDF soubor s vypracovaným řešením zadání. Odpovídat můžete pouze jednou.{/czech}
+    {english}Submit a PDF file containing the solution of the taks. You may submit the file only once.{/english}
 </p>
 <form name="solutionform" action="?act=save,formsolution,{$subtask.id}" method="post" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="16000000">
 <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
-  <td class="itemtitle" width="100%">Soubor s popisem řešení úlohy (.pdf)</td>
+  <td class="itemtitle" width="100%">{czech}Soubor s popisem řešení úlohy{/czech}{english}File containing your report{/english} (.pdf)</td>
   <td>
     <input type="file" name="pdf[1]" size="70%"><br>
   </td>
@@ -65,14 +68,16 @@ Vložte PDF soubor s vypracovaným řešením zadání. Odpovídat můžete pouz
 </table>
 </form>
 {else}
-Pokud Vaše semestrální práce sestává pouze z jednoho PDF souboru, nahrajte
+{* Pokud Vaše semestrální práce sestává pouze z jednoho PDF souboru, nahrajte
 jej prosím na náš server pomocí formuláře pod tímto textem.
 <p>
-V opačném prípadě prosím postupujte následujícím způsobem:
+V opačném prípadě prosím postupujte následujícím způsobem: *}
+<p>
+Postupujte prosím následujícím způsobem:
 <ol>
 	<li>Podle pokynů uvedených výše připravte ZIP archív se všemi soubory své
 	    práce. Soubory je třeba správným způsobem pojmenovat, archív také,
-	    vše bz mělo být uvedeno výše.
+	    vše by mělo být uvedeno výše.
 	<li>Tento archív nesmí být větší, než 8MB. Pokud tomu tak je, patrně
 	    jse přibalili zcela nepotřebný balast (protokoly kompilátoru,
 		spustitelné soubory a podobně). 
@@ -88,8 +93,8 @@ nezvládáme v čase kratším, než jeden týden.
 <input type="hidden" name="MAX_FILE_SIZE" value="16000000">
 <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
 <tr class="rowA">
-  <td>Soubor s řešením:&nbsp;</td>
-  <td><input type="file" name="zip[1]" size="50"></td>
+  <td class="itemtitle" style="width: 1%; white-space: nowrap;">Soubor s řešením:</td>
+  <td style="width: auto;"><input type="file" name="zip[1]" style="width: 100%; background-color: white; padding-left: 0px;"><br></td>
 </tr>
 <tr class="rowB">
   <td>&nbsp;</td>
@@ -103,6 +108,7 @@ nezvládáme v čase kratším, než jeden týden.
 </form>
 {/if}
 {else}
-Úloha není aktivní a není ji možno odevzdat.
+    {czech}Úloha není aktivní a není ji možno odevzdat.{/czech}
+    {english}The task is not active and therefore its solution cannot be submitted.{/english}
 {/if}
 </p>

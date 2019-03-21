@@ -1,12 +1,12 @@
 <p>
-Èlánek s názvem <i>{$article.title}</i> byl zmìnìn.
+ÄŒlÃ¡nek s nÃ¡zvem <i>{$article.title}</i> byl zmÄ›nÄ›n.
 </p>
 {if $article.returntoparent}
 <form action="?act=show,section,{$article.parent}" method="post">
-<input type="submit" value="Zpìt na sekci">
+<input type="submit" value="ZpÄ›t na sekci">
 </form>
 {else}
 <form action="?act=admin,article,42" method="post">
-<input type="submit" value="Pokraèovat v administraci èlánkù">
+<input type="submit" value="PokraÄovat v administraci ÄlÃ¡nkÅ¯">
 </form>
 {/if}

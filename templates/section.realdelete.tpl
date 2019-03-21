@@ -1,13 +1,12 @@
-<h1>Sekce byla vymaz·na</h1>
 <p>
-Sekce s n·zvem <i>{$section.title}</i> byla z datab·ze vymaz·na.
+Sekce s n√°zvem <i>{$section.title}</i> byla z datab√°ze vymaz√°na.
 </p>
 {if $section.returntoparent}
 <form action="?act=show,section,{$section.parent}" method="post">
-<input type="submit" value="ZpÏt na rodiËovskou sekci">
+<input type="submit" value="Zpƒõt na rodiƒçovskou sekci">
 </form>
 {else}
 <form action="?act=admin,section,42" method="post">
-<input type="submit" value="PokraËovat na administraci sekcÌ">
+<input type="submit" value="Pokraƒçovat na administraci sekc√≠">
 </form>
 {/if}

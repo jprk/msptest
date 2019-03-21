@@ -485,7 +485,7 @@ function previousWeekEnd($timestamp)
 function termEnd()
 {
     /* Timestamp of the end of this term. */
-    $eTime = 0;
+    $eTime = null;
 
     /* Month beginnings. Winter term starts in the week that
        contains 1.10., summer term in the first week that
@@ -503,7 +503,7 @@ function termEnd()
     /* This is the current time. */
     $cTime = time();
 
-    /* Now find out which part of the shool year we have today. */
+    /* Now find out which part of the school year we have today. */
     if ($cTime <= $wEnd)
     {
         /* Winter term of the school year that ends in this year. */
@@ -613,8 +613,12 @@ function returnDefault($var, $default = '0')
  * aryel at iku dot com dot br
  * 29-Jan-2008 11:40
  * http://cz2.php.net/manual/en/function.debug-backtrace.php
+ * @param resource $stackTrace Stack trace info
+ * @param string $pfx Prefix string before the stack trace item
+ * @param string $sfx Suffix string after the backtrace item
+ * @return string Textual form of the stacktrace resource.
  */
-function getDebugBacktrace($stackTrace = NULL, $pfx = "<li>", $sfx = "</li>\n")
+function getDebugBacktrace($stackTrace = null, $pfx = "<li>", $sfx = "</li>\n")
 {
     $dbgMsg = '';
     $dbgMsgList = getDebugBacktraceList($stackTrace);
@@ -832,6 +836,9 @@ function mutexLock($class, $resourceId, &$lockTime, &$lockLogin)
  * Unlock the shared resource is locked.
  * Uses a rather complicated non-blocking mutex construct requiring a
  * semaphore and a temporary file.
+ * @param $class
+ * @param $resourceId
+ * @return int
  */
 function mutexUnlock($class, $resourceId)
 {
@@ -912,6 +919,44 @@ function removeDirContent($dirPath)
 }
 
 /**
+ * Safe array getter with default value returned in case that the element is not present.
+ * @param $arr array Array to get the element from.
+ * @param $idx mixed Index, numeric or string.
+ * @param null $default mixed Default value to return.
+ * @return mixed Element contents or the default value.
+ */
+function safe_array_elem(&$arr, $idx, $default=null)
+{
+    return isset($arr[$idx]) ? $arr[$idx] : $default;
+}
+
+/**
+ * Check if the array contains exactly the given keys.
+ * See https://stackoverflow.com/questions/13169588
+ * @param array $keys Array of keys to check
+ * @param array $arr Array that should have all the keys from $keys
+ * @return bool True if array contains exactly the given keys, false otherwise.
+ */
+function array_has_keys(array $keys, array $arr)
+{
+    return !array_diff_key(array_flip($keys), $arr);
+}
+
+/**
+ * Check if the array contains at least the given keys.
+ * See https://stackoverflow.com/questions/13169588
+ * @param array $keys Array of keys to check for existence
+ * @param array $arr Array that should have all the keys from $keys
+ * @return bool True if all keys are present, false otherwise.
+ */
+function array_keys_exist(array $keys, array $arr)
+{
+    $fkeys = array_flip($keys);
+    $ikeys = array_intersect_key($fkeys, $arr);
+    return !array_diff_key($fkeys, $ikeys);
+}
+
+/**
  * Return INI variable value represented as a number of bytes.
  * Converts shorthand strings like "128k", "16M" into exact number of bytes.
  * See also https://stackoverflow.com/questions/2133652/how-to-gracefully-handle-files-that-exceed-phps-post-max-size
@@ -933,9 +978,11 @@ function ini_get_bytes($var_name)
         switch($last)
         {
             // The 'G' modifier is available since PHP 5.1.0
+            /** @noinspection PhpMissingBreakStatementInspection */
             case 'g':
                 $val *= 1024;
                 // fall-thru
+            /** @noinspection PhpMissingBreakStatementInspection */
             case 'm':
                 $val *= 1024;
                 // fall-thru

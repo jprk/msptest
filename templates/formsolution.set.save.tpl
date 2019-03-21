@@ -5,8 +5,8 @@ Na disk a do databáze byla uložena ručně nahraná řešení následujících
 <thead>
 <tr class="newobject">
   <th class="left">Název úlohy</th>
-  <th>Zadání</th>
-  <th>Část</th>
+  <th>Číslo zadání</th>
+  <th>Část řešení</th>
   <th>Stav</th>
 </tr>
 </thead>
@@ -19,8 +19,8 @@ Na disk a do databáze byla uložena ručně nahraná řešení následujících
 <tr class="rowB">
 {/if}
   <td>{$saveSet[aId].subtask.title}</td>
-  <td>{$saveSet[aId].assignmentId}</td>
-  <td>{$saveSet[aId].parts[pId].part}</td>
+  <td>{if $saveSet[aId].assignmentId > 0}{$saveSet[aId].assignmentId}{else}n/a{/if}</td>
+  <td>{$saveSet[aId].parts[pId].part+1}</td>
   <td>{$saveSet[aId].parts[pId].status|fcodes}</td>
 </tr>
 {/section}

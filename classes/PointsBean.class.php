@@ -206,6 +206,19 @@ class PointsBean extends DatabaseBean
         // echo "<!-- replace ok -->\n";
     }
 
+    /**
+     * Update points for the given student, subtask and school year in case there has been a change.
+     * Fetches data neede for conditional replace of points table record for the given subtask and
+     * student. Real update occurs onlz in case that there has been a change in the number of points
+     * or in the comment that is stored with the record.
+     *
+     * @param $student_id int Student identifier.
+     * @param $subtask_id int Subtask identifier.
+     * @param $year int Start of the school year,
+     * @param $num_points float|string New number of points to save in the database.
+     * @param $comment string New comment to save in the database.
+     * @param bool $convert Convert the possible string representation of points into a numerical value.
+     */
     function updatePoints(
         $studentId, $subtaskId, $schoolYear, $numPts, $comment,
         $convert = true

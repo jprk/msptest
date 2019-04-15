@@ -137,6 +137,11 @@ class StudentGroupBean extends DatabaseBean
         return $rs;
     }
 
+    /**
+     * Get the active student groups and the count of students in every group.
+     * @return array
+     * @throws Exception
+     */
     function getGroupsOccupancy()
     {
         /* Get the count of students in every active student group. */
@@ -205,11 +210,14 @@ class StudentGroupBean extends DatabaseBean
 
     /**
      * Get a list of students that are not assigned to any student group.
+     * @param array $groups Limit the search to study groups from the array.
      * @return array Student data of unassigned students.
      */
-    function getUnassignedStudentList()
+    function getUnassignedStudentList($groups=null)
     {
-        $rs = $this->dbQuery(
+        /* WARNING: This is not correct. It ignores students that enrolled for the second or third time. */
+        /*
+            $rs = $this->dbQuery(
             "SELECT st.* " .
             "FROM stud_lec AS sl " .
             "LEFT JOIN stud_group AS sp ON sl.student_id=sp.student_id AND sp.cancel_stamp IS NULL " .
@@ -218,6 +226,25 @@ class StudentGroupBean extends DatabaseBean
             "WHERE sl.lecture_id=" . $this->lecture_id . " " .
             "AND sl.year=" . $this->schoolyear . " " .
             "AND sp.group_id IS NULL");
+        */
+
+        /* Better: Use a right join. This will insert NULLs where no group exists, so the unassigned students may
+           be filtered out using the sg.id is NULL condition. */
+        $where = "";
+        if (! empty($groups))
+        {
+            $where = "AND st.groupno IN (" . arrayToDBString($groups, false) . ") ";
+        }
+
+        $rs = $this->dbQuery(
+           "SELECT st.* " .
+           "FROM studentgroup AS sg " .
+           "LEFT JOIN stud_group as sp ON (sg.id=sp.group_id) " .
+           "RIGHT JOIN stud_lec as sl ON (sl.student_id=sp.student_id AND sl.lecture_id=sg.object_id AND sl.year=sg.year) " .
+           "JOIN student AS st ON (sl.student_id=st.id) " .
+           "WHERE sl.lecture_id=$this->lecture_id AND sl.year=$this->schoolyear " .
+           "AND sp.cancel_stamp is NULL AND sg.id IS NULL " . $where .
+           "ORDER BY st.surname,st.firstname");
 
         return $rs;
     }
@@ -328,7 +355,7 @@ class StudentGroupBean extends DatabaseBean
         {
             /** @noinspection PhpMissingBreakStatementInspection */
             case MUTEX_LOCK_STOLEN_OK;
-                /* Stealing a stale lock is perfecty okay. On the other hand we would better let the user
+                /* Stealing a stale lock is perfectly okay. On the other hand we would better let the user
                    know that someone has started editing the data and did not save them for more than 30 minutes. */
                 $this->assign('lockstolen', true);
             case MUTEX_OK:
@@ -351,7 +378,8 @@ class StudentGroupBean extends DatabaseBean
                 return self::ERR_MUTEX;
         }
 
-        /* Check that the selected group is not full. */
+        /* We have the resource locked.
+           Check that the selected group is not full. */
         if ($this->getFreePlaces($group_id) > 0)
         {
             /* Add the student to the group. */
@@ -654,6 +682,15 @@ class StudentGroupBean extends DatabaseBean
                 /* Display a list of unassigned students. Those students will be assigned to their own groups
                    in the next step. */
                 $unassigned_students = $this->getUnassignedStudentList();
+                /* Get the list of student groups of unassigned students */
+                $groups = array();
+                foreach ($unassigned_students as $val)
+                {
+                    $group = intval($val['groupno']);
+                    $groups[$group] = $group;  // This way we do not have to test for existing entries
+                }
+                sort($groups);
+                $this->assign('groupList', $groups);
                 $this->assign('unassigned_students', $unassigned_students);
                 $this->action = 'forcelist';
             }
@@ -661,7 +698,9 @@ class StudentGroupBean extends DatabaseBean
         else
         {
             /* Second stage of forcing a group. */
-            $unassigned_students = $this->getUnassignedStudentList();
+            assignPostIfExists($groups, $this->rs, 'groups');
+            $unassigned_students = $this->getUnassignedStudentList($groups);
+            $this->dumpVar('unassigned students', $unassigned_students);
             $empty_groups = $this->getEmptyGroupsList();
             $forced_groups = $this->forceGroupAssignment($unassigned_students, $empty_groups);
             $this->assign('forced_groups', $forced_groups);
@@ -704,7 +743,8 @@ class StudentGroupBean extends DatabaseBean
     }
 
     /**
-     * Handle `delete` event
+     * Fetch data needed to confirm the removal of student from certain student group.
+     * @throws Exception
      */
     function doDelete()
     {
@@ -712,14 +752,41 @@ class StudentGroupBean extends DatabaseBean
         $this->assign('student_group', $this->rs);
     }
 
+    /**
+     * Really delete the association of student to certain student group.
+     * @throws Exception
+     */
     function doRealDelete()
     {
+        /* We need to check all subtask assignments and delete them as well.
+           For this we need to know the current evaluation scheme that will in turn provide us with the list
+           of subtasks that are valid in this schoolyear. */
+        $evb = new EvaluationBean (null, $this->_smarty, null, null);
+        /* The EvaluationBean constructed above does not map to any evaluation scheme. We have to initialise
+           it for the current lecture (the id of the lecture is stored in the session). The function returns
+           'true' if the evaluation scheme has been found and the object has been initialised. */
+        $res = $evb->initialiseFor(SessionDataBean::getLectureId(), $this->schoolyear);
+        if (!$res)
+        {
+            /* No evaluation for this school year, abort. */
+            $this->action = 'e_evalinit';
+            return ERR_ADMIN_MODE;
+        }
+
+        /* Student identifier is a part of the session. */
         $student_id = SessionDataBean::getUserId();
         $res = $this->removeStudentFromGroup($student_id, $this->id);
         if ($res != self::ERR_OK)
         {
             trigger_error("removeStudentFromGroup() did not succeed, error $res", E_USER_WARNING);
         }
+
+        /* Get a list of all valid subtasks for this lecture in this schoolyear. */
+        $subtask_list = $evb->getSubtaskList();
+        /* And remove those subtasks from assignment storage in case that someone already assigned assignments. */
+        $asb = new AssignmentsBean(null, $this->_smarty, null, null);
+        $asb->deleteAssignments($student_id, $subtask_list);
+
         $this->dbQuerySingle();
         $this->assign('student_group', $this->rs);
     }

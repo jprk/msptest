@@ -431,8 +431,9 @@ class SectionBean extends DatabaseBean
 
         /* Query the section list. */
         $rs = $this->dbQuery(
-            "SELECT MIN(id) AS id FROM `section` " .
-            "WHERE parent=" . $rootSection
+            "SELECT id AS id FROM `section` " .
+            "WHERE parent=" . $rootSection . " " .
+            "ORDER BY position,mtitle LIMIT 1"
         );
         if (!empty ($rs))
         {

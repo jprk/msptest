@@ -58,19 +58,22 @@ class SchoolYearBean extends BaseBean
                 self::TERMTYPE_WINTER => array('from' => '2016-10-03', 'to' => '2017-01-13'),
                 self::TERMTYPE_SUMMER => array('from' => '2017-02-20', 'to' => '2017-05-26')
             ),
-            /* Dummy, there is no official info yet. */
             2017 => array(
-                self::TERMTYPE_WINTER => array('from' => '2017-09-25', 'to' => '2018-01-10'),
-                self::TERMTYPE_SUMMER => array('from' => '2018-02-17', 'to' => '2018-05-16')
+                self::TERMTYPE_WINTER => array('from' => '2017-10-02', 'to' => '2018-02-16'),
+                self::TERMTYPE_SUMMER => array('from' => '2018-02-19', 'to' => '2018-09-30')
             ),
             2018 => array(
-                self::TERMTYPE_WINTER => array('from' => '2018-10-01', 'to' => '2019-01-11'),
-                self::TERMTYPE_SUMMER => array('from' => '2019-02-18', 'to' => '2019-05-24')
+                self::TERMTYPE_WINTER => array('from' => '2018-10-01', 'to' => '2019-02-15'),
+                self::TERMTYPE_SUMMER => array('from' => '2019-02-18', 'to' => '2019-09-20')
+            ),
+            2019 => array(
+                self::TERMTYPE_WINTER => array('from' => '2019-09-23', 'to' => '2020-02-14'),
+                self::TERMTYPE_SUMMER => array('from' => '2020-02-17', 'to' => '2020-09-13')
             ),
             /* Dummy, there is no official info yet. */
-            2019 => array(
-                self::TERMTYPE_WINTER => array('from' => '2019-10-01', 'to' => '2020-01-11'),
-                self::TERMTYPE_SUMMER => array('from' => '2020-02-18', 'to' => '2020-05-24')
+            2020 => array(
+                self::TERMTYPE_WINTER => array('from' => '2020-09-21', 'to' => '2021-02-15'),
+                self::TERMTYPE_SUMMER => array('from' => '2021-02-18', 'to' => '2021-09-30')
             ));
 
         if (array_key_exists($schoolyear, $_dates))

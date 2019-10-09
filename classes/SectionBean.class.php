@@ -107,6 +107,24 @@ class SectionBean extends DatabaseBean
         $this->rs['text'] = $this->text;
     }
 
+    /**
+     * Check that the request to save section has all valid data.
+     */
+    function saveRequestIsValid()
+    {
+        $keys = array('id', 'parent', 'lecture_id', 'type', 'title', 'mtitle', 'text', 'position', 'redirect', 'ival1');
+        /*
+         * $fkeys = array_flip($keys);
+         * $ikeys = array_intersect_key($fkeys, $_POST);
+         * $dkeys = array_diff_key($fkeys, $ikeys);
+         * $this->dumpVar('fkeys', $fkeys);
+         * $this->dumpVar('ikeys', $ikeys);
+         * $this->dumpVar('dkeys', $dkeys);
+         */
+        /* Returns true if all keys from $keys are present in the array $_POST. */
+        return array_keys_exist($keys, $_POST);
+    }
+
     /* Assign POST variables to internal variables of this class and
        remove evil tags where applicable. We shall probably also remove
        evil attributes et cetera, but this will be done later if ever. */

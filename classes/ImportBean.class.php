@@ -157,6 +157,7 @@ class ImportBean extends DatabaseBean
                         {
                             /* New WEBKOS format */
                             $format = self::FORMAT_WEBKOS_2017;
+                            error_log('import::FORMAT_WEBKOS_2017');
                         }
                         else
                         {
@@ -205,7 +206,7 @@ class ImportBean extends DatabaseBean
                                     'manual_email' => 13),
                                 self::FORMAT_WEBKOS_2017 => array(
                                     'yearno' => 10,
-                                    'groupno' => 12,
+                                    'groupno' => 13,
                                     'numcols' => 14,
                                     'manual_login' => 13,
                                     'manual_email' => 14));

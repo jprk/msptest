@@ -59,11 +59,26 @@ tr.rowB {
 }
 
 div.formula {
-  border: 1px solid #ac6109;
-  background-color: #fff3e7;
-  padding: 1ex;
+    border: 1px solid #ac6109;
+    background-color: #fff3e7;
+    padding: 1ex;
 }
 
 .inactive, .inactive th, .inactive td {
-  color: #a0a0a0;
+    color: #a0a0a0;
+}
+
+div.onlineteaching {
+    border: 1px solid #9caac8;
+    background-color: #ccecff;
+    margin: 1ex;
+    padding: 1ex;
+}
+
+div.onlineteaching p:first-of-type {
+    margin-top: 0pt;
+}
+
+div.onlineteaching p:last-of-type {
+    margin-bottom: 0pt;
 }

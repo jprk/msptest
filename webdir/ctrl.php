@@ -232,14 +232,28 @@ if ($isPageOutput)
 if (!empty($_GET['schoolyear']))
 {
     SessionDataBean::setSchoolYear($_GET['schoolyear']);
+    if (SessionDataBean::hasLecture())
+    {
+        $lectureData = SessionDataBean::getLecture();
+        $lectureData['schoolyear'] = SessionDataBean::getSchoolYear();
+        SessionDataBean::setLectureData($lectureData);
+
+    }
+    echo '<!-- schoolyear forced to ' . $_GET['schoolyear'] . ' -->';
+    echo "\n";
 }
 /* Initialise session defaults in case that the session data storage does not
    contain the variables we would need later. */
 SessionDataBean::conditionalInit(SchoolYearBean::getSchoolYearStart());
 if ($isPageOutput)
 {
-    echo '<!-- schoolyear ' . SchoolYearBean::getSchoolYearStart() . ' -->';
+    echo '<!-- schoolyear from session ' . SessionDataBean::getSchoolYear() . ' -->';
     echo "\n";
+    echo '<!-- current schoolyear start ' . SchoolYearBean::getSchoolYearStart() . ' -->';
+    echo "\n";
+    // echo "<!-- session (SID=" . session_id() . ")\n";
+    // print_r($_SESSION);
+    // echo "-->\n";
 }
 
 /* Binary flags for user roles */

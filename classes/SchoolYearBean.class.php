@@ -126,6 +126,20 @@ class SchoolYearBean extends BaseBean
     }
 
     /**
+     * Find out lecture beginning and ending dates in this term.
+     * @param $lecture_info array Lecture info as stored in SessionBean.
+     * @return array|null
+     * @throws Exception
+     */
+    static function getTermLimitsForLecture($lecture_info)
+    {
+        $year = SessionDataBean::getSchoolYear();
+        $term = $lecture_info['term'];
+        return self::getTermDates($year, $term);
+
+    }
+
+    /**
      * Return the stating year of the current schoolyear.
      *
      * @return int Starting year of the current schoolyear (2010 for 2010/2011).

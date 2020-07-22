@@ -68,6 +68,28 @@ class StudentGroupBean extends DatabaseBean
         $lecture_data = SessionDataBean::getLecture();
         $this->max_places = $lecture_data['group_limit'];
         $this->title = '';
+
+        $termParams = new LectureTermParamBean(null, $this->_smarty, null, null);
+        try
+        {
+            $termParams->dbQuerySingle();
+            $this->group_open_from = $termParams->getGroupOpenFrom();
+            $this->group_open_to = $termParams->getGroupOpenTo();
+        } catch (Exception $e)
+        {
+            error_log("Exception: {$e->getMessage()}");
+            $this->group_open_from = LectureTermParamBean::DEFAULT_DATE;
+            $this->group_open_to = LectureTermParamBean::DEFAULT_DATE;
+        }
+
+        $dt = new DateTime($this->group_open_from);
+        $this->gots_from = $dt->getTimestamp();
+
+        $dt = new DateTime($this->group_open_to);
+        // $dt->modify('+1 day');
+        $dt->modify('+15 minutes');
+        $this->gots_to = $dt->getTimestamp();
+
     }
 
     /* Constructor */

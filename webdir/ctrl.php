@@ -42,6 +42,7 @@ require(REQUIRE_DIR . 'NewsBean.class.php');
 require(REQUIRE_DIR . 'NoteBean.class.php');
 require(REQUIRE_DIR . 'PointsBean.class.php');
 require(REQUIRE_DIR . 'LectureBean.class.php');
+require(REQUIRE_DIR . 'LectureTermParamBean.class.php');
 require(REQUIRE_DIR . 'LectureLecturerBean.class.php');
 require(REQUIRE_DIR . 'LecturerBean.class.php');
 require(REQUIRE_DIR . 'SchoolYearBean.class.php');
@@ -84,6 +85,7 @@ switch ($object)
     case "formassign":
     case "formsolution":
     case "lecture":
+    case "lecture.term":
     case "import":
     case "labtask":
     case "lgrp":
@@ -409,6 +411,9 @@ switch ($object)
         break;
     case "lecture":
         $bean = new LectureBean ($id, $smarty, $action, $object);
+        break;
+    case "lecture.term":
+        $bean = new LectureTermParamBean ($id, $smarty, $action, $object);
         break;
     case "lecturer":
         $bean = new LecturerBean ($id, $smarty, $action, $object);

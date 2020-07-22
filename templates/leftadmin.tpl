@@ -17,6 +17,10 @@
         <td valign="top">-&nbsp;</td>
         <td>{adminlink act="admin" obj="lecture" id=$lecture.id text="Správa předmětů"}</td>
     </tr>
+    <tr class="mlevel1">
+        <td valign="top">-&nbsp;</td>
+        <td><a class="link_yellow" href="?act=edit,lecture.term,{$lecture.id}">Změna parametrů semestru</a></td>
+    </tr>
     <tr>
         <td valign="top">-&nbsp;</td>
         <td><a class="link_yellow" href="?act=admin,schoolyear,{$lecture.id}">Změna školního roku</a></td>

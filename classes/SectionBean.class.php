@@ -13,6 +13,9 @@ define('ST_PHYLAB', "fylab");
 
 class SectionBean extends DatabaseBean
 {
+    const NEWEST = 1;
+    const NEWEST_PUBLISHED = 2;
+
     var $parent;
     var $lecture_id;
     var $type;
@@ -24,6 +27,9 @@ class SectionBean extends DatabaseBean
     var $lastmodified;
     var $ival1;            // Section-type specific small integer value
     private $copy_parent;
+    private $version;
+    private $version_msg;
+    private $is_published;
 
     /* Fill in reasonable defaults. */
     function _setDefaults()
@@ -38,6 +44,9 @@ class SectionBean extends DatabaseBean
         $this->redirect = $this->rs['redirect'] = "";
         $this->ival1 = $this->rs['ival1'] = 0;
         $this->copy_parent = $this->rs['copy_parent'] = false;
+        $this->version = $this->rs['version'] = 0;
+        $this->version_msg = $this->rs['version_msg'] = 0;
+        $this->is_published = $this->rs['is_published'] = false;
     }
 
     /* Retun a list of available section types. */
@@ -66,6 +75,11 @@ class SectionBean extends DatabaseBean
        this class. If $this->id is equal to zero, a new record will be created. */
     function dbReplace()
     {
+        /* Increase the object version. */
+        $this->version++;
+        /* Force the user to explicitly publish the record afterwards. */
+        $this->is_published = false;
+
         DatabaseBean::dbQuery(
             "REPLACE section VALUES (" .
             $this->id . "," .
@@ -79,13 +93,28 @@ class SectionBean extends DatabaseBean
             $this->dbEscape($this->redirect) . "'," .
             "NULL" . "," .
             $this->ival1 . ")"
+        // TODO: in case of version add the commented parts
+        //",'" .
+        //$this->dbEscape($this->version) . "','" .
+        //$this->dbEscape($this->version_msg) . "','" .
+        //$this->dbEscape($this->is_published) . "')"
         );
         /* Update the id of this record if necessary. */
         $this->updateId();
     }
 
-    /* Query the data of section specified by $this->id. */
-    function dbQuerySingle($alt_id = 0)
+    /**
+     * Query the data record of a section.
+     *
+     * The section is either specified by $this->id or by the argument to this method.
+     *
+     * @param int $alt_id Alternative section id that overrides the implicit $this->id.
+     * @param int $section_type What kind of section record to return. Valid values are SectionBean::NEWEST for
+     *                          possibly work-in-progress version of the record, or SectionBean::NEWEST_PUBLISHED
+     *                          for the actual published version.
+     * @throws Exception when query fails.
+     */
+    function dbQuerySingle($alt_id = 0, $section_type = self::NEWEST_PUBLISHED)
     {
         /* Query the data of this section (ID has been already specified) */
         DatabaseBean::dbQuerySingle($alt_id);

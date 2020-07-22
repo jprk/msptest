@@ -46,7 +46,7 @@ class NoteBean extends DatabaseBean
         DatabaseBean::dbQuery(
             "REPLACE note VALUES ("
             . $this->id . ",'"
-            . mysql_escape_string($this->text) . "',"
+            . $this->dbEscape($this->text) . "',"
             . $this->type . ","
             . $this->object_id . ","
             . $this->author_id . ","

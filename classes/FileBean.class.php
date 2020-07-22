@@ -167,9 +167,9 @@ class FileBean extends DatabaseBean
             . $this->objid . ","
             . $this->uid . ","
             . "NULL,'"
-            . mysql_real_escape_string($this->fname) . "','"
-            . mysql_real_escape_string($this->origfname) . "','"
-            . mysql_real_escape_string($this->description) . "',"
+            . $this->dbEscape($this->fname) . "','"
+            . $this->dbEscape($this->origfname) . "','"
+            . $this->dbEscape($this->description) . "',"
             . $this->position . ")"
         );
 
@@ -440,7 +440,7 @@ class FileBean extends DatabaseBean
     function dbQueryFname($fname)
     {
         $rs = self::dbQuery("SELECT id FROM file " .
-            "WHERE fname='" . mysql_real_escape_string($fname) . "'");
+            "WHERE fname='" . $this->dbEscape($fname) . "'");
         if (empty ($rs))
         {
             return 0;
@@ -777,7 +777,7 @@ class FileBean extends DatabaseBean
     }
 
     /**
-     * Show a single file from the satabase reference by id.
+     * Show a single file from the database reference by id.
      * @throws Exception
      */
     function showSingleFile()
@@ -1320,7 +1320,7 @@ class FileBean extends DatabaseBean
                 {
                     /* No file exists, the REPLACE above inserted a new record into the database.
                        Get its Id. */
-                    $this->id = mysql_insert_id();
+                    $this->id = $this->_smarty->dbInsertId();
                 }
 
                 /* Now copy the uploaded file, changing its name. */
@@ -1329,7 +1329,7 @@ class FileBean extends DatabaseBean
                 copy($fn, CMSFILES . '/' . $dbname);
 
                 /* And reflect the change in the database. */
-                $this->dbQuery("UPDATE file SET fname='" . mysql_real_escape_string($dbname) . "' WHERE id=" . $this->id);
+                $this->dbQuery("UPDATE file SET fname='" . $this->dbEscape($dbname) . "' WHERE id=" . $this->id);
             }
             else
             {
@@ -1352,10 +1352,10 @@ class FileBean extends DatabaseBean
                 /* And reflect the change in the database. */
                 DatabaseBean::dbQuery(
                     "UPDATE file SET " .
-                    "type=" . mysql_real_escape_string($_POST['type']) . ", " .
-                    "objid=" . mysql_real_escape_string($_POST['objid']) . ", " .
-                    "position=" . mysql_real_escape_string($_POST['position']) . ", " .
-                    "description='" . mysql_escape_string($_POST['description']) . "' " .
+                    "type=" . $this->dbEscape($_POST['type']) . ", " .
+                    "objid=" . $this->dbEscape($_POST['objid']) . ", " .
+                    "position=" . $this->dbEscape($_POST['position']) . ", " .
+                    "description='" . $this->dbEscape($_POST['description']) . "' " .
                     "WHERE id=" . $this->id);
             }
         }

@@ -71,7 +71,7 @@ class FormSolutionsBean extends DatabaseBean
             . $this->student_id . ","
             . $this->subtask_id . ","
             . $this->assignment_id . ",'"
-            . mysql_real_escape_string($this->part) . "',"
+            . $this->dbEscape($this->part) . "',"
             . $this->a . ","
             . $this->b . ","
             . $this->c . ","

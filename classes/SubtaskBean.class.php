@@ -41,9 +41,9 @@ class SubtaskBean extends DatabaseBean
             "REPLACE subtask VALUES ('"
             . $this->id . "','"
             . $this->type . "','"
-            . mysql_real_escape_string($this->title) . "','"
-            . mysql_real_escape_string($this->ttitle) . "','"
-            . mysql_real_escape_string($this->assignment) . "','"
+            . $this->dbEscape($this->title) . "','"
+            . $this->dbEscape($this->ttitle) . "','"
+            . $this->dbEscape($this->assignment) . "','"
             . $this->maxpts . "','"
             . $this->position . "','"
             . $this->lecture_id . "')"
@@ -471,8 +471,10 @@ class SubtaskBean extends DatabaseBean
            we can fill the values of $this->rs into a template. */
         $this->assignSingle();
 
-        /* Publish a list of task types. */
-        TaskBean::assignTypeSelect();
+        /* Publish a list of task types.
+           We need to have access to Smarty, hence only dynamic call is possible. */
+        $tb = new TaskBean (null, $this->_smarty, null, null);
+        $tb->assignTypeSelect();
 
         /* Get a list of lectures. */
         $lectureBean = new LectureBean (0, $this->_smarty, null, null);

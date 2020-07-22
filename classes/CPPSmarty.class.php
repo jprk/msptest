@@ -4,7 +4,7 @@
 require('tools.php');
 
 // load Smarty library
-require('Smarty.class.php');
+require('smarty3/Smarty.class.php');
 
 /* News types */
 define('NEWS_SECTION', 1);
@@ -18,12 +18,14 @@ define('IMG_SIZE', 190);
  */
 class CPPSmarty extends Smarty
 {
+    private $_config;
     private $_currencies;
-    private $_submenu;
+    //private $_submenu;
     private $_yesno;
     private $_dayMap;
     private $_yearMap;
     private $_locale;
+    private $_link;
 
     public $debug;
     public $upload_max_filesize;
@@ -60,8 +62,10 @@ class CPPSmarty extends Smarty
 
     /**
      * Class constructor
+     * @param $config
+     * @param $isPageOutput
      */
-    function CPPSmarty($config, $isPageOutput)
+    function __construct($config, $isPageOutput)
     {
         /* Call parent constructor first. */
         parent::__construct();
@@ -74,14 +78,14 @@ class CPPSmarty extends Smarty
 
         /* Set the application directories. Value of `APP_BASE_DIR`
            is defined in configuration file. */
-        $this->template_dir = APP_BASE_DIR . '/templates';
-        $this->compile_dir = APP_BASE_DIR . '/templates_c';
-        $this->config_dir = APP_BASE_DIR . '/configs';
-        $this->cache_dir = APP_BASE_DIR . '/cache';
+        $this->setTemplateDir(APP_BASE_DIR . '/templates');
+        $this->setCompileDir(APP_BASE_DIR . '/templates_c');
+        $this->setConfigDir(APP_BASE_DIR . '/configs');
+        $this->setCacheDir(APP_BASE_DIR . '/cache');
 
         /* We will place (and look for) plugins into a subdirectory
            of directory where class files are located. */
-        $this->plugins_dir[] = REQUIRE_DIR . '/plugins';
+        $this->addPluginsDir(REQUIRE_DIR . '/plugins');
 
         $this->_yesno = array(0 => '&nbsp;ne', 1 => '&nbsp;ano');
         $this->_dayMap = self::_assignDayMap();
@@ -100,9 +104,13 @@ class CPPSmarty extends Smarty
         $this->use_sub_dirs = $this->_config['use_sub_dirs'];
         $this->caching = false;
 
+        /* No database connection. */
+        $this->_link = null;
+
         /* Get remote address. If the request came from certain computer,
            switch on the debugging. */
         $ra = $_SERVER['REMOTE_ADDR'];
+        // echo "`$ra`";
         $this->debug = ($isPageOutput) ? in_array($ra, $this->_config['debug_hosts']) : false;
         $this->assign('debugmode', $this->debug);
 
@@ -140,58 +148,77 @@ class CPPSmarty extends Smarty
     }
 
     /**
-     * @return resource
+     * @return mysqli
      * @throws Exception
      */
     function dbOpen()
     {
         /* Open connection to the database server. */
         $db = $this->_config['db'];
-        $link = mysql_connect($db['host'], $db['user'], $db['pass']);
+        $link = mysqli_connect($db['host'], $db['user'], $db['pass'], $db['data'], 3307);
         if (!$link)
         {
             $error = "<p>Cannot connect to mySQL as <tt>'" .
-                $db['user'] . "@" . $db['host'] . "'</tt></p>\n";
-            logSystemError($error);
-            throw new Exception ('Nelze se připojit k databázovému serveru.');
-        }
-
-        /* Select the database. */
-        $res = mysql_select_db($db['data']);
-        if (!$res)
-        {
-            $error = "<p>Cannot select database <tt>'" .
-                $db['data'] . "'</tt> as <tt>'" . $db['user'] . "@" .
-                $db['host'] . "'</tt></p>\n";
+                $db['user'] . "@" . $db['host'] . "'</tt></p>" . PHP_EOL;
+            $error .= "<p>Debugging errno: " . mysqli_connect_errno() . "</p>" . PHP_EOL;
+            $error .= "<p>Debugging error: " . mysqli_connect_error() . "</p>" . PHP_EOL;
+            echo $error;
             logSystemError($error);
             throw new Exception ('Nelze se připojit k databázovému serveru.');
         }
 
         /* Support for UTF-8 data exchange. */
-        $res = mysql_query("SET NAMES utf8");
+        $res = mysqli_query($link, "SET NAMES utf8");
         if (!$res)
         {
-            $error = "<p>Cannot set charset to utf8: <tt>" . mysql_error() .
+            $error = "<p>Cannot set charset to utf8: <tt>" . mysqli_error($link) .
                 "</tt></p>\n";
             logSystemError($error);
             throw new Exception ('Nelze zvolit znakovou sadu pro komunikaci s databází.');
         }
 
+        $this->_link = $link;
+        // TODO: Check whether we shall return something or not.
         return $link;
     }
 
     function dbClose($link)
     {
-        if ($link) mysql_close($link);
+        if ($link) mysqli_close($link);
     }
 
-    function dbLog($time_start, $object, $action)
+    /**
+     * Create a legal SQL string that you can use in an SQL statement.
+     * The given string is encoded to an escaped SQL string, taking into account
+     * the current character set of the connection. Just a wrapper around
+     * mysqli_real_escape_string().
+     *
+     * @param $escape_str string String to be escaped.
+     * @return string Escaped string.
+     */
+    function dbEscape($escape_str)
     {
+        return mysqli_real_escape_string($this->_link, $escape_str);
+    }
+
+    function dbLog($time_start, $object, $action, $internal_post = null)
+    {
+        /* Allow for specifying an array that will be stored as POST. */
+        if (is_null($internal_post))
+        {
+            $internal_post = $_POST;
+        }
+
+        /* Do not store password information */
+        if ($object == 'login' && $action == 'verify')
+        {
+            $internal_post['password'] = '**********';
+        }
         $user_id = SessionDataBean::getUserId();
         $lecture_id = SessionDataBean::getLectureId();
-        $get_data = mysql_real_escape_string(json_encode($_GET));
-        $post_data = mysql_real_escape_string(json_encode($_POST));
-        $ip_address = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
+        $get_data = $this->dbEscape(json_encode($_GET));
+        $post_data = $this->dbEscape(json_encode($internal_post));
+        $ip_address = $this->dbEscape($_SERVER['REMOTE_ADDR']);
 
         $this->dbQuery(
             "INSERT INTO log " .
@@ -204,8 +231,8 @@ class CPPSmarty extends Smarty
     {
         $user_id = SessionDataBean::getUserId();
         $lecture_id = SessionDataBean::getLectureId();
-        $ip_address = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
-        $message = mysql_real_escape_string($message);
+        $ip_address = $this->dbEscape($_SERVER['REMOTE_ADDR']);
+        $message = $this->dbEscape($message);
 
         $this->dbQuery(
             "INSERT INTO log " .
@@ -233,13 +260,14 @@ class CPPSmarty extends Smarty
             echo "<!-- " . $caller['file'] . ":" . $caller['line'] . " in `" . $ucaller['function'] . "()`\n";
             echo "     dbQuery():'" . $query . "' -->\n";
         }
-        $result = mysql_query($query);
+        $result = mysqli_query($this->_link, $query);
 
         /* Is the result a meaningful `resource` or did an error occur? */
         if (!$result)
         {
-            $error = "<p>Invalid query: <tt>" . mysql_error() . "</tt></p>\n";
+            $error = "<p>Invalid query: <tt>" . mysqli_error($this->_link) . "</tt></p>\n";
             $error .= "<p>Query string: <tt>" . $query . "</tt></p>\n";
+            // echo $error;
             logSystemError($error);
             throw new Exception ('Neplatný SQL dotaz.');
         }
@@ -251,10 +279,10 @@ class CPPSmarty extends Smarty
         if (!is_bool($result))
         {
             /* If normal indexing has been requested, copy the returned rows exactly
-             * in the order they have been retured by the database. */
+             * in the order they have been returned by the database. */
             if ($idx === null)
             {
-                while ($row = mysql_fetch_assoc($result))
+                while ($row = $result->fetch_assoc())
                 {
                     $asr[] = $row;
                 }
@@ -263,18 +291,23 @@ class CPPSmarty extends Smarty
             {
                 /* Assume that every fetched row contains a field with name given by
                  * $idx and use the value of that field as an index. */
-                while ($row = mysql_fetch_assoc($result))
+                while ($row = $result->fetch_assoc())
                 {
                     $asr[$row[$idx]] = $row;
                 }
             }
 
-            mysql_free_result($result);
+            $result->free();
         }
 
         return $asr;
     }
 
+    /**
+     * @param $query
+     * @return array|null
+     * @throws Exception
+     */
     function dbQuerySingle($query)
     {
         if ($this->debug)
@@ -286,25 +319,35 @@ class CPPSmarty extends Smarty
             echo "<!-- " . $caller['file'] . ":" . $caller['line'] . " in `" . $ucaller['function'] . "()`\n";
             echo "     dbQuerySingle():'" . $query . "' -->\n";
         }
-        $result = mysql_query($query);
+        $result = mysqli_query($this->_link, $query);
 
         /* Is the result a meaningful `resource` or did an error occur? */
         if (!$result)
         {
-            $error = "<p>Invalid query: <tt>" . mysql_error() . "</tt></p>\n";
+            $error = "<p>Invalid query: <tt>" . mysqli_error($this->_link) . "</tt></p>\n";
             $error .= "<p>Query string: <tt>" . $query . "</tt></p>\n";
             logSystemError($error);
             throw new Exception ('Neplatný SQL dotaz.');
         }
 
-        if (!($row = mysql_fetch_assoc($result)))
+        if (!($row = $result->fetch_assoc()))
         {
             $row = NULL;
         }
 
-        mysql_free_result($result);
+        $result->free();
 
         return $row;
+    }
+
+    /**
+     * Return id of the last insert operation.
+     * Wrapper around mysqli_insert_id.
+     * @return int|string
+     */
+    function dbInsertId()
+    {
+        return mysqli_insert_id($this->_link);
     }
 
     function dbQueryMenuHier($parentId)
@@ -322,6 +365,10 @@ class CPPSmarty extends Smarty
         return $resultset;
     }
 
+    /**
+     * @return array
+     * @throws Exception
+     */
     function dbQueryArticleIdSet()
     {
         $resultset = $this->dbQuery("SELECT Id, title FROM articles ORDER BY title");
@@ -341,8 +388,9 @@ class CPPSmarty extends Smarty
 
     function getNewsTypes()
     {
-        return array(NEWS_SECTION => "Novinka k sekci",
-            NEWS_ARTICLE => "Novinka ke �l�nku");
+        return array(
+            NEWS_SECTION => "Novinka k sekci",
+            NEWS_ARTICLE => "Novinka ke článku");
     }
 
     function getNewsTypeString($newsTypeId)
@@ -387,6 +435,10 @@ class CPPSmarty extends Smarty
         return $type;
     }
 
+    /**
+     * @return array|null
+     * @throws Exception
+     */
     function assignSettings()
     {
         /* Get settings data */
@@ -395,6 +447,11 @@ class CPPSmarty extends Smarty
         return $settings;
     }
 
+    /**
+     * @param $intId
+     * @param $fileType
+     * @throws Exception
+     */
     function assignFileList($intId, $fileType)
     {
         $resultset = $this->dbQuery('SELECT * FROM files WHERE parent=' . $intId . ' AND type=' . $fileType . ' ORDER BY position,description');

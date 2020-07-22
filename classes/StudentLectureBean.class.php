@@ -234,7 +234,7 @@ class StudentLectureBean extends DatabaseBean
         $where = "";
         if (!empty ($this->firstLetter))
         {
-            $where .= 'surname LIKE "' . mysql_escape_string($this->firstLetter) . '%"';
+            $where .= 'surname LIKE "' . $this->dbEscape($this->firstLetter) . '%"';
         }
         if (!empty ($where)) $where = " WHERE " . $where;
 

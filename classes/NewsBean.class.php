@@ -70,13 +70,13 @@ class NewsBean extends DatabaseBean
         DatabaseBean::dbQuery(
             "REPLACE news VALUES ("
             . $this->id . ",'"
-            . mysql_escape_string($this->title) . "','"
-            . mysql_escape_string($this->text) . "',"
+            . $this->dbEscape($this->title) . "','"
+            . $this->dbEscape($this->text) . "',"
             . $this->author_id . ","
             . $this->type . ","
             . $this->object_id . ",'"
-            . mysql_escape_string($this->datefrom) . "','"
-            . mysql_escape_string($this->dateto) . "')"
+            . $this->dbEscape($this->datefrom) . "','"
+            . $this->dbEscape($this->dateto) . "')"
         );
 
         $this->updateId();

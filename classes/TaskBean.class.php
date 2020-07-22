@@ -66,7 +66,7 @@ class TaskBean extends DatabaseBean
             "REPLACE task VALUES ("
             . $this->id . ","
             . $this->type . ",'"
-            . mysql_escape_string($this->title) . "',"
+            . $this->dbEscape($this->title) . "',"
             . $this->minpts . ","
             . $this->position . ","
             . $this->lecture_id . ")"

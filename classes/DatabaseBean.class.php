@@ -58,6 +58,7 @@ class DatabaseBean extends BaseBean
        ------------------------------------------------------------------- */
     function dbQuery($query, $idx = NULL)
     {
+        error_log('DB QUERY ' . $query);
         return $this->_smarty->dbQuery($query, $idx);
     }
 
@@ -83,6 +84,15 @@ class DatabaseBean extends BaseBean
         $ids = arrayToDBString($id_list);
         /* Delete the ID from the specified table. */
         $this->dbQuery("DELETE FROM " . $this->_table . " WHERE id IN(" . $ids . ")");
+    }
+
+    /**
+     * @param $escape_str
+     * @return string
+     */
+    function dbEscape($escape_str)
+    {
+        return $this->_smarty->dbEscape($escape_str);
     }
 
     /* -------------------------------------------------------------------

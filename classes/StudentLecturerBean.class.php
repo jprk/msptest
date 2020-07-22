@@ -31,8 +31,8 @@ class StudentLecturerBean extends DatabaseBean
         DatabaseBean::dbQuery(
             "REPLACE user (id,surname,firstname,yearno,group) VALUES ("
             . $this->id . ",'"
-            . mysql_escape_string($this->surname) . "','"
-            . mysql_escape_string($this->firstname) . "','"
+            . $this->dbEscape($this->surname) . "','"
+            . $this->dbEscape($this->firstname) . "','"
             . $this->yearno . "','"
             . $this->group . "')"
         );
@@ -41,7 +41,7 @@ class StudentLecturerBean extends DatabaseBean
            we can later try to update passwords as well. */
         if (!$this->id)
         {
-            $this->id = mysql_insert_id();
+            $this->id = $this->_smarty->dbInsertId();
         }
     }
 

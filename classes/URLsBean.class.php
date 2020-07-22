@@ -30,11 +30,11 @@ class URLsBean extends DatabaseBean
         DatabaseBean::dbQuery(
             "REPLACE urls VALUES ("
             . $this->id . ",'"
-            . mysql_escape_string($this->url) . "','"
-            . mysql_escape_string($this->title) . "','"
-            . mysql_escape_string($this->description) . "',"
-            . mysql_escape_string($this->position) . ","
-            . mysql_escape_string($this->lecture_id) . ")"
+            . $this->dbEscape($this->url) . "','"
+            . $this->dbEscape($this->title) . "','"
+            . $this->dbEscape($this->description) . "',"
+            . $this->dbEscape($this->position) . ","
+            . $this->dbEscape($this->lecture_id) . ")"
         );
 
         $this->updateId();

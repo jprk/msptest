@@ -65,7 +65,7 @@ class DeadlineExtensionBean extends DatabaseBean
                         . $this->subtaskId . "','"
                         . $val . "','"
                         . $this->schoolyear . "','"
-                        . mysql_escape_string($this->dateTo) . "')"
+                        . $this->dbEscape($this->dateTo) . "')"
                     );
 
                     break;
@@ -84,7 +84,7 @@ class DeadlineExtensionBean extends DatabaseBean
                         . $val . "','"
                         . $this->studentId . "','"
                         . $this->schoolyear . "','"
-                        . mysql_escape_string($this->dateTo) . "')"
+                        . $this->dbEscape($this->dateTo) . "')"
                     );
 
                     break;

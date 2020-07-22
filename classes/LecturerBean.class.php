@@ -30,10 +30,10 @@ class LecturerBean extends DatabaseBean
         DatabaseBean::dbQuery(
             "REPLACE lecturer VALUES ("
             . $this->id . ",'"
-            . mysql_escape_string($this->surname) . "','"
-            . mysql_escape_string($this->firstname) . "','"
-            . mysql_escape_string($this->room) . "','"
-            . mysql_escape_string($this->email) . "')"
+            . $this->dbEscape($this->surname) . "','"
+            . $this->dbEscape($this->firstname) . "','"
+            . $this->dbEscape($this->room) . "','"
+            . $this->dbEscape($this->email) . "')"
         );
 
         $this->updateId();

@@ -81,7 +81,7 @@ class PointsBean extends DatabaseBean
                 . $this->schoolyear . ",'"
                 . $numPts . "','"
                 . SessionDataBean::getUserId() . "','"
-                . mysql_real_escape_string($comment) . "',NULL";
+                . $this->dbEscape($comment) . "',NULL";
 
             /* Delete all point records for this student and subtask and
                school year. */

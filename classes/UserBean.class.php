@@ -107,16 +107,16 @@ class UserBean extends DatabaseBean
             DatabaseBean::dbQuery(
                 "REPLACE user (id,login,role,firstname,surname,email) VALUES ("
                 . $this->id . ",'"
-                . mysql_real_escape_string($this->login) . "',"
+                . $this->dbEscape($this->login) . "',"
                 . $this->role . ",'"
-                . mysql_real_escape_string($this->firstname) . "','"
-                . mysql_real_escape_string($this->surname) . "','"
-                . mysql_real_escape_string($this->email) . "')"
+                . $this->dbEscape($this->firstname) . "','"
+                . $this->dbEscape($this->surname) . "','"
+                . $this->dbEscape($this->email) . "')"
             );
             /* New records have initial 'id' equal to zero and the proper value is
                set by the database engine. We have to retrieve the 'id' back so that
                we can later try to update passwords as well. */
-            $this->id = mysql_insert_id();
+            $this->id = $this->_smarty->dbInsertId();
         }
         else
         {
@@ -124,11 +124,11 @@ class UserBean extends DatabaseBean
                password. */
             DatabaseBean::dbQuery(
                 "UPDATE user SET "
-                . "login='" . mysql_real_escape_string($this->login) . "', "
+                . "login='" . $this->dbEscape($this->login) . "', "
                 . "role=" . $this->role . ", "
-                . "firstname='" . mysql_real_escape_string($this->firstname) . "', "
-                . "surname='" . mysql_real_escape_string($this->surname) . "', "
-                . "email='" . mysql_real_escape_string($this->email) . "' "
+                . "firstname='" . $this->dbEscape($this->firstname) . "', "
+                . "surname='" . $this->dbEscape($this->surname) . "', "
+                . "email='" . $this->dbEscape($this->email) . "' "
                 . "WHERE id=" . $this->id
             );
         }
@@ -141,7 +141,7 @@ class UserBean extends DatabaseBean
         /* Standard replace does not replace passwords */
         DatabaseBean::dbQuery(
             "UPDATE user SET "
-            . "password=MD5('" . mysql_escape_string($this->password) . "') "
+            . "password=MD5('" . $this->dbEscape($this->password) . "') "
             . "WHERE id='" . $this->id . "'"
         );
     }
@@ -151,8 +151,8 @@ class UserBean extends DatabaseBean
         /* Query the database for the login and password tuple. */
         $rs = DatabaseBean::dbQuery(
             "SELECT * FROM user WHERE "
-            . "login='" . mysql_real_escape_string($login) . "' AND "
-            . "password=MD5('" . mysql_real_escape_string($password) . "')");
+            . "login='" . $this->dbEscape($login) . "' AND "
+            . "password=MD5('" . $this->dbEscape($password) . "')");
 
         /* If the result contains something, the check is positive. */
         if (!empty ($rs))
@@ -179,7 +179,7 @@ class UserBean extends DatabaseBean
             DatabaseBean::dbQuery(
                 "UPDATE user SET " .
                 "failcount=failcount+1 " .
-                "WHERE login='" . mysql_escape_string($login) . "'"
+                "WHERE login='" . $this->dbEscape($login) . "'"
             );
         }
 

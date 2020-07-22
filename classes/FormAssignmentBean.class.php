@@ -61,9 +61,9 @@ class FormAssignmentBean extends DatabaseBean
      */
     function dbReplace()
     {
-        DatabaseBean:: dbQuery("DELETE FROM formassignmnt WHERE " . "subtask_id=" . $this->subtask_id . " AND " . "assignmnt_id=" . $this->assignment_id . " AND part='" . mysql_escape_string($this->part) . "'");
+        DatabaseBean:: dbQuery("DELETE FROM formassignmnt WHERE " . "subtask_id=" . $this->subtask_id . " AND " . "assignmnt_id=" . $this->assignment_id . " AND part='" . $this->dbEscape($this->part) . "'");
 
-        DatabaseBean:: dbQuery("REPLACE formassignmnt VALUES (" . $this->subtask_id . "," . $this->assignment_id . ",'" . mysql_escape_string($this->part) . "'," . $this->count . "," . $this->a . "," . $this->b . "," . $this->c . "," . $this->d . "," . $this->e . "," . $this->f . ")");
+        DatabaseBean:: dbQuery("REPLACE formassignmnt VALUES (" . $this->subtask_id . "," . $this->assignment_id . ",'" . $this->dbEscape($this->part) . "'," . $this->count . "," . $this->a . "," . $this->b . "," . $this->c . "," . $this->d . "," . $this->e . "," . $this->f . ")");
     }
 
     /**

@@ -155,12 +155,12 @@ class ExerciseBean extends DatabaseBean
             "REPLACE exercise VALUES ("
             . $this->id . ",'"
             . $this->day . "','"
-            . mysql_real_escape_string($this->from) . "','"
-            . mysql_real_escape_string($this->to) . "','"
-            . mysql_real_escape_string($this->room) . "','"
+            . $this->dbEscape($this->from) . "','"
+            . $this->dbEscape($this->to) . "','"
+            . $this->dbEscape($this->room) . "','"
             . $this->lecture_id . "','"
             . "0" . "','" // we have no lecturer stored here now, everything is handled through ExerciseTutorBean
-            . mysql_real_escape_string($this->schoolyear) . "','"
+            . $this->dbEscape($this->schoolyear) . "','"
             . $this->groupno . "')"
         );
 

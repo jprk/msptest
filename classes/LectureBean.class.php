@@ -19,6 +19,7 @@ class LectureBean extends DatabaseBean
     protected $do_groups;
     protected $grace_minutes;
     protected $lecture_manager;
+    protected $show_forum;
     protected $rootsection;
 
     /**
@@ -44,6 +45,7 @@ class LectureBean extends DatabaseBean
         $this->group_type = StudentGroupBean::GRPTYPE_NONE;
         $this->do_groups = false;
         $this->grace_minutes = self::DEFAULT_GRACE_MINUTES;
+        $this->show_forum = false;
         $this->rootsection = 0;
         /* Update the value of $this->rs. */
         $this->_update_rs();
@@ -238,6 +240,7 @@ class LectureBean extends DatabaseBean
             . $this->repl_count . ","
             . $this->group_limit . ","
             . $this->group_type . ","
+            . $this->show_forum . ","
             . $this->rootsection . ")"
         );
 
@@ -271,6 +274,7 @@ class LectureBean extends DatabaseBean
             $this->group_limit = $this->rs['group_limit'];
             $this->group_type = $this->rs['group_type'];
             $this->do_groups = ($this->group_limit > 0);
+            $this->show_forum = $this->rs['show_forum'];
             $this->rootsection = $this->rs['rootsection'];
             /* Update the value of $this->rs. This will make the lecture data
                * available to the templating engine. */
@@ -296,6 +300,7 @@ class LectureBean extends DatabaseBean
         $this->repl_count = intval($_POST['repl_count']);
         $this->group_limit = intval($_POST['group_limit']);
         $this->group_type = intval($_POST['group_type']);
+        $this->show_forum = intval($_POST['show_forum']);
         $this->rootsection = intval($_POST['rootsection']);
     }
 

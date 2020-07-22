@@ -8,6 +8,8 @@ class SessionDataBean
     const SDB_LAST_SECTION_ID = 'last_section_id';
     const SDB_SCHOOL_YEAR = 'school_year';
     const SDB_USER_DATA = 'user';
+    const SDB_FROM_POWER_USER = 'from_power_user';
+    const SDB_FLARUM_SSO = 'flarum_sso';
 
     /**
      * Constructor is empty in this case. This class has only static methods.
@@ -172,6 +174,15 @@ class SessionDataBean
     }
 
     /**
+     * Return the Flarum SSO object holding the discussion forum SSO session cookie.
+     * @return Flarum Flarum SSO object.
+     */
+    static function getFlarumSSOObject()
+    {
+        return $_SESSION[self::SDB_FLARUM_SSO];
+    }
+
+    /**
      * Return true if the current school year has been set.
      */
     static function hasSchoolYear()
@@ -262,6 +273,14 @@ class SessionDataBean
     {
         $_SESSION[self::SDB_SCHOOL_YEAR] = $schoolYear;
     }
-}
+
+    /**
+     * Store the Flarum SSO object holding the discussion forum SSO session cookie.
+     * @param $flarum Flarum
+     */
+    static function setFlarumSSOObject(&$flarum)
+    {
+        $_SESSION[self::SDB_FLARUM_SSO] = $flarum;
+    }
 
 ?>

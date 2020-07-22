@@ -21,12 +21,14 @@
         <tr class="rowA">
             <td class="itemtitle">Docvičující studenti</td>
             <td><input type="text" name="repl_students" maxlength="1" size="1" value="{$lectureInfo.repl_students}">
-                (0 pokud není docvičení)</td>
+                (0 pokud není docvičení)
+            </td>
         </tr>
         <tr class="rowB">
             <td class="itemtitle">Počet docvičení</td>
             <td><input type="text" name="repl_count" maxlength="1" size="1" value="{$lectureInfo.repl_count}">
-                (pro jednoho studenta)</td>
+                (pro jednoho studenta)
+            </td>
         </tr>
         <tr class="rowA">
             <td class="itemtitle">Max studentů ve skupině</td>
@@ -36,9 +38,15 @@
         <tr class="rowB">
             <td class="itemtitle">Typ studentských skupin</td>
             <td>{html_options name="group_type" options=$select_group selected=$lectureInfo.group_type}
-                (po cvičeních je třeba FY1+FY2, po předmětu třeba MAMY nebo TEDL)</td>
+                (po cvičeních je třeba FY1+FY2, po předmětu třeba MAMY nebo TEDL)
+            </td>
         </tr>
         <tr class="rowA">
+            <td class="itemtitle"><label for="in_forum">Odkaz na fórum</label></td>
+            <td><input id="in_forum" type="checkbox" name="show_forum"
+                       value="1" {html_checked value=$lectureInfo.show_forum}></td>
+        </tr>
+        <tr class="rowB">
             <td class="itemtitle">Sylabus</td>
             <td>
                 <textarea id="edcTextArea" name="syllabus" style="width: 100%; height: 420px;">

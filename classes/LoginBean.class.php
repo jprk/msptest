@@ -1,6 +1,6 @@
 <?php
 
-/* IT MIGHT BE NEEDED TO CALL SESSION_START() IN PREHANDLEREXEC() */
+require_once 'external/flarum-sso/Forum.php';
 
 class LoginBean extends BaseBean
 {
@@ -118,17 +118,40 @@ class LoginBean extends BaseBean
         }
     }
 
+    /**
+     * @throws Exception
+     */
     function doShow()
     {
-        $this->assign('leftcolumn', "leftempty.tpl");
-        /* Set the failed login flag to false and old username to empty so that the debug version of PHP does not
-           complain about a non-existent variables. */
-        $this->_smarty->assign('loginfailed', 0);
-        $this->_smarty->assign('oldusername', '');
-        /* It could have been that doShow() has been called from another
-           handler. Change the action to "show" so that ctrl.php will
-           know that it shall display the scriptlet for login.show */
-        $this->action = "show";
+        assignGetIfExists($forum_sso, $this->rs, 'forum_sso', false, '', 'false');
+        // error_log('forum_sso_0='.$forum_sso);
+        $forum_sso = filter_var($forum_sso, FILTER_VALIDATE_BOOLEAN);
+        // error_log('forum_sso_1='.print_r($forum_sso, true));
+        if ($forum_sso)
+        {
+            /* Redirect to Flarum */
+            $flarum = SessionDataBean::getFlarumSSOObject();
+            if (isset($flarum))
+            {
+                $flarum->redirectToForum();
+            }
+            else
+            {
+                throw new Exception('User not logged in, cannot SSO.');
+            }
+        }
+        else
+        {
+            $this->assign('leftcolumn', "leftempty.tpl");
+            /* Set the failed login flag to false and old username to empty so that the debug version of PHP does not
+               complain about a non-existent variables. */
+            $this->_smarty->assign('loginfailed', 0);
+            $this->_smarty->assign('oldusername', '');
+            /* It could have been that doShow() has been called from another
+               handler. Change the action to "show" so that ctrl.php will
+               know that it shall display the scriptlet for login.show */
+            $this->action = "show";
+        }
     }
 
     function doVerify()
@@ -138,6 +161,8 @@ class LoginBean extends BaseBean
         {
             /* Initialise class instance of `StudentBean` class to none. */
             $studentBean = null;
+
+            // error_log('logging in, POST:' . print_r($_POST, true));
 
             /* Create an instance of UserBean which will be used to verify the
                supplied login credentials. */
@@ -151,6 +176,7 @@ class LoginBean extends BaseBean
                But still it might be a student. */
             if (empty($rs))
             {
+                // error_log('empty rs from user data, checking student');
                 /* Create an instance of StudentBean which will be used to verify the
                    supplied student login credentials. */
                 $studentBean = new StudentBean (0, $this->_smarty, $this->action, $this->object);
@@ -161,6 +187,7 @@ class LoginBean extends BaseBean
             }
 
             $this->dumpVar('login verification rs', $rs);
+            // error_log('login verification rs' . print_r($rs, true));
         }
         else
         {
@@ -171,6 +198,20 @@ class LoginBean extends BaseBean
            containing some data will mean the user has successfully logged in. */
         if (!empty($rs))
         {
+            /* SSO login of the user into Flarum */
+            $flarum = new Flarum();
+            /* User `root` is a special case. */
+            $login = UserBean::getLogin($rs);
+            if ($login == 'root')
+            {
+                $flarum->login_admin();
+            }
+            else
+            {
+                $flarum->login($login, UserBean::getEmail($rs));
+            }
+            SessionDataBean::setFlarumSSOObject($flarum);
+
             $this->prepareHomePage($rs, $userBean, $studentBean);
         }
         else
@@ -189,10 +230,22 @@ class LoginBean extends BaseBean
 
     function doDelete()
     {
-        /* Clear information about the current user stored in the
-           session data storage and initialise the user information to
-           indicate an anonymous user. */
-        SessionDataBean::clearUserInformation();
+        if (empty(SessionDataBean::getPowerUserLogin()))
+        {
+            /* Standard logout, will return to anonymous user. */
+            $flarum = SessionDataBean::getFlarumSSOObject();
+            $flarum->logout();
+
+            /* Clear information about the current user stored in the
+               session data storage and initialise the user information to
+               indicate an anonymous user. */
+            SessionDataBean::clearUserInformation();
+        }
+        else
+        {
+            /* Fetch back the session data representing the power user */
+            SessionDataBean::popPowerUserToUser();
+        }
     }
 }
 

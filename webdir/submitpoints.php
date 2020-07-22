@@ -40,9 +40,8 @@ $errorMessage = '';
 /* Initialise database connection */
 try
 {
-    $smlink = $smarty->dbOpen ();
-}
-catch ( Exception $e )
+    $smlink = $smarty->dbOpen();
+} catch (Exception $e)
 {
     /* Make sure smlink has some value. */
     $smlink = NULL;
@@ -50,10 +49,12 @@ catch ( Exception $e )
     $errorMessage = $e->getMessage();
 }
 
-if ( UserBean::isRoleAtLeast ( SessionDataBean::getUserRole(),USR_LECTURER ))
+$smarty->dbLog($timeStart, 'submitpoints', 'ajax');
+
+if (UserBean::isRoleAtLeast(SessionDataBean::getUserRole(), USR_LECTURER))
 {
     /* Create an instance of the database interface to the `points` table. */
-    $pointsBean = new PointsBean ( NULL, $smarty, NULL, NULL );
+    $pointsBean = new PointsBean (NULL, $smarty, NULL, NULL);
     /* Write data to the database. */
     $pointsBean->doSave();
     $status = 0;
@@ -69,10 +70,11 @@ else
          containing the text in $errorMessage)
    2 ... no change (changed the same number of points to the same number)
 */
-$result = array ( 'status' => $status, 'message' => $errorMessage );
-echo json_encode( $result );
+$result = array('status' => $status, 'message' => $errorMessage);
+$smarty->dbLog($timeStart, 'submitpoints', 'ajax_out');
+echo json_encode($result);
 
-/* Close the dadtabase connection */
-$smarty->dbClose ($smlink);
+/* Close the database connection */
+$smarty->dbClose($smlink);
 
 ?>

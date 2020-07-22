@@ -22,7 +22,7 @@ class FormAssignmentBean extends DatabaseBean
     function _setDefaults()
     {
         $this->subtask_id = $this->rs['subtask_id'] = 0;
-        $this->assigmnent_id = $this->rs['assignment_id'] = 0;
+        $this->assignment_id = $this->rs['assignment_id'] = 0;
         $this->part = $this->rs['part'] = '';
         $this->count = $this->rs['count'] = 0;
 
@@ -33,8 +33,11 @@ class FormAssignmentBean extends DatabaseBean
         $this->e = $this->rs['e'] = 0;
         $this->f = $this->rs['f'] = 0;
 
-        $this->copysub = 0;
-        $this->pdfimport = 0;
+        $this->regenerate = $this->rs['regenerate'] = false;
+        $this->onlynew = $this->rs['onlynew'] = false;
+        $this->catalogue = $this->rs['catalogue'] = false;
+        $this->copysub = $this->rs['copysub'] = false;
+        $this->pdfimport = $this->rs['pdfimport'] = false;
     }
 
     /* Constructor */
@@ -71,7 +74,8 @@ class FormAssignmentBean extends DatabaseBean
      */
     function _getFullList($where = '')
     {
-        $rs = DatabaseBean:: dbQuery("SELECT * FROM formassignmnt " . $where . " ORDER BY subtask_id,assignmnt_id,part");
+        $rs = DatabaseBean:: dbQuery("SELECT * FROM formassignmnt " .
+            $where . " ORDER BY subtask_id,assignmnt_id,part");
 
         return $rs;
     }
@@ -440,7 +444,8 @@ class FormAssignmentBean extends DatabaseBean
      */
     function regenerateAssignments($subtaskId)
     {
-        /* Get the code of the subtask id. */
+        error_log("FormAssignmentBean::regenerateAssignments(subtaskId=$subtaskId)");
+
         $subtaskBean = new SubtaskBean(0, $this->_smarty, null, null);
         $sCode = $subtaskBean->getSubtaskCode($subtaskId);
 
@@ -460,17 +465,20 @@ class FormAssignmentBean extends DatabaseBean
         );
 
         /* Read the template. */
-        $tBaseDir = CMSFILES . "/assignments/" . $sCode . "r/";
-        $tGeneBase = "generated/" . $sCode . "/" . $this->schoolyear . "/";
+        $tBaseDir = CMSFILES . "/assignments/" . $sCode . "/";
         $tFileName = $tBaseDir . $sCode . ".tex";
         $handle = fopen($tFileName, "r");
         $templatestr = fread($handle, filesize($tFileName));
         fclose($handle);
+        error_log("* template $tFileName read");
 
-        /* Change to the directory where files shall be generated. */
+        /* Make the directories where files shall be generated. Change to the
+           target directory */
+        $tGeneBase = "generated/" . $sCode . "r/" . $this->schoolyear . "/";
         $base = CMSFILES . "/" . $tGeneBase;
-        @ mkdir($base);
+        @ mkdir($base, 0777, true);
         chdir($base);
+        error_log("* changed directory to $base");
 
         /* Erase all remaining files in the directory. */
         //system ( 'rm -f *');
@@ -521,13 +529,15 @@ class FormAssignmentBean extends DatabaseBean
             $handle = fopen($filename, "w");
             fwrite($handle, $texstr);
             fclose($handle);
-            echo "<!-- written " . $filename . ", base dir " . $tBaseDir . " -->\n";
+            error_log("* written $filename, base dir $tBaseDir");
 
             /* And LaTeX it. */
-            $ret = system("TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex -interaction=batchmode " . $filename . " > /dev/null ");
-            //$ret = system ( "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex ".$filename." " );
-            echo "<!-- " . $ret . "-->\n";
-            //system ( 'rm -f *.tex *.log *.aux');
+            $command = "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex -interaction=batchmode " . $filename . " > /dev/null ";
+            error_log("* executing: $command");
+            $ret = system($command);
+            //$ret = system ( "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex ".$filename_tex." " );
+            //echo "<!-- ".$ret."-->";
+            error_log("* pdflatex call returned $ret");
         }
     }
 
@@ -553,9 +563,12 @@ class FormAssignmentBean extends DatabaseBean
      * @param $id_list array   List of student/group identifiers
      * @param $isUpdate    boolean Do not erase older assignment files
      * @param $copy_from_subtask integer Copy assignment ids from this subtask
+     * @throws Exception
      */
     function generateAssignments($id_subtask, $id_list, $isUpdate, $copy_from_subtask)
     {
+        error_log("FormAssignmentBean::generateAssignments(id_subtask=$id_subtask,id_list=$id_list,is_update=$isUpdate,copy_from_subtask=$copy_from_subtask)");
+
         /* Get the code of the subtask id. */
         $subtaskBean = new SubtaskBean ($id_subtask, $this->_smarty, NULL, NULL);
         $subtask_code = $subtaskBean->getSubtaskCode($id_subtask);
@@ -574,6 +587,7 @@ class FormAssignmentBean extends DatabaseBean
         $new_assignment_ids = array();
         if ($copy_from_subtask > 0)
         {
+            error_log("* copying from subtask $copy_from_subtask");
             /* Copy records from assignments of another task. */
             $assignment_list = $assignmentsBean->getAssignmentList($copy_from_subtask);
             /* We have to transform the list into a list indexed by student id. */
@@ -586,6 +600,7 @@ class FormAssignmentBean extends DatabaseBean
         else
         {
             /* Randomly select a number of records from the database. */
+            error_log("* randomly selecting new assignments");
             $new_assignment_ids = DatabaseBean:: dbQuery("SELECT DISTINCT(assignmnt_id) FROM formassignmnt WHERE " .
                 "subtask_id=" . $id_subtask . " ORDER BY count,RAND() " .
                 "LIMIT " . $num_assignments);
@@ -595,6 +610,7 @@ class FormAssignmentBean extends DatabaseBean
         $template_base_dir = CMSFILES . "/assignments/" . $subtask_code . "/";
         $generated_dir_path = "generated/" . $subtask_code . "/" . $this->schoolyear . "/";
         $template_file_name = $template_base_dir . $subtask_code . ".tex";
+        error_log("* template_file_name=$template_file_name");
 
         /* Check the presence of the template file. */
         if (is_file($template_file_name))
@@ -603,17 +619,20 @@ class FormAssignmentBean extends DatabaseBean
             $handle = fopen($template_file_name, "r");
             $template_as_string = fread($handle, filesize($template_file_name));
             fclose($handle);
+            error_log("* template read");
         }
         else
         {
             /* Signal missing template by setting the template string to null. */
             $template_as_string = null;
+            error_log("* template not available");
         }
 
         /* Change to the directory where files shall be generated, possibly creating it. */
         $generated_base_dir = CMSFILES . "/" . $generated_dir_path;
         if (!is_dir($generated_base_dir)) mkdir($generated_base_dir, 0775, true);
         chdir($generated_base_dir);
+        error_log("* working directory changed to $generated_base_dir");
 
         /* Are we updating the existing set of assignments (for example due to typo or an error in the template)? */
         if (!$isUpdate)
@@ -623,6 +642,7 @@ class FormAssignmentBean extends DatabaseBean
 
             /* Erase all remaining files in the directory. */
             system('rm -f *');
+            error_log("* removed all files from directory");
         }
 
         /* Make a list of students that were ignored during the copy_from_subtask operation due to non-existent
@@ -637,7 +657,8 @@ class FormAssignmentBean extends DatabaseBean
 
             $date = date("d.m.Y");
             $u8name = $val['firstname'] . " " . $val['surname'];
-            $name = iconv("utf-8", "windows-1250", $u8name);
+            // $name = iconv("utf-8", "windows-1250", $u8name);
+            $name = $u8name;
             $group = $val['yearno'] . "/" . $val['groupno'];
 
             /* Allow copying assignment ids from other subtasks. */
@@ -692,15 +713,28 @@ class FormAssignmentBean extends DatabaseBean
                    when the number of students is higher than the number of assignments.*/
                 $cmsFileName = $studentLogin . "_" . $subtask_code . "_" . $id;
                 $cmsFileBase = $generated_dir_path . $cmsFileName;
-                $filename = CMSFILES . "/" . $cmsFileBase . ".tex";
-                $handle = fopen($filename, "w");
+                $filename_base = CMSFILES . "/" . $cmsFileBase;
+                $filename_tex = $filename_base . ".tex";
+                $filename_pdf = $filename_base . ".pdf";
+                $handle = fopen($filename_tex, "w");
                 fwrite($handle, $latex_src_string);
                 fclose($handle);
+                error_log("* wrote LaTeX to $filename_tex");
 
                 /* And LaTeX it. */
-                $ret = system("TEXINPUTS=`kpsexpand -p tex`:$template_base_dir pdflatex -interaction=batchmode " . $filename . " > /dev/null ");
-                //$ret = system ( "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex ".$filename." " );
+                $command = "TEXINPUTS=`kpsexpand -p tex`:$template_base_dir pdflatex -interaction=batchmode " . $filename_tex . " > /dev/null ";
+                error_log("* executing: $command");
+                $ret = system($command);
+                //$ret = system ( "TEXINPUTS=`kpsexpand -p tex`:$tBaseDir pdflatex ".$filename_tex." " );
                 //echo "<!-- ".$ret."-->";
+                error_log("* prflatex call returned $ret");
+
+                /* Check that a PDF file has been produced. */
+                if (!is_file($filename_pdf))
+                {
+                    throw new Exception("Failed to generate $filename_pdf");
+                }
+
                 system('rm -f *.tex *.log *.aux');
 
                 /* Store information about the generated file in file table. */
@@ -708,6 +742,7 @@ class FormAssignmentBean extends DatabaseBean
                 $cmsFileBase = $cmsFileBase . ".pdf";
                 $fileId = $fileBean->addFile(FT_X_ASSIGNMENT, $id_subtask, $studentId, $cmsFileBase, $cmsFileName,
                     "Úloha " . $subtask_code . ", příklad " . $id . ", student " . $u8name);
+                error_log("* new file ID $fileId created for $cmsFileName");
             }
             else
             {
@@ -834,8 +869,7 @@ class FormAssignmentBean extends DatabaseBean
                on the same problem from different viewpoints).
                Note: In some cases the `copysub` will just duplicate links to existing files, in fact not generating
                anything. This is controlled by the absence of the template file for the given subtask. */
-            $this->generateAssignments($this->id, $studentList, $isUpdate,
-                $this->copysub);
+            $this->generateAssignments($this->id, $studentList, $isUpdate, $this->copysub);
         }
 
         $this->assign('formassignment', $this->rs);
@@ -844,12 +878,14 @@ class FormAssignmentBean extends DatabaseBean
     function uploadAssignmentCSV()
     {
         /* Open the file. */
+        error_log('uploadAssignmentCSV');
         $handle = @ fopen($_FILES['assignfile']['tmp_name'], "r");
         if ($handle)
         {
             /* TODO: Only CSV format allowed here. Currently we do not check it. */
             /* Can be opened, it shall be a CSV, so delete all previous data
                from the table and parse the lines. */
+            error_log('handle exists, processing CSV');
             $this->dbQuery(
                 'DELETE FROM formassignmnt WHERE subtask_id=' .
                 $this->subtask_id
@@ -867,6 +903,7 @@ class FormAssignmentBean extends DatabaseBean
                 $la = explode(";", $trimmed);
                 echo "\n<!-- la=";
                 print_r($la);
+                error_log('la=' . print_r($la, true));
                 echo " -->";
 
                 /* The record has to have 8 elements. Skip it otherwise. */
@@ -895,14 +932,17 @@ class FormAssignmentBean extends DatabaseBean
         }
     }
 
+    /**
+     * @throws Exception
+     */
     function uploadAssignmentsPDFZIP()
     {
         /* Due to its typical size (often 30-60MB), the ZIP file is uploaded manually to
            a pre-defined directory on the server.
            Check that the file exists. */
-        $file_name = SessionDataBean::getCode().'-'.$this->schoolyear.'-'.$this->id.'.zip';
+        $file_name = SessionDataBean::getCode() . '-' . $this->schoolyear . '-' . $this->id . '.zip';
         $this->assign('file_name', $file_name);
-        $file_path = STATICFILES.'/upload/'.SessionDataBean::getCode().'/'.$file_name;
+        $file_path = STATICFILES . '/upload/' . SessionDataBean::getCode() . '/' . $file_name;
         $this->dumpVar('full zip file path', $file_path);
         if (!is_file($file_path))
         {
@@ -925,6 +965,7 @@ class FormAssignmentBean extends DatabaseBean
             /* Construct the path where the PDFs should land and make sure it exists. */
             $gendir_path = "/generated/" . $subtask_code . "/" . $this->schoolyear . "/";
             $full_gendir_path = CMSFILES . $gendir_path;
+            $this->dumpVar('full_gendir_path', $full_gendir_path);
             if (!is_dir($full_gendir_path))
             {
                 mkdir($full_gendir_path, 0775, true);

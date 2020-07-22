@@ -76,6 +76,7 @@ class LoginBean extends BaseBean
 
     /**
      * Switch context to some student.
+     * @throws Exception
      * @see BaseBean::doAdmin()
      */
     function doAdmin()
@@ -104,7 +105,7 @@ class LoginBean extends BaseBean
                    UserBean and StudentBean are passed by reference and therefore
                    both variables have to exist. We know that our user in question
                    is a student, we will therefore set UserBean instance to NULL. */
-                $userBean = NULL;
+                $userBean = null;
                 $this->prepareHomePage(
                     $studentBean->getRsData(),
                     $userBean,

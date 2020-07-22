@@ -6,6 +6,7 @@ class StudentLectureBean extends DatabaseBean
     const E_INIT_FAILED = -1;
     const E_NO_TASKS = -2;
     const E_NO_SUBTASKS = -3;
+    const E_NOT_STUDYING = -4;
 
     private $studentList;     // List of student ids of this lecture
     private $resType;         // Type of evaluation listing
@@ -124,14 +125,18 @@ class StudentLectureBean extends DatabaseBean
 
     /**
      * Verify that a student studies given lecture.
+     * @param $student_id
+     * @param $lecture_id
+     * @param $school_year
+     * @return bool
      */
-    function studentIsListed($studentId, $lectureId, $year)
+    function studentIsListed($student_id, $lecture_id, $school_year)
     {
         $rs = DatabaseBean::dbQuery(
             "SELECT student_id FROM stud_lec " .
-            "WHERE student_id=" . $studentId . " " .
-            "AND lecture_id=" . $lectureId . " " .
-            "AND year=" . $year);
+            "WHERE student_id=" . $student_id . " " .
+            "AND lecture_id=" . $lecture_id . " " .
+            "AND year=" . $school_year);
 
         return (count($rs) > 0);
     }

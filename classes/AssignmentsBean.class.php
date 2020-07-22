@@ -28,14 +28,29 @@ class AssignmentsBean extends DatabaseBean
         parent::__construct($id, $smarty, "assignmnts", $action, $object);
     }
 
+    /**
+     * Delete all references to particular student and subtask.
+     * @param $subtask_list array List of subtasks to delete (optional).
+     */
+    function dbDelete($subtask_list = null)
+    {
+        if (!is_null($subtask_list))
+        {
+            $db_list = arrayToDBString($subtask_list);
+        }
+        else
+        {
+            $db_list = strval($this->subtask_id);
+        }
+
+        $this->dbQuery(
+            "DELETE FROM assignmnts WHERE student_id=$this->student_id AND subtask_id IN ($db_list) AND year=$this->schoolyear");
+    }
+
+
     function dbReplace()
     {
-        $this->dbQuery(
-            'DELETE FROM assignmnts WHERE ' .
-            'student_id=' . $this->student_id . ' AND ' .
-            'subtask_id=' . $this->subtask_id . ' AND ' .
-            'year=' . $this->schoolyear);
-
+        $this->dbDelete();
         $this->dbQuery(
             "REPLACE assignmnts VALUES ("
             . $this->student_id . ","
@@ -44,6 +59,39 @@ class AssignmentsBean extends DatabaseBean
             . $this->assignment_id . ","
             . $this->file_id . ")"
         );
+    }
+
+    /**
+     * Delete all assignments for the given student and subtask.
+     * In theory, there should be only one valid assigment, but this method deletes all of them in case that
+     * there are some extra pieces that were not detected before.
+     * @param $student_id int Student identifier.
+     * @param $subtask_list array Subtask identifier.
+     */
+    function deleteAssignments($student_id, $subtask_list)
+    {
+        /* Initialise internal variables used by `dbDelete()`. */
+        $this->student_id = $student_id;
+
+        /* Delete the records. */
+        $this->dbDelete($subtask_list);
+    }
+
+    /**
+     * Delete all assignments for the given student and subtask.
+     * In theory, there should be only one valid assigment, but this method deletes all of them in case that
+     * there are some extra pieces that were not detected before.
+     * @param $student_id int Student identifier.
+     * @param $subtask_id int Subtask identifier.
+     */
+    function deleteAssignment($student_id, $subtask_id)
+    {
+        /* Initialise internal variables used by `dbDelete()`. */
+        $this->student_id = $student_id;
+        $this->subtask_id = $subtask_id;
+
+        /* Delete the record. */
+        $this->dbDelete();
     }
 
     function setAssignment($studentId, $subtaskId, $assignmentId, $fileId)

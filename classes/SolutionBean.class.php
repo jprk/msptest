@@ -128,6 +128,7 @@ class SolutionBean extends DatabaseBean
             'WHERE su.lecture_id=' . $lId . ' ' .
             'AND su.type IN (' . $tLst . ') ' .
             'AND pt.year=' . SessionDataBean::getSchoolYear() . ' ' .
+            /* This would limit the list to entries that have been submitted ... 'AND fi.id IS NOT NULL ' . */
             'AND fi.id IS NOT NULL ' .
             'GROUP BY su.id');
 
@@ -331,11 +332,19 @@ class SolutionBean extends DatabaseBean
         {
             /* Get the student group of the student that submitted the file. */
             $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+            /* In the absence of structures, `group_res` is an array of two elements, the first one
+               holding the group data, the second one holding a list of students in the group. */
             $group_res = $sgb->assignGroupAndGroupStudentsOfStudent($studentBean->id);
-            $_SESSION['group_res'] = $group_res;
             /* Assignment file UID block contains group id. */
             $group_data = $group_res[0];
+            if (empty($group_data))
+            {
+                $this->action = 'e_nogroup';
+                return;
+            }
             $file_uid = $group_data['id'];
+            /* Store the group information into the session. */
+            $_SESSION['group_res'] = $group_res;
         }
         else
         {

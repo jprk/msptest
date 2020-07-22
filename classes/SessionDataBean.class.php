@@ -18,6 +18,7 @@ class SessionDataBean
 
     /**
      * Conditionally initialise some parts of session storage.
+     * @param $schoolYearStart
      */
     static function conditionalInit($schoolYearStart)
     {
@@ -196,6 +197,7 @@ class SessionDataBean
 
     /**
      * Set the array with parameters of the currently selected lecture.
+     * @param $lectureBean LectureBean Lecture description and configuration object.
      */
     static function setLecture(&$lectureBean)
     {
@@ -203,7 +205,17 @@ class SessionDataBean
     }
 
     /**
+     * Directly set the array with parameters of the currently selected lecture.
+     * @param array $lectureData Associative array representing the lecture data.
+     */
+    static function setLectureData(&$lectureData)
+    {
+        $_SESSION[self::SDB_LECTURE_DATA] = $lectureData;
+    }
+
+    /**
      * Set or update the user role.
+     * @param $role
      */
     static function setUserRole($role)
     {
@@ -213,6 +225,7 @@ class SessionDataBean
 
     /**
      * Update user data provided by login bean.
+     * @param $loginBean LoginBean
      */
     static function setUserInformation($loginBean)
     {
@@ -232,6 +245,7 @@ class SessionDataBean
 
     /**
      * Set the last visited section identifier.
+     * @param $lastSectionId int
      */
     static function setLastSectionId($lastSectionId)
     {
@@ -242,6 +256,7 @@ class SessionDataBean
      * Set the current school year.
      * The value is the year of the beginning of the current school year,
      * i.e. 2008 for 2008/2009.
+     * @param $schoolYear
      */
     static function setSchoolYear($schoolYear)
     {

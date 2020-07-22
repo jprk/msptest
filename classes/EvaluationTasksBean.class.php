@@ -46,6 +46,12 @@ class EvaluationTasksBean extends DatabaseBean
         $this->relation = $_POST['te_rel'];
     }
 
+
+    /**
+     * Get tasks that are associated with the actual evaluation scheme.
+     * Returns an empty list in case that the evaluation scheme does not exist or is empty.
+     * @return array List of task ids or empty array.
+     */
     function getTaskList()
     {
         $rs = DatabaseBean::dbQuery(
@@ -53,12 +59,9 @@ class EvaluationTasksBean extends DatabaseBean
             . $this->id);
 
         $taskList = array();
-        if (isset ($rs))
+        if (!empty($rs))
         {
-            foreach ($rs as $key => $val)
-            {
-                $taskList[] = $val['task_id'];
-            }
+            $taskList = array_column($rs, 'task_id');
         }
         return $taskList;
     }

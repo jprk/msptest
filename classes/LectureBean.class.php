@@ -21,6 +21,12 @@ class LectureBean extends DatabaseBean
     protected $lecture_manager;
     protected $rootsection;
 
+    /**
+     * Parameters for the given schoolyear.
+     * @type: LectureSchoolyearParams
+     */
+    private $year_params;
+
     function _setDefaults()
     {
         /* Define default values for properties. */

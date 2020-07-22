@@ -38,6 +38,11 @@ class StudentGroupBean extends DatabaseBean
     protected $max_places;
     protected $title;
     protected $forcegroup;
+    protected $group_open_from;
+    protected $group_open_to;
+
+    private $gots_from;
+    private $gots_to;
 
     static function GRPTYPE_LIST()
     {
@@ -53,7 +58,10 @@ class StudentGroupBean extends DatabaseBean
         return $group_types[$group_type];
     }
 
-    function _setDefaults()
+    /**
+     * @throws Exception
+     */
+    private function _setDefaults()
     {
         $this->lecture_id = SessionDataBean::getLectureId();
         $this->schoolyear = SessionDataBean::getSchoolYear();
@@ -75,8 +83,7 @@ class StudentGroupBean extends DatabaseBean
     {
         /* Check that no student groups exist for the given lecture and school year. */
         $rs = $this->dbQuery(
-            "SELECT * FROM studentgroup WHERE object_id=" . $this->lecture_id .
-            " AND year=" . $this->schoolyear);
+            "SELECT * FROM studentgroup WHERE object_id=$this->lecture_id AND year=$this->schoolyear");
         /* If so, return an error. */
         if (!empty($rs))
         {
@@ -163,6 +170,7 @@ class StudentGroupBean extends DatabaseBean
 
     /**
      * Get a list of student groups where a student may still join the group.
+     * @throws Exception
      */
     function getFreeGroupsList()
     {
@@ -189,6 +197,7 @@ class StudentGroupBean extends DatabaseBean
 
     /**
      * Get a list of student groups that are completely empty.
+     * @throws Exception
      */
     function getEmptyGroupsList()
     {
@@ -610,6 +619,21 @@ class StudentGroupBean extends DatabaseBean
     }
 
     /**
+     * Make group deadlines and their parameters available to Smarty.
+     * Publishes `group_open_from`, `group_open_to`, `group_open` and `group_past`.
+     */
+    public function assignGroupDeadlines()
+    {
+        $current_timestamp = time();
+        $group_open = ($current_timestamp >= $this->gots_from && $current_timestamp <= $this->gots_to);
+        $group_past = ($current_timestamp > $this->gots_to);
+        $this->assign('group_open_from', $this->group_open_from);
+        $this->assign('group_open_to', $this->group_open_to);
+        $this->assign('group_open', $group_open);
+        $this->assign('group_past', $group_past);
+    }
+
+    /**
      * Pass information about student's group and group students to Smarty templates.
      * Creates Smarty variables `group_data` and `group_students`.
      * @param $student_id int Identifier of the student.
@@ -649,16 +673,20 @@ class StudentGroupBean extends DatabaseBean
         $free_groups = array_column($free_groups, 'namef', 'id');
         $this->assign('free_group_options', $free_groups);
         $this->dumpVar('free student group options', $free_groups);
-        // TODO: Hack, remove once the deadlines are implemented
-        $this->assign('group_open_to', date('2019-03-15'));
         return $free_groups;
     }
 
     /**
      * Handle `show` event.
+     * @throws Exception
      */
     function doShow()
     {
+        /* Make sure that all necessary template variables are defined. */
+        // $this->assign('group_open_from', null);
+        // $this->assign('group_open_to', null);
+        $this->assign('group_open', null);
+
         $this->assignFullGroupList();
     }
 
@@ -711,6 +739,7 @@ class StudentGroupBean extends DatabaseBean
     /**
      * Handle `edit` events
      * The edit handler is called when a students decides to join a group.
+     * @throws Exception
      */
     function doEdit()
     {

@@ -360,10 +360,12 @@ class FormSolutionsBean extends DatabaseBean
     }
 
     /**
-     * @param $stb SubtaskBean
-     * @param %students Array
+     * Send a confirmaion e-mail to students that their solution has arrived at the server.
+     * @param SubtaskBean $stb
+     * @param array $students
+     * @param bool $group_task
      */
-    function sendConfirmationEmail($stb, $students)
+    function sendConfirmationEmail($stb, $students, $group_task = true)
     {
         /* Send an e-mail to the user saying that the password has been changed. */
 
@@ -377,7 +379,15 @@ class FormSolutionsBean extends DatabaseBean
         $userLogin = SessionDataBean::getUserLogin();
         $userName = SessionDataBean::getUserFullName();
 
-        $message = "Uživatel '" . $userLogin . "' (" . $userName . ") nahrál za vaši skupinu řešení úlohy\r\n";
+        $message = "";
+        if ($group_task)
+        {
+            $message .= "Uživatel '$userLogin' ($userName) nahrál za vaši skupinu řešení úlohy\r\n";
+        }
+        else
+        {
+            $message .= "Do systému bylo právě vloženp řešení úlohy\r\n";
+        }
         $message .= $stb->ttitle . " (" . $stb->title . ")\r\n";
         $message .= "\r\n";
         $message .= "Řešení tímto považujeme za odevzdané.\r\n";
@@ -404,6 +414,7 @@ class FormSolutionsBean extends DatabaseBean
      * Save a set of subtask solutions.
      * This function allows for saving a set of files containing solved
      * problems submitted by a student.
+     * @throws Exception In case that the solution set contains formtats other than PDF or ZIP.
      */
     function saveSolutionSet()
     {
@@ -462,7 +473,7 @@ class FormSolutionsBean extends DatabaseBean
                             $this->saveSolutionPDF($subtaskBean, 'solutions', $assignmentId, $studentBean);
                             break;
                         default:
-                            throw new Exception ('Currently can save only PDF solutions!');
+                            throw new Exception ('Currently can save only PDF and ZIP solution sets!');
                     }
                 }
                 else
@@ -497,6 +508,7 @@ class FormSolutionsBean extends DatabaseBean
         $assignmentsBean = new AssignmentsBean ($this->id, $this->_smarty, "", "");
         /* This will query the assignment for the currently logged in student. */
         $assignmentId = $assignmentsBean->getAssignmentId($studentId, $this->id, $subtaskBean->type);
+        error_log('assignment id ' . $assignmentId);
 
         /* Construct the deadline extenion bean and prepare data for
            querying the extension status. */
@@ -832,7 +844,9 @@ class FormSolutionsBean extends DatabaseBean
                                 @ mkdir(CMSFILES . '/' . $solPath, 0777, TRUE);
                                 copy($fn, CMSFILES . '/' . $solFile);
 
-                                /* Difference between semestral and weekly tasks is
+                                error_log('assignment id after copy: ' . $assignmentId);
+
+                                /* Difference between semestral/lecture and weekly tasks is
                                    in the absence of assignmentId for the former. */
                                 if ($subtaskBean->type == TT_SEMESTRAL)
                                 {
@@ -846,12 +860,16 @@ class FormSolutionsBean extends DatabaseBean
                                         "příklad " . $assignmentId . "(" . $key . "), " .
                                         "student " . $u8name;
                                 }
+                                error_log('student submission ' . $fileDesc);
+
                                 /* Store information about the generated file in
                                    file table. */
                                 $fileId = $fileBean->addFile(
                                     FT_X_SOLUTION, $this->id, $studentId, $solFile,
                                     $nn, $fileDesc
                                 );
+
+                                error_log('file added ' . $fileDesc);
 
                                 /* Update the solution database with this solution.
                                  * Subtask id and part number and assignment id. */
@@ -867,6 +885,8 @@ class FormSolutionsBean extends DatabaseBean
                                 $this->student_id = SessionDataBean::getUserId();
                                 /* And store the data. */
                                 $this->dbReplace();
+
+                                error_log('student submission ' . $assignmentId);
 
                                 /* Slightly different output. */
                                 $this->object = 'formsolution.pdf';

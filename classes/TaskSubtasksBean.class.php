@@ -80,35 +80,39 @@ class TaskSubtasksBean extends DatabaseBean
      * tasks. All subtasks belonging to a certain version of some evaluation
      * scheme have their `year` set to the same year as the relevant evaluation
      * scheme.
+     * @param $task_list array List of integer task ids
+     * @param $evaluation_year int|null Year of the evaluation scheme
+     * @return array A map of subtask_id => task_id pairs.
+     * @throws Exception In case that the map is empty
      */
-    function getSubtaskMapForTaskList($taskList, $evalYear)
+    function getSubtaskMapForTaskList($task_list, $evaluation_year = null)
     {
-        $dbList = arrayToDBString($taskList);
+        /* Default is the current school year. */
+        if (is_null($evaluation_year)) $evaluation_year = $this->schoolyear;
 
-        $this->dumpVar('getSubtaskListForTaskList::subtaskList', $taskList);
-        //$this->dumpVar ( 'getSubtaskListForTaskList::dbList', $dbList );
+        /* Convert the task id list to an SQL list. */
+        $db_list = arrayToDBString($task_list);
 
-        /* @TODO@ This is going to break older schoolyears. */
+        $this->dumpVar('getSubtaskListForTaskList::taskList', $task_list);
+        //$this->dumpVar ( 'getSubtaskListForTaskList::db_list', $db_list );
+
+        /* Get the subtask for an evaluation scheme that is valid in the given schoolyear. */
         $rs = $this->dbQuery(
-            "SELECT subtask_id, task_id FROM tsksub WHERE task_id IN ("
-            . $dbList
-            . ") AND year=" . $evalYear);
+            "SELECT subtask_id, task_id FROM tsksub WHERE task_id IN ($db_list) AND year=$evaluation_year");
 
-        $subtaskMap = array();
-        if (isset ($rs))
+        $subtask_map = array();
+        if (!empty($rs))
         {
-            foreach ($rs as $key => $val)
-            {
-                $subtaskMap[$val['subtask_id']] = $val['task_id'];
-            }
+            $subtask_map = array_column($rs, 'task_id', 'subtask_id');
         }
+        $this->dumpVar('subtask_map', $subtask_map);
 
-        if (empty ($subtaskMap))
+        if (empty($subtask_map))
         {
             throw new Exception ('Lecture evaluation not configured properly: missing subtasks!');
         }
 
-        return $subtaskMap;
+        return $subtask_map;
     }
 
     function getSubtaskTaskMap($taskIdSq, $subtaskList, $nullTaskId, $schoolYear)

@@ -40,7 +40,7 @@ class EvaluationBean extends DatabaseBean
         DatabaseBean::dbQuery(
             "REPLACE evaluation VALUES ("
             . $this->id . ",'"
-            . mysql_escape_string($this->title) . "','"
+            . $this->dbEscape($this->title) . "','"
             . $this->year . "','"
             . $this->lecture_id . "','"
             . $this->do_grades . "','"
@@ -55,7 +55,7 @@ class EvaluationBean extends DatabaseBean
            we can later update this record if needed. */
         if (!$this->id)
         {
-            $this->id = mysql_insert_id();
+            $this->id = $this->_smarty->dbInsertId();
         }
     }
 
@@ -102,12 +102,41 @@ class EvaluationBean extends DatabaseBean
         $this->pts_E = (integer)$_POST['pts_E'];
     }
 
-    /* Returns a list of tasks for the current evaluation scheme. */
+    /**
+     * Find a list of tasks for the current evaluation scheme.
+     */
     function getTaskList()
     {
-        $evaluationTasksBean =
-            new EvaluationTasksBean ($this->id, $this->_smarty, null, null);
-        return $evaluationTasksBean->getTaskList();
+        $etb = new EvaluationTasksBean ($this->id, $this->_smarty, null, null);
+        return $etb->getTaskList();
+    }
+
+    /**
+     * Construct a map of subtask-task pairs for the current evaluation scheme.
+     * @return array Array indexed by subtask_id mapping subtasks to task ids.
+     * @throws Exception In case that there are no subtasks for the task list.
+     */
+    function getSubtaskMap()
+    {
+        /* Fetch the list of valid tasks for this schoolyear. */
+        $task_list = $this->getTaskList();
+
+        /* Get the subtasks related to the tasks from $task_list in this schoolyear. */
+        $tsb = new TaskSubtasksBean (null, $this->_smarty, null, null);
+        $subtask_map = $tsb->getSubtaskMapForTaskList($task_list);
+
+        return $subtask_map;
+    }
+
+    /**
+     * Find a list of subtasks for the current evaluation scheme.
+     * @return array List of valid subtask ids for the current evaluation scheme.
+     * @throws Exception In case that there are no subtasks for the task list.
+     */
+    function getSubtaskList()
+    {
+        $subtask_map = $this->getSubtaskMap();
+        return $subtask_map;
     }
 
     function getEvalYear()

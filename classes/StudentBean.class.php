@@ -295,28 +295,28 @@ class StudentBean extends DatabaseBean
             if (is_null($pw_field_text))
             {
                 /* No password field override specified, we will encode the password given. */
-                $pw_field_text = "MD5('" . mysql_escape_string($this->password) . "')";
+                $pw_field_text = "MD5('" . $this->dbEscape($this->password) . "')";
             }
             else
             {
                 /* We shall put the text specified in $pw_field_test directly into the password field without
                    hashing it. This is used to indicate an invalid or locked password. */
-                $pw_field_text = "'" . mysql_real_escape_string($this->password) . "'";
+                $pw_field_text = "'" . $this->dbEscape($this->password) . "'";
             }
 
             /* Standard replace creates also the hash. */
             DatabaseBean::dbQuery(
                 "REPLACE student VALUES ("
                 . $this->id . ",MD5('"
-                . mysql_real_escape_string($this->hash) . "'),'"
-                . mysql_real_escape_string($this->login) . "',"
+                . $this->dbEscape($this->hash) . "'),'"
+                . $this->dbEscape($this->login) . "',"
                 . $pw_field_text . ",'"
-                . mysql_real_escape_string($this->surname) . "','"
-                . mysql_real_escape_string($this->firstname) . "','"
+                . $this->dbEscape($this->surname) . "','"
+                . $this->dbEscape($this->firstname) . "','"
                 . $this->yearno . "','"
                 . $this->groupno . "','"
                 . $this->calendaryear . "','"
-                . mysql_real_escape_string($this->email) . "','"
+                . $this->dbEscape($this->email) . "','"
                 . $this->coeff . "')"
             );
 
@@ -331,13 +331,13 @@ class StudentBean extends DatabaseBean
                everything else. */
             DatabaseBean::dbQuery(
                 "UPDATE student SET "
-                . "login='" . mysql_real_escape_string($this->login) . "', "
-                . "surname='" . mysql_real_escape_string($this->surname) . "', "
-                . "firstname='" . mysql_real_escape_string($this->firstname) . "', "
+                . "login='" . $this->dbEscape($this->login) . "', "
+                . "surname='" . $this->dbEscape($this->surname) . "', "
+                . "firstname='" . $this->dbEscape($this->firstname) . "', "
                 . "yearno='" . $this->yearno . "', "
                 . "groupno='" . $this->groupno . "', "
                 . "calendaryear='" . $this->calendaryear . "', "
-                . "email='" . mysql_real_escape_string($this->email) . "', "
+                . "email='" . $this->dbEscape($this->email) . "', "
                 . "coeff='" . $this->coeff . "' "
                 . "WHERE id=" . $this->id
             );
@@ -448,7 +448,7 @@ class StudentBean extends DatabaseBean
         /* Standard replace does not replace passwords */
         DatabaseBean::dbQuery(
             "UPDATE student SET "
-            . "password=MD5('" . mysql_real_escape_string($this->password) . "') "
+            . "password=MD5('" . $this->dbEscape($this->password) . "') "
             . "WHERE id='" . $this->id . "'"
         );
     }
@@ -462,8 +462,10 @@ class StudentBean extends DatabaseBean
     {
         /* Escape the login and password characters in an attempt to at least
            partially prevent command injection. */
-        $eLogin = mysql_real_escape_string($login);
-        $ePass = mysql_real_escape_string($password);
+        $eLogin = $this->dbEscape($login);
+        $ePass = $this->dbEscape($password);
+
+        // error_log("login=$eLogin, pass=$ePass");
 
         /* Check if the login can be verified against our own database.
            This is the case of demonstration users and external users that
@@ -481,6 +483,7 @@ class StudentBean extends DatabaseBean
            check. */
         if (empty ($rs) && (LDAPConnection::isActive($this->_smarty)))
         {
+            // error_log('trying LDAP');
             /* Try to contact the LDAP server and verify the user. */
             $rs = DatabaseBean::dbQuery(
                 "SELECT * FROM student WHERE login='" . $eLogin . "'");
@@ -1474,6 +1477,8 @@ class StudentBean extends DatabaseBean
             {
                 $grpb->assignFreeGroupsHtmlOptions();
             }
+            /* Publish the information about deadlines. */
+            $grpb->assignGroupDeadlines();
         }
 
         /* Check the replacement exercises. */

@@ -583,7 +583,7 @@ function schoolYearStart()
 /* Return a boolean identifier of the role. */
 function isRole($roleId)
 {
-    return ((integer)SessionDataBean::getUserRole() == (integer)$roleId) ? TRUE : FALSE;
+    return ((int)SessionDataBean::getUserRole() == (int)$roleId) ? TRUE : FALSE;
 }
 
 /**
@@ -663,6 +663,8 @@ function getDebugBacktraceList($dbgTrace = NULL)
 
 /**
  * Log an error into the webserver error log and send an e-mail.
+ * @param $errorMsgHTML
+ * @param null $stackTrace
  */
 function logSystemError($errorMsgHTML, $stackTrace = NULL)
 {

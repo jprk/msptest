@@ -101,7 +101,9 @@ class LoginBean extends BaseBean
             }
             else
             {
-                /* And pretend she or he has just logged in. The instances of
+                /* Remember the current power user identity ... */
+                SessionDataBean::pushUserToPowerUser();
+                /* ... and pretend that the student has just logged in. The instances of
                    UserBean and StudentBean are passed by reference and therefore
                    both variables have to exist. We know that our user in question
                    is a student, we will therefore set UserBean instance to NULL. */

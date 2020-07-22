@@ -283,4 +283,36 @@ class SessionDataBean
         $_SESSION[self::SDB_FLARUM_SSO] = $flarum;
     }
 
-?>
+    /**
+     * Helper function for remembering the information about a power user in cases when
+     * they are logging in as students.
+     */
+    static function pushUserToPowerUser()
+    {
+        $_SESSION[self::SDB_FROM_POWER_USER] = $_SESSION[self::SDB_USER_DATA];
+    }
+
+    /**
+     * Helper function for returning the control back to power users in cases when
+     * they have been logged in as students.
+     */
+    static function popPowerUserToUser()
+    {
+        $_SESSION[self::SDB_USER_DATA] = $_SESSION[self::SDB_FROM_POWER_USER];
+        unset($_SESSION[self::SDB_FROM_POWER_USER]);
+    }
+
+    /**
+     * Return the login of a power user in case that the user has taken over the identity
+     * of a student. In case that there is no power used info stored, return an empty string.
+     * @return string Power user login or empty string.
+     */
+    static function getPowerUserLogin()
+    {
+        if (isset($_SESSION[self::SDB_FROM_POWER_USER]))
+        {
+            return UserBean::getLogin($_SESSION[self::SDB_FROM_POWER_USER]);
+        }
+        return '';
+    }
+}

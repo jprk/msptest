@@ -561,6 +561,8 @@ if (isLoggedIn())
     $smarty->assign('login', SessionDataBean::getUserLogin());
     $smarty->assign('uid', SessionDataBean::getUserId());
 
+    $smarty->assign('powerlogin', SessionDataBean::getPowerUserLogin());
+
     /* And once again go through user roles. */
     $isAdmin = isRole(USR_ADMIN);
     $isLecturer = isRole(USR_LECTURER);
@@ -578,6 +580,7 @@ if (isLoggedIn())
 else
 {
     $smarty->assign('login', "anonymní");
+    $smarty->assign('powerlogin', '');
 
     /* Reset indicators for just logged-out users */
     $isAdmin = false;

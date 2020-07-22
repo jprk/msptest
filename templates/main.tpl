@@ -40,34 +40,48 @@
 </map>
 <!-- page markup starts here -->
 <table width="900" border="0" cellspacing="0" cellpadding="0">
-  <tr id="pgrow_title">
-    <td class="rightbordersolid">
-    <a href="?act=show,home,{$lecture.id}">{*<img src="ex/{$lecture.id}/title.gif" alt="" width="410" height="40" border="0" align="left">*}<img src="ex/{$lecture.id}/title.gif" alt="{$lecture.code}" border="0" align="left"></a>
-        {if $lecture.id > 0}<img src="ex/{$lecture.id}/login.gif" alt="" width="112" height="40" border="0" align="right" ismap="ismap" usemap="#loginmap" >{/if}
-    </td>
-  </tr>
-  <tr>
-    <td class="backcolor" height="25" align="right"><div style="padding-right:8px" class="user">uživatel: {if $isAdmin == 1 || $isLecturer == 1}<a href="?act=show,user,{$uid}">{$login}</a>{elseif $isStudent == 1}<a href="?act=show,student,{$uid}">{$login}</a>{else}{$login}{/if}</div></td>
-  </tr>
-  <tr id="pgrow_images">
-    <td class="rightbordersolid" style="height: 72px; vertical-align: top;"
-        ><div style="position: relative;"><div style="width: 100%; overflow: hidden; white-space: nowrap; position: absolute;"
-        ><img src="ex/{$lecture.id}/i1.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i2.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i3.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i4.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i5.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i1.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i2.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i3.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i4.gif" width="180" height="72" alt="" border="0"
-        ><img src="ex/{$lecture.id}/i5.gif" width="180" height="72" alt="" border="0"
-        ></div></div></td>
-  </tr>
-{if $global_alert}
-    <tr>
-        <td style="margin: 0px; padding 0px;">{include file=$global_alert}</td>
+    <tr id="pgrow_title">
+        <td class="rightbordersolid">
+            <a href="?act=show,home,{$lecture.id}">{*<img src="ex/{$lecture.id}/title.gif" alt="" width="410" height="40" border="0" align="left">*}
+                <img src="ex/{$lecture.id}/title.gif" alt="{$lecture.code}" border="0" align="left"></a>
+            {if $lecture.id > 0}<img src="ex/{$lecture.id}/login.gif" alt="" width="112" height="40" border="0"
+                                     align="right" ismap="ismap" usemap="#loginmap" >{/if}
+        </td>
     </tr>
+    <tr>
+        <td class="backcolor" height="25" align="right">
+            <div style="padding-right:8px" class="user"
+            >uživatel: {if $isAdmin == 1 || $isLecturer == 1}<a
+                    href="?act=show,user,{$uid}">{$login}</a>{elseif $isStudent == 1}<a
+                    href="?act=show,student,{$uid}">{$login}</a>{else}{$login}{/if}
+                {if $powerlogin}[logoutem zpět na {$powerlogin}] {/if}{if not $isAnonymous and $lecture.show_forum}(zkratka do
+                    <a href="/chat/t/{$lecture.code|lower}">fóra</a>
+                    ){/if}</div>
+        </td>
+    </tr>
+    <tr id="pgrow_images">
+        <td class="rightbordersolid" style="height: 72px; vertical-align: top;"
+        >
+            <div style="position: relative;">
+                <div style="width: 100%; overflow: hidden; white-space: nowrap; position: absolute;"
+                ><img src="ex/{$lecture.id}/i1.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i2.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i3.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i4.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i5.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i1.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i2.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i3.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i4.gif" width="180" height="72" alt="" border="0"
+                    ><img src="ex/{$lecture.id}/i5.gif" width="180" height="72" alt="" border="0"
+                    ></div>
+            </div>
+        </td>
+    </tr>
+    {if $global_alert}
+        <tr>
+            <td style="margin: 0px; padding 0px;">{include file=$global_alert}</td>
+        </tr>
 {/if}
 {if $lecture.alert}
     <tr>

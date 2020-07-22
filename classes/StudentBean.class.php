@@ -896,11 +896,15 @@ class StudentBean extends DatabaseBean
         //$this->dumpVar ( "idList", $idList );
         //$this->dumpVar ( "dbList", $dbList );
 
-        $resultset = DatabaseBean::dbQuery(
+        /* $resultset = DatabaseBean::dbQuery(
             "SELECT id, login, surname, firstname, yearno, groupno FROM student WHERE id IN ("
             . $dbList
-            . ") ORDER BY surname,firstname");
-
+            . ") ORDER BY surname,firstname"); */
+        $resultset = DatabaseBean::dbQuery(
+            "SELECT st.id, st.login, st.surname, st.firstname, st.yearno, st.groupno, sl.grade_confirmed "
+            . "FROM student AS st LEFT JOIN stud_lec AS sl ON "
+            . "st.id=sl.student_id AND sl.lecture_id=$lectureId AND sl.year=$this->schoolyear "
+            . "WHERE st.id IN ($dbList) ORDER BY st.surname, st.firstname");
         $studentList = array();
         $statData = array('negative' => 0, 'exmAvg' => 0, 'average' => 0);
 
@@ -943,6 +947,7 @@ class StudentBean extends DatabaseBean
                 $studentData['yearno'] = $val['yearno'];
                 $studentData['groupno'] = $val['groupno'];
                 $studentData['login'] = $val['login'];
+                $studentData['grade_confirmed'] = $val['grade_confirmed'];
 
                 /* Now add subtask points (array $sPoints) and sum the task points according
                    to task definition (array $xPoints). */
@@ -967,6 +972,9 @@ class StudentBean extends DatabaseBean
                         if (empty ($num)) $num = 0;
                         $sPoints[$sKey] = $num;
 
+                        /* $subtaskMap contains subtask_id as a key and task_id as a value. */
+                        $tskId = $subtaskMap[$subId];
+
                         /* Extract the number of points from the <points><comment> record. */
                         $numPoints = $num['points'];
                         /* It may be something like '-'. */
@@ -977,13 +985,10 @@ class StudentBean extends DatabaseBean
                             $maxPoints = $sVal['maxpts'];
                             if ($maxPoints > 0 && $numPoints > $maxPoints)
                             {
-                                /* Commented ourt by JP 2010-01-17 */
+                                /* Commented out by JP 2010-01-17 */
                                 //$numPoints = $maxPoints;
                             }
                             $this->dumpVar('numpoints (1) is ', $numPoints);
-
-                            /* $subtaskMap contains subtask_id as a key and task_id as a value. */
-                            $tskId = $subtaskMap[$subId];
 
                             /* Comparing 0 == '-' will result in 'equal' as the dash will
                                be converted to integer, the conversion will fail, and the
@@ -1011,7 +1016,31 @@ class StudentBean extends DatabaseBean
                         }
                         else
                         {
-                            $this->dumpVar('num[points] is not numeric', $num);
+                            $this->dumpVar("num[points] for $subId is not numeric", $num);
+                            /* Modification for 11MSP and COVID season. */
+                            $ttitle = $sVal['ttitle'];
+                            if ($lectureId == 1 and $ttitle == 'CZT' and $numPoints == '-')
+                            {
+                                /* Fill in the average */
+                                $points_ctms = $sPoints[0]['points'];
+                                $points_cmdt = $sPoints[1]['points'];
+                                if (is_numeric($points_cmdt) && is_numeric($points_ctms))
+                                {
+                                    $points_czt = ceil(10 * ($points_ctms + $points_cmdt) * 14 / 22) / 10;
+                                    $sPoints[$sKey]['points'] = $points_czt;
+                                    $sPoints[$sKey]['comment'] = 'automatický dopočet';
+                                    if ($xPoints[$tskId] != '-')
+                                    {
+                                        $xPoints[$tskId] += $points_czt;
+                                    }
+                                    else
+                                    {
+                                        $xPoints[$tskId] = 0 + $points_czt;
+                                    }
+                                }
+                                $this->dumpVar("sPoints", $sPoints);
+                            }
+
                         }
                     }
                 }
@@ -1127,22 +1156,32 @@ class StudentBean extends DatabaseBean
 
                 /* Exam points (0-6).
                    @TODO@ This is hardcoded and it is nonsense to do it this way. */
-                if ($lectureId == 1 and $this->schoolyear <= 2009)
+                $exmPoints = 0;
+                if ($lectureId == 1)
                 {
                     /* 11MSP */
-                    $this->dumpVar('tPoints', $tPoints);
-                    if ($this->schoolyear == 2009)
+                    if ($this->schoolyear <= 2009)
                     {
-                        $exmPoints = $tPoints[0] + $tPoints[1] + $tPoints[3];
-                        $exmPoints = $exmPoints - 6;
-                        $exmPoints = ($exmPoints < 0) ? 0 : (($exmPoints > 6) ? 6 : $exmPoints);
+                        /* 11MSP */
+                        $this->dumpVar('tPoints', $tPoints);
+                        if ($this->schoolyear == 2009)
+                        {
+                            $exmPoints = $tPoints[0] + $tPoints[1] + $tPoints[3];
+                            $exmPoints = $exmPoints - 6;
+                            $exmPoints = ($exmPoints < 0) ? 0 : (($exmPoints > 6) ? 6 : $exmPoints);
+                        }
+                        else
+                        {
+                            $exmPoints = $tPoints[1] + $tPoints[3];
+                            $exmPoints = $exmPoints - 6;
+                            $exmPoints = ($exmPoints < 0) ? 0 : (($exmPoints > 6) ? 6 : $exmPoints);
+                            $exmPoints = $exmPoints + $tPoints[0];
+                        }
                     }
-                    else
+                    elseif ($this->schoolyear == 2019)
                     {
-                        $exmPoints = $tPoints[1] + $tPoints[3];
-                        $exmPoints = $exmPoints - 6;
-                        $exmPoints = ($exmPoints < 0) ? 0 : (($exmPoints > 6) ? 6 : $exmPoints);
-                        $exmPoints = $exmPoints + $tPoints[0];
+                        /* COVID-19 modifications */
+
                     }
                 }
                 elseif ($lectureId == 27)

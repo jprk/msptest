@@ -43,7 +43,8 @@ class StudentLectureBean extends DatabaseBean
             "REPLACE stud_lec VALUES ("
             . $student_id . ","
             . $this->id . ","
-            . $this->schoolyear . ")"
+            . $this->schoolyear . ","
+            . "NULL)"
         );
     }
 
@@ -140,6 +141,90 @@ class StudentLectureBean extends DatabaseBean
 
         return (count($rs) > 0);
     }
+
+    /**
+     * @param $grade
+     * @param $student_id
+     * @param $lecture_id
+     * @param $school_year
+     * @throws Exception
+     */
+    function studentAcceptsGrade($grade, $student_id, $lecture_id, $school_year)
+    {
+        if ($this->studentIsListed($student_id, $lecture_id, $school_year))
+        {
+            /* Replace the timestamp of the agreement.
+               TODO: Check that the grade has not been confirmed yet. */
+            DatabaseBean::dbQuery(
+                "UPDATE stud_lec SET grade_confirmed=NOW() " .
+                "WHERE student_id=$student_id AND lecture_id=$lecture_id AND year=$school_year"
+            );
+            $rs = DatabaseBean::dbQuery(
+                "SELECT grade_confirmed FROM stud_lec " .
+                "WHERE student_id=$student_id AND lecture_id=$lecture_id AND year=$school_year"
+            );
+            /* Send confirmation email */
+            $this->sendConfirmationEmail($grade, $rs[0]['grade_confirmed']);
+        }
+        else
+        {
+            $message = "Cannot accept evaluation score: Student with ID $student_id does not study lecture $lecture_id in school year $school_year.";
+            error_log($message);
+            throw new Exception($message, self::E_NOT_STUDYING);
+        }
+    }
+
+    /**
+     * Send a confirmaion e-mail to student that they accepted the grade.
+     * @param $grade
+     * @param $confirmed_timestamp
+     */
+    function sendConfirmationEmail($grade, $confirmed_timestamp)
+    {
+        /* Send an e-mail to the user saying that the password has been changed. */
+
+        $header = "From: " . SENDER_FULL . "\r\n";
+        // $header  .= "To: <" . $this->email . ">\r\n";
+        $header .= "Content-Type: text/plain; charset=\"utf-8\"\r\n";
+        $header .= "Errors-To: " . ADMIN_FULL . "\r\n";
+        $header .= "Reply-To: " . ADMIN_FULL . "\r\n";
+        $header .= "X-Mailer: PHP";
+
+        $userId = SessionDataBean::getUserId();
+        $userLogin = SessionDataBean::getUserLogin();
+        $userName = SessionDataBean::getUserFullName();
+        $lecture_data = SessionDataBean::getLecture();
+
+        $message = "Student $userName ($userLogin, id=$userId) potvrdil přijetí známky $grade\r\n";
+        $message .= "z předmětu " . $lecture_data['title'] . ".\r\n\r\n";
+        $message .= "Časové razítko transakce: ";
+        $message .= $confirmed_timestamp;
+        $message .= "\r\n";
+
+        $message_title = '[' . $lecture_data['code'] . '] Student `' . $userLogin . '` přijal známku ' . $grade;
+        $subject = "=?utf-8?B?" . base64_encode($message_title) . "?=";
+
+        /* Now send the notification to the student ... */
+        if (SEND_MAIL)
+        {
+            /* Mail the student */
+            mail(SessionDataBean::getUserEmail(), $subject, $message, $header);
+
+            /* Mail the lecturers. */
+            $llb = new LectureLecturerBean(null, $this->_smarty, null, null);
+            $lecturers = $llb->getLecturersForLecture();
+            error_log('lecturers: ' . print_r($lecturers, true));
+            foreach ($lecturers as $key => $val)
+            {
+                error_log('lecturer email: ' . $val['email']);
+                mail($val['email'], $subject, $message, $header);
+            }
+        }
+
+        /* ... and send a copy to the administrator. */
+        mail(ADMIN_EMAIL, $subject, $message, $header);
+    }
+
 
     /**
      * Prepare the list of students and their points for the lecture.

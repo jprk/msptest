@@ -65,6 +65,12 @@ class UserBean extends DatabaseBean
         return $rsData['login'];
     }
 
+    /** Getter method for email data stored within session. */
+    static function getEmail(&$rsData)
+    {
+        return $rsData['email'];
+    }
+
     /** Getter method for full user name stored after login within ther session. */
     static function getFullName(&$rsData)
     {

@@ -155,6 +155,14 @@ class SessionDataBean
     }
 
     /**
+     * Return the user's email address.
+     */
+    static function getUserEmail()
+    {
+        return UserBean::getEmail($_SESSION[self::SDB_USER_DATA]);
+    }
+
+    /**
      * Get the last visited section identifier.
      */
     static function getLastSectionId()

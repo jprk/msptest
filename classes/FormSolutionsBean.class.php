@@ -472,6 +472,10 @@ class FormSolutionsBean extends DatabaseBean
                         case TaskBean::TT_WEEKLY_PDF:
                             $this->saveSolutionPDF($subtaskBean, 'solutions', $assignmentId, $studentBean);
                             break;
+                        case TaskBean::TT_LECTURE_ZIP:
+                        case TaskBean::TT_WEEKLY_ZIP:
+                            $this->saveSolutionZIP($subtaskBean, 'solutions', $assignmentId, $studentBean);
+                            break;
                         default:
                             throw new Exception ('Currently can save only PDF and ZIP solution sets!');
                     }
@@ -803,6 +807,7 @@ class FormSolutionsBean extends DatabaseBean
                     break;
 
                 case TaskBean::TT_WEEKLY_ZIP:
+                case TaskBean::TT_LECTURE_ZIP:
                 case TaskBean::TT_SEMESTRAL_ZIP:
                     /* Construct the file bean that implements also all operations on assigment files. */
                     $fileBean = new FileBean(0, $this->_smarty, null, null);
@@ -835,6 +840,36 @@ class FormSolutionsBean extends DatabaseBean
                             $nn = $val;
                             if (is_uploaded_file($fn))
                             {
+                                /* Verify the format using `ZipArchove` class. */
+                                $do_check_zip = False;
+                                if ($do_check_zip)
+                                {
+                                    $zip = new ZipArchive();
+                                    $res = $zip->open($fn, ZipArchive::CHECKCONS);
+                                    $errormsg = null;
+                                    if ($res !== true)
+                                    {
+                                        switch ($res)
+                                        {
+                                            case ZipArchive::ER_NOZIP:
+                                                $errormsg = 'not a zip archive';
+                                                break;
+                                            case ZipArchive::ER_INCONS :
+                                                $errormsg = 'consistency check failed';
+                                                break;
+                                            case ZipArchive::ER_CRC :
+                                                $errormsg = 'checksum failed';
+                                                break;
+                                            default:
+                                                $errormsg = "ZIP error $res";
+                                        }
+                                        /* The command did not succeed. */
+                                        $this->action = 'e_nozip';
+                                        $this->assign('errormsg', $errormsg);
+                                        return;
+                                    }
+                                }
+
                                 /* Upload ok, copy it. */
                                 $solPath = 'solutions/' . strtolower($sCode) . '/' . $this->schoolyear . '/';
                                 $solName = $login . '_' . $this->id . $key . '.zip';
@@ -848,9 +883,15 @@ class FormSolutionsBean extends DatabaseBean
 
                                 /* Difference between semestral/lecture and weekly tasks is
                                    in the absence of assignmentId for the former. */
-                                if ($subtaskBean->type == TT_SEMESTRAL)
+                                if ($subtaskBean->type == TaskBean::TT_SEMESTRAL_ZIP)
                                 {
                                     $fileDesc = "Řešení semestrální úlohy " .
+                                        $sCode . ", student " . $u8name;
+                                    $assignmentId = 0;
+                                }
+                                elseif ($subtaskBean->type == TaskBean::TT_LECTURE_ZIP)
+                                {
+                                    $fileDesc = "Řešení hromadně zadané úlohy " .
                                         $sCode . ", student " . $u8name;
                                     $assignmentId = 0;
                                 }
@@ -880,7 +921,7 @@ class FormSolutionsBean extends DatabaseBean
                                 $this->e = 0;
                                 $this->f = 0;
                                 $this->subtask_id = $this->id;
-                                $this->assignmnt_id = $assignmentId;
+                                $this->assignment_id = $assignmentId;
                                 $this->part = $key;
                                 $this->student_id = SessionDataBean::getUserId();
                                 /* And store the data. */
@@ -889,7 +930,7 @@ class FormSolutionsBean extends DatabaseBean
                                 error_log('student submission ' . $assignmentId);
 
                                 /* Slightly different output. */
-                                $this->object = 'formsolution.pdf';
+                                $this->object = 'formsolution.zip';
                             }
                             else
                             {

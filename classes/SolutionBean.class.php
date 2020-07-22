@@ -98,7 +98,7 @@ class SolutionBean extends DatabaseBean
     {
         /* List all subtasks of the current lecture that are candidates for
            manual evaluation (that is, they are of type TT_WEEKLY_SIMU,
-           TT_WEEKLY_PDF, TT_LECTURE_PDF, TT_WEEKLY_ZIP or TT_SEMESTRAL or TT_SEMESTRAL_IND ) and
+           TT_WEEKLY_PDF, TT_LECTURE_PDF, TT_LECTURE_ZIP, TT_WEEKLY_ZIP or TT_SEMESTRAL or TT_SEMESTRAL_IND ) and
            count the number of submitted solutions and the number of solutions
            that have been already evaluated.
            @TODO@ The list of subtask is probably a subset of the one that is
@@ -109,6 +109,7 @@ class SolutionBean extends DatabaseBean
             TaskBean::TT_WEEKLY_PDF,
             TaskBean::TT_WEEKLY_ZIP,
             TaskBean::TT_LECTURE_PDF,
+            TaskBean::TT_LECTURE_ZIP,
             TaskBean::TT_SEMESTRAL_ZIP,
             TaskBean::TT_SEMESTRAL_INDIV_PDF);
         $tLst = arrayToDBString($ta);

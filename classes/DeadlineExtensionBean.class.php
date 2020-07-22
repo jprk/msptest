@@ -197,6 +197,7 @@ class DeadlineExtensionBean extends DatabaseBean
             TaskBean::TT_WEEKLY_PDF,
             TaskBean::TT_WEEKLY_TF,
             TaskBean::TT_LECTURE_PDF,
+            TaskBean::TT_LECTURE_ZIP,
             TaskBean::TT_SEMESTRAL_ZIP));
         self::dumpVar('subtaskList', $subtaskList);
         $subtaskIds = array2ToDBString($subtaskList, 'id');

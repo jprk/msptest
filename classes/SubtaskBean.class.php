@@ -188,6 +188,7 @@ class SubtaskBean extends DatabaseBean
         switch ($sType)
         {
             case TaskBean::TT_LECTURE_PDF:
+            case TaskBean::TT_LECTURE_ZIP:
             case TaskBean::TT_SEMESTRAL_ZIP:
                 return true;
         }
@@ -230,6 +231,7 @@ class SubtaskBean extends DatabaseBean
             TaskBean::TT_WEEKLY_ZIP . "," .
             TaskBean::TT_WEEKLY_PDF . "," .
             TaskBean::TT_LECTURE_PDF . "," .
+            TaskBean::TT_LECTURE_ZIP . "," .
             TaskBean::TT_SEMESTRAL_ZIP . "," .
             TaskBean::TT_SEMESTRAL_INDIV_PDF . ") " .
             "AND lecture_id=" . $lectureId . " " .
@@ -299,6 +301,7 @@ class SubtaskBean extends DatabaseBean
                     $type != TaskBean::TT_WEEKLY_PDF &&
                     $type != TaskBean::TT_WEEKLY_TF &&
                     $type != TaskBean::TT_LECTURE_PDF &&
+                    $type != TaskBean::TT_LECTURE_ZIP &&
                     $type != TaskBean::TT_SEMESTRAL_ZIP &&
                     $type != TaskBean::TT_SEMESTRAL_INDIV_PDF
                 )
@@ -385,6 +388,10 @@ class SubtaskBean extends DatabaseBean
             else if ($this->type == TaskBean::TT_WEEKLY_ZIP || $this->type == TaskBean::TT_SEMESTRAL_ZIP)
             {
                 $this->rs['iszipassignment'] = true;
+            }
+            else if ($this->type == TaskBean::TT_LECTURE_ZIP)
+            {
+                $this->rs['islzipassignment'] = true;
             }
 
             //$this->dumpVar ( 'rs1', $this->rs );

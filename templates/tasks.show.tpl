@@ -8,16 +8,18 @@
 <th>{czech}Aktivní?{/czech}{english}Active?{/english}</th>
 </tr>
 {section name=aId loop=$studentSubtaskList}
-{if $smarty.section.aId.iteration is even}
-<tr class="rowA">
-{else}
-<tr class="rowB">
-{/if}
-<td>&nbsp;{$studentSubtaskList[aId].title}</td>
-<td class="date" style="width: 18ex;">{$studentSubtaskList[aId].datefrom|date_format:"%d.%m.%Y %H:%M"}</td>
-<td class="date" style="width: 18ex;">{$studentSubtaskList[aId].dateto|date_format:"%d.%m.%Y %H:%M"}</td>
-<td class="center">{if $studentSubtaskList[aId].active}{czech}aktivní{/czech}{english}active{/english}{else}{czech}neaktivní{/czech}{english}inactive{/english}{/if}</td>
-</tr>
+    {if $smarty.section.aId.iteration is even}
+        <tr class="rowA">
+            {else}
+        <tr class="rowB">
+    {/if}
+    <td>&nbsp;{$studentSubtaskList[aId].title}</td>
+    <td class="date"
+        style="width: 18ex;">{if isset($studentSubtaskList[aId].datefrom)}{$studentSubtaskList[aId].datefrom|date_format:"%d.%m.%Y %H:%M"}{else}nezadáno{/if}</td>
+    <td class="date"
+        style="width: 18ex;">{if isset($studentSubtaskList[aId].dateto)}{$studentSubtaskList[aId].dateto|date_format:"%d.%m.%Y %H:%M"}{else}nezadáno{/if}</td>
+    <td class="center">{if $studentSubtaskList[aId].active}{czech}aktivní{/czech}{english}active{/english}{else}{czech}neaktivní{/czech}{english}inactive{/english}{/if}</td>
+    </tr>
 {/section}
 </table>
 {if $sectionFileList}

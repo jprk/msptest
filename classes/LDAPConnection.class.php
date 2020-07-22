@@ -20,9 +20,13 @@ class LDAPConnection
     private $ldap;
     private $debug;
 
+    /**
+     * @param $smarty CPPSmarty
+     * @return mixed
+     */
     static function isActive(&$smarty)
     {
-        return $smarty->_config['ldap_active'];
+        return $smarty->getConfig('ldap_active');
     }
 
     /**
@@ -34,8 +38,8 @@ class LDAPConnection
     function __construct(&$smarty)
     {
         /* Initialise configuration parameters from Smarty config. */
-        $this->serverURL = $smarty->_config['ldap_server_url'];
-        $this->basedn = $smarty->_config['ldap_basedn'];
+        $this->serverURL = $smarty->getConfig('ldap_server_url');
+        $this->basedn = $smarty->getConfig('ldap_basedn');
         $this->debug = $smarty->debug;
 
         /* Initialise LDAP connection for LDAP search of usernames and e-mails. */
@@ -49,6 +53,8 @@ class LDAPConnection
                 $this->serverURL
             );
         }
+
+        error_log('connected to LDAP ' . $this->serverURL);
 
         /* Default protocol version is 2. */
         ldap_set_option($this->ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
@@ -102,7 +108,12 @@ class LDAPConnection
             if (FALSE !== strstr($value, '='))
             {
                 list($prefix, $data) = explode("=", $value);
-                $data = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $data);
+                // does not work in PHP 7
+                // $data = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $data);
+                $data = preg_replace_callback("/\\\([0-9A-Fa-f]{2})/",
+                    function ($match) {
+                        chr(hexdec($match));
+                    }, $data);
                 if (isset($current_prefix) && $prefix == $current_prefix)
                 {
                     $out[$prefix][] = $data;
@@ -169,6 +180,9 @@ class LDAPConnection
     {
         @$ldapbind = ldap_bind($this->ldap, $userDN, $password);
         $ldapstr = var_export($ldapbind, true);
+
+        error_log('$ldapbind=' . $ldapstr);
+
         if ($this->debug)
         {
             echo "<!-- binding with `$userDN` and password `$password` -->";

@@ -1,35 +1,42 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<!-- (c) 2004,2007,2008 jprk -->
+{* quirks mode: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"> *}
+{* <!DOCTYPE html> *}
+<!DOCTYPE html>
+<!-- (c) 2004 CTU Faculty of Transportation Sciences,
+     (c) 2007-2020 jprk -->
 <html>
 <head>
-<title> {$lecture.code} / {include file=$maincolumntitle}</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<!-- feed search engines with reasonable data -->
-<meta name="keywords" lang="cs" content="systémy, procesy, matematické modelování">
-<meta name="keywords" lang="en" content="systems, processes, mathematical modelling">
-<meta name="description" lang="cs" content="Modelování systémů a procesů">
-<meta name="description" lang="en" content="Systems and processes">
-<!-- styles for the application -->
-<link href="style.css" rel="stylesheet" title="formal" type="text/css">
-<link href="ex/{$lecture.id}/metadata.css" rel="stylesheet" title="formal" type="text/css">
-<link href="stylist.css" rel="stylesheet" title="formal" type="text/css">
-<!-- overlay window -->
-<link rel="stylesheet" href="css/lightwindow.css" type="text/css" media="screen">
-<script type="text/javascript" language="JavaScript1.2">
-<!--
-/* Global onload list */
-var ON_LOAD = [];
--->
-</script>
-{include file=$htmlareaheader}
-{include file=$calendarheader}
+    <title> {$lecture.code} / {include file=$maincolumntitle}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!-- feed search engines with reasonable data -->
+    <meta name="keywords" lang="cs" content="systémy, procesy, matematické modelování">
+    <meta name="keywords" lang="en" content="systems, processes, mathematical modelling">
+    <meta name="description" lang="cs" content="Modelování systémů a procesů">
+    <meta name="description" lang="en" content="Systems and processes">
+    <!-- styles for the application -->
+    <link href="style.css" rel="stylesheet" title="formal" type="text/css">
+    <link href="ex/{$lecture.id}/metadata.css" rel="stylesheet" title="formal" type="text/css">
+    <link href="stylist.css" rel="stylesheet" title="formal" type="text/css">
+    <!-- overlay window -->
+    <link rel="stylesheet" href="css/lightwindow.css" type="text/css" media="screen">
+    {* Font Awesome icons *}
+    <script src="https://kit.fontawesome.com/14a0202baf.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" language="JavaScript1.2">
+        <!--
+        /* Global onload list */
+        var ON_LOAD = [];
+        -->
+    </script>
+    {include file=$htmlareaheader}
+    {include file=$calendarheader}
 </head>
 <body>
 <!-- body leftmargin="0" topmargin="0" rightmargin="0" bottommargin="0" marginwidth="0" marginheight="0" -->
 <!-- map for the login image -->
 <map id="loginmap" name="loginmap">
-    <area shape="rect" coords="29,16,57,30"  href="http://{$HOST_NAME}{$SCRIPT_NAME}?act=show,login,42"    alt="přihlášení" title="Přihlášení uživatele">
-    <area shape="rect" coords="70,16,102,30" href="http://{$HOST_NAME}{$SCRIPT_NAME}?act=delete,login,42"  alt="odhlášení"  title="Odhlášení uživatele">
+    <area shape="rect" coords="29,16,57,30" href="//{$HOST_NAME}{$SCRIPT_NAME}?act=show,login,42" alt="přihlášení"
+          title="Přihlášení uživatele">
+    <area shape="rect" coords="70,16,102,30" href="//{$HOST_NAME}{$SCRIPT_NAME}?act=delete,login,42" alt="odhlášení"
+          title="Odhlášení uživatele">
 </map>
 <!-- page markup starts here -->
 <table width="900" border="0" cellspacing="0" cellpadding="0">
@@ -117,9 +124,9 @@ var ON_LOAD = [];
           <div class="backcolor" style="padding: 4px 10px; color: white;">
           <p style="margin: 0px;"><small>
           {czech}Školní rok:{/czech}{english}Schoolyear:{/english} {$schoolyear}.
-{if $section.lastmodified}
-          {czech}Poslední změna obsahu:{/czech}{english}Last modified:{/english} {$section.lastmodified|date_format:"%d.%m.%Y %H:%M:%S"}.
-{/if}
+                  {if isset($section) and $section.lastmodified}
+                      {czech}Poslední změna obsahu:{/czech}{english}Last modified:{/english} {$section.lastmodified|date_format:"%d.%m.%Y %H:%M:%S"}.
+                  {/if}
           Vzniklo díky podpoře grantu FRVŠ 1344/2007{$lecture.thanks}.</small></p>
           </div>
         </td>

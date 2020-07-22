@@ -247,6 +247,12 @@ class AssignmentsBean extends DatabaseBean
                     $subtaskList[$key]['haveSolution'] =
                         $fsBean->haveSolution($subtaskId, $students, $assignmntId);
                 }
+                else
+                {
+                    /* But make sure that the entry exists, otherwise the templating engine will complain
+                       about undefined index ... */
+                    $subtaskList[$key]['haveSolution'] = null;
+                }
             }
         }
 

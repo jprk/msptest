@@ -31,9 +31,11 @@
             </td>
         </tr>
         <tr class="rowA">
-            <td class="itemtitle">Max studentů ve skupině</td>
-            <td><input type="text" name="group_limit" maxlength="1" size="1" value="{$lectureInfo.group_limit}">
-                (0 pokud každý student jede na sebe)</td>
+            <td class="itemtitle"><label for="in_maxstudents">Max studentů ve skupině</label></td>
+            <td><input id="in_maxstudents" type="text" name="group_limit" maxlength="1" size="1"
+                       value="{$lectureInfo.group_limit}">
+                (0 pokud každý student jede na sebe)
+            </td>
         </tr>
         <tr class="rowB">
             <td class="itemtitle">Typ studentských skupin</td>
@@ -54,11 +56,11 @@
                 </textarea>
             </td>
         </tr>
-        <tr class="rowB">
+        <tr class="rowA">
             <td class="itemtitle">Poděkování</td>
             <td><input type="text" name="thanks" maxlength="255" size="50" value="{$lectureInfo.thanks}"></td>
         </tr>
-        <tr class="rowA">
+        <tr class="rowB">
             <td class="itemtitle">Varování</td>
             <td><input type="text" name="alert" maxlength="255" size="50" value="{$lectureInfo.alert}"></td>
         </tr>

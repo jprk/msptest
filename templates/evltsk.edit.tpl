@@ -10,16 +10,17 @@
 {if $smarty.section.eId.iteration is even}
 <tr class="rowA">
 {else}
-<tr class="rowB">
+  <tr class="rowB">
 {/if}
-<td>{$evaluationList[eId].title}</td>
-{section name=tId loop=$taskList}
-<td class="center"><input type="checkbox" name="te_rel[{$evaluationList[eId].id}][]" value="{$taskList[tId].id}"{$evaluationList[eId].checked[tId]}}></td>
+  <td>{$evaluationList[eId].title}</td>
+  {section name=tId loop=$taskList}
+    <td class="center"><input type="checkbox" name="te_rel[{$evaluationList[eId].id}][]" value="{$taskList[tId].id}"
+                              {$evaluationList[eId].checked[tId]}}></td>
+  {/section}
+  </tr>
 {/section}
-</tr>
-{/section}
-<tr class="submitrow">
-  <td colspan="{$smarty.section.tId.max+1}" class="center"><input type="submit" value="Uložit"></td>
-</tr>
+  <tr class="submitrow">
+    <td colspan="{$smarty.section.tId.loop+1}" class="center"><input type="submit" value="Uložit"></td>
+  </tr>
 </table>
 </form>

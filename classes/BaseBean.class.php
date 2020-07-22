@@ -32,6 +32,12 @@ class BaseBean
     /* -------------------------------------------------------------------
 	   CONSTRUCTOR
 	   ------------------------------------------------------------------- */
+    /**
+     * BaseBean constructor.
+     * @param $smarty CPPSmarty
+     * @param $action string
+     * @param $object string
+     */
     function __construct(&$smarty, $action, $object)
     {
         $this->action = $action;
@@ -213,7 +219,7 @@ class BaseBean
            after we have written the data into the database. */
         if ((integer)($this->id) == 0)
         {
-            $this->id = $this->rs['id'] = mysql_insert_id();
+            $this->id = $this->rs['id'] = $this->_smarty->dbInsertId();
         }
     }
 

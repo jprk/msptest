@@ -22,23 +22,26 @@ V položce "<strong>Učí</strong>" zaškrtněte učitele, kteří učí předm�
         <th style="text-align: left;">E-mail</th>
         <th>&nbsp;</th>
     </tr>
-{section name=aId loop=$lecturerList}
-    {if $smarty.section.aId.iteration is even}
+{foreach $lecturerList as $lctr}
+    {if $lctr@iteration is even}
         <tr class="rowA">
             {else}
-    <tr class="rowB">
+        <tr class="rowB">
     {/if}
-    <td style="text-align: center;"><input type="checkbox" class="lectactive" name="lecturer_states[{$lecturerList[aId].id}]" {$lecturerList[aId].checked}></td>
-    <td>{$lecturerList[aId].firstname} {$lecturerList[aId].surname}</td>
-    <td>{$lecturerList[aId].room}</td>
-    <td>{$lecturerList[aId].email}</td>
+    <td style="text-align: center;"><input type="checkbox" class="lectactive"
+                                           name="lecturer_states[{$lctr.id}]" {if isset($lctr.checked)}{$lctr.checked}{/if}>
+    </td>
+    <td>{$lctr.firstname} {$lctr.surname}</td>
+    <td>{$lctr.room}</td>
+    <td>{$lctr.email}</td>
     <td width="32" class="smaller" valign="middle"
-            ><a href="?act=edit,lecturer,{$lecturerList[aId].id}"><img src="images/famfamfam/application_edit.png" title="změnit" alt="[edit]"
-                                                                       width="16" height="16"></a
-            ><a href="?act=delete,lecturer,{$lecturerList[aId].id}"><img src="images/famfamfam/application_delete.png" title="smazat"
-                                                                         alt="[smazat]" width="16" height="16"></a></td>
-</tr>
-{/section}
+    ><a href="?act=edit,lecturer,{$lctr.id}"><img src="images/famfamfam/application_edit.png" title="změnit"
+                                                  alt="[edit]"
+                                                  width="16" height="16"></a
+        ><a href="?act=delete,lecturer,{$lctr.id}"><img src="images/famfamfam/application_delete.png" title="smazat"
+                                                        alt="[smazat]" width="16" height="16"></a></td>
+    </tr>
+{/foreach}
 </table>
 </p>
 <script src="js/jquery.js"></script>

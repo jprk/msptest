@@ -1040,14 +1040,22 @@ class StudentBean extends DatabaseBean
                         /* Fetch the previously accumulated points for this task. */
                         $gotPoints = $xPoints[$tskId];
                         /* $gotPoints is a number or '-'. Assure $numPoints will be a number. */
-                        $numPoints = 0 + $gotPoints;
+                        if (!is_numeric($gotPoints))
+                        {
+                            /* Not a number, probably '-' or 'c' or whatever. */
+                            $numPoints = 0.0;
+                        }
+                        else
+                        {
+                            $numPoints = floatval($gotPoints);
+                        }
                         /* Positive evaluation of this task means that either this task is
                            always positive ('minpts' is zero) or if this task has at least
                            'minpts' achieved. */
                         $minPts = $sVal['minpts'];
                         if ($minPts > 0)
                         {
-                            $positive = (boolean)($gotPoints >= $minPts);
+                            $positive = (boolean)($numPoints >= $minPts);
                         }
                         else
                         {
@@ -1103,7 +1111,7 @@ class StudentBean extends DatabaseBean
                            task adds to the total. */
                         if ($tskType != TaskBean::TT_NO_TOTAL_POINTS)
                         {
-                            $sumPoints += $gotPoints;
+                            $sumPoints += $numPoints;
                         }
                     }
                 }

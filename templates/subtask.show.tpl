@@ -73,31 +73,48 @@ jej prosím na náš server pomocí formuláře pod tímto textem.
 <p>
 V opačném prípadě prosím postupujte následujícím způsobem: *}
 <p>
-Postupujte prosím následujícím způsobem:
-<ol>
-	<li>Podle pokynů uvedených výše připravte ZIP archív se všemi soubory své
-	    práce. Soubory je třeba správným způsobem pojmenovat, archív také,
-	    vše by mělo být uvedeno výše.
-	<li>Tento archív nesmí být větší, než 8MB. Pokud tomu tak je, patrně
-	    jse přibalili zcela nepotřebný balast (protokoly kompilátoru,
-		spustitelné soubory a podobně). 
-	<li>Tento archív nahrajte pomocí formuláře pod tímto textem.
-	<li>Po úspěšném vložení vašich výsledků do databáze se tato úloha zobrazí
-	    na Vaší domovské stránce jako odevzdaná.
-</ol>
-<p>
-Odpovídat můžete pouze jednou. Úlohy se opravují ručně, opravu typicky
-nezvládáme v čase kratším, než jeden týden.
-</p>
-<form name="solutionform" action="?act=save,formsolution,{$subtask.id}" method="post" enctype="multipart/form-data">
-<input type="hidden" name="MAX_FILE_SIZE" value="16000000">
-<table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
-<tr class="rowA">
-  <td class="itemtitle" style="width: 1%; white-space: nowrap;">Soubor s řešením:</td>
-  <td style="width: auto;"><input type="file" name="zip[1]" style="width: 100%; background-color: white; padding-left: 0px;"><br></td>
-</tr>
-<tr class="rowB">
-  <td>&nbsp;</td>
+{czech}Postupujte prosím následujícím způsobem:
+    <ol>
+        <li>Podle pokynů uvedených výše připravte ZIP, RAR, či 7Z archív se všemi soubory své
+            práce. Soubory je třeba správným způsobem pojmenovat, archív také,
+            vše by mělo být uvedeno výše.
+        <li>Tento archív nesmí být větší, než 8MB. Pokud tomu tak je, patrně
+            jste přibalili zcela nepotřebný balast (protokoly kompilátoru,
+            spustitelné soubory, fotografie z dovolené a podobně).
+        <li>Tento archív nahrajte pomocí formuláře pod tímto textem.
+        <li>Po úspěšném vložení vašich výsledků do databáze se tato úloha zobrazí
+            na Vaší domovské stránce jako odevzdaná.
+    </ol>
+    <p>
+    Odpovídat můžete pouze jednou. Úlohy se opravují ručně, opravu typicky
+    nezvládáme v čase kratším, než jeden týden.{/czech}
+    {english}Please follow these steps:
+    <ol>
+        <li>Follow the instructions above (if any) to prepare a ZIP archive with all
+            your work files. The files must be named correctly, the archive also,
+            everything should be documented above.
+        <li>The archive cannot be larger than 8MB. If this is the case, you may have
+            included a completely unnecessary ballast (compiler logs, executables,
+            and so on).
+        <li>Upload this archive using the form below.
+        <li>After successful upload of your results to the database, the task will appear
+            on as "turned in" on your dashboard.
+    </ol>
+    <p>
+    You can only respond once. Tasks are corrected manually, typically we cannot handle the
+    review in less than a week.{/english}
+    </p>
+    <form name="solutionform" action="?act=save,formsolution,{$subtask.id}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="MAX_FILE_SIZE" value="16000000">
+        <table class="admintable table-override" border="0" cellpadding="2" cellspacing="1">
+            <tr class="rowA">
+                <td class="itemtitle" style="width: 1%; white-space: nowrap;">Soubor s řešením:</td>
+                <td style="width: auto;"><input type="file" name="zip[1]"
+                                                style="width: 100%; background-color: white; padding-left: 0px;"><br>
+                </td>
+            </tr>
+            <tr class="rowB">
+                <td>&nbsp;</td>
   <td>
     <input type="submit" value="Odeslat řešení">
     <input type="reset"  value="Vymazat">

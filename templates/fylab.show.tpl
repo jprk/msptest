@@ -25,7 +25,7 @@
                     <td>
                         <p class="atitle"
                         ><a href="ctrl.php?act=show,file,{$sectionFileList[filePos].id}"
-                            >{$sectionFileList[filePos].origfname}</a>{if $adminMode}&nbsp;<a href="ctrl.php?act=edit,file,{$sectionFileList[filePos].id}"
+                            >{$sectionFileList[filePos].origfname}</a>{if $isAdmin || $isLecturer}&nbsp;<a href="ctrl.php?act=edit,file,{$sectionFileList[filePos].id}"
                             ><img style="float: none;" src="images/edit.gif" alt="[edit]" width="16" height="16" align="texttop"  ></a>{/if}</p>
                         <p class="aabstract">{$sectionFileList[filePos].description}
                     </td>
@@ -57,20 +57,25 @@
         {include file="admin.art.hea.tpl"}
         {* Description of the photograph *}
         {$articleList[articlePos].text}
-        {if $adminMode}
+        {if $isAdmin || $isLecturer}
             <div class="file">
             <table>
             {section name=filePos loop=$articleList[articlePos].articleFileList}
                 <tr>
-                    <td valign="top"><img src="images/{$articleList[articlePos].articleFileList[filePos].icon}.gif" width="16" height="16" title="{$articleList[articlePos].articleFileList[filePos].icon}" alt="[{$articleList[articlePos].articleFileList[filePos].icon} file]"></td>
+                    <td valign="top"><img src="images/{$articleList[articlePos].articleFileList[filePos].icon}.gif"
+                                          width="16" height="16"
+                                          title="{$articleList[articlePos].articleFileList[filePos].icon}"
+                                          alt="[{$articleList[articlePos].articleFileList[filePos].icon} file]"></td>
                     <td>
                 <p class="atitle"
                 ><a href="?act=show,file,{$articleList[articlePos].articleFileList[filePos].id}"
                     >{$articleList[articlePos].articleFileList[filePos].origfname|escape:"html"}</a
-                    >{if $adminMode}&nbsp;<a href="?act=edit,file,{$articleList[articlePos].articleFileList[filePos].id}&returntoparent=1"
+                    >{if $isAdmin || $isLecturer}&nbsp;<a
+                        href="?act=edit,file,{$articleList[articlePos].articleFileList[filePos].id}&returntoparent=1"
                 ><img style="float: none;" src="images/edit.gif" alt="[edit]" width="16" height="16" align="texttop"></a
                 ><a href="?act=delete,file,{$articleList[articlePos].articleFileList[filePos].id}&returntoparent=1"
-                    ><img style="float: none;" src="images/delete.gif" alt="[smazat]" width="16" height="16" align="texttop"></a
+                    ><img style="float: none;" src="images/delete.gif" alt="[smazat]" width="16" height="16"
+                          align="texttop"></a
                     >{/if}</p>
                 <p class="aabstract">{$articleList[articlePos].articleFileList[filePos].description}</p>
                 </td>

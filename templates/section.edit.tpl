@@ -148,7 +148,7 @@ ON_LOAD[ON_LOAD.length] = initSelection;
 </select>
 <input  id="in_row_p2" name="objid_p" style="width: 100%; display: none;" onchange="setIval1From(this);" value="{$section.ival1}">
 <select id="in_row_a2" name="objid_a" style="width: 100%; display: none;" onchange="setIval1From(this);">
-{html_options options=$personcats selected=$section.ival1}
+{* no personcats available ... html_options options=$personcats selected=$section.ival1 *}
 </select>
 <select id="in_row_l2" name="objid_l" style="width: 100%; display: none;" onchange="setIval1From(this);">
 {html_options options=$lectureSelect selected=$section.ival1}
@@ -172,9 +172,11 @@ ON_LOAD[ON_LOAD.length] = initSelection;
 </tr>
 </table>
 </form>
+{*
+TODO: Need to get rid of document.write() ...
 <p><small>
 <script language="javascript">
   document.write(document.compatMode);
 </script>
 </small></p>
-
+*}

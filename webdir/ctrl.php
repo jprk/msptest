@@ -187,6 +187,11 @@ if ($stringId != (string)$id or
    session will be identical to the base directory of the application. */
 session_name(BASE_DIR);
 session_start();
+
+/* Start buffering output so that headers that may be emitted in the handlers are still sent
+   to the client. */
+ob_start();
+
 /* Check for a sign that we have been connected to an existing session. In case that the session does not contain
    instance data of LectureBean as `lecture`, we will force a redirect to the home page. */
 if (!isset($_SESSION['lecture']))
@@ -343,6 +348,13 @@ else
     $smarty->assign('calendarheader', "empty.tpl");
     $smarty->assign('calendarfooter', "empty.tpl");
 }
+
+/**
+ * Initialisation of Smarty variables that are referred in templates and may be left unitialised.
+ */
+$smarty->assign('newsList', array());
+$smarty->assign('section', null);
+$smarty->assign('lastmodified', null);
 
 /* -----------------------------------------------------------------------
    Main dispatcher.
@@ -530,6 +542,9 @@ if ($bean)
     }
 }
 
+/* No header or cookies after this point. */
+ob_end_flush();
+
 /* Handle admin/section/0 which occurs in case when user tries to log in after
    session timeout. */
 /*if ( $id == 0 and $action == 'admin' and $object == 'section' )
@@ -691,7 +706,7 @@ if ($smarty->debug)
     $time = microtime(true) - $timeStart;
     echo "<!-- Total " . $time . " sec -->\n";
     echo "<!-- SMARTY \n";
-    print_r($smarty);
+    @print_r($smarty);
     echo "-->\n";
     echo "<!-- _GET\n";
     print_r($_GET);

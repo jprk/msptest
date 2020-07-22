@@ -32,7 +32,7 @@ function smarty_function_adminlink($params, &$smarty)
             return;
         }
 
-        if ($smarty->_tpl_vars['isAdmin'])
+        if ($smarty->getTemplateVars('isAdmin'))
         {
             $text =
                 '<a href="?act=' .
@@ -43,13 +43,13 @@ function smarty_function_adminlink($params, &$smarty)
     }
     else
     {
-        if ($smarty->_tpl_vars['isAdmin'])
+        if ($smarty->getTemplateVars('isAdmin'))
         {
             $text = '<a href="' . $params['href'] . '">' . $text . '</a>';
         }
     }
 
-    if (!$smarty->_tpl_vars['isAdmin'])
+    if (!$smarty->getTemplateVars('isAdmin'))
     {
         $text = '<span class="inactive">' . $text . '</span>';
     }
@@ -58,4 +58,3 @@ function smarty_function_adminlink($params, &$smarty)
     return $text;
 }
 
-?>

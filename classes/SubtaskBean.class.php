@@ -359,6 +359,13 @@ class SubtaskBean extends DatabaseBean
             $this->rs = $this->rs[0];
             $this->_updateFromResultSet();
 
+            $this->rs['isformassignment'] = false;
+            $this->rs['issimuassignment'] = false;
+            $this->rs['ispdfassignment'] = false;
+            $this->rs['islpdfassignment'] = false;
+            $this->rs['iszipassignment'] = false;
+            $this->rs['islzipassignment'] = false;
+
             if ($this->type == TaskBean::TT_WEEKLY_FORM || $this->type == TaskBean::TT_WEEKLY_TF)
             {
                 $this->rs['isformassignment'] = true;

@@ -204,25 +204,29 @@ class StudentLectureBean extends DatabaseBean
         $message_title = '[' . $lecture_data['code'] . '] Student `' . $userLogin . '` přijal známku ' . $grade;
         $subject = "=?utf-8?B?" . base64_encode($message_title) . "?=";
 
-        /* Now send the notification to the student ... */
+        /* Now send the notification e-mail.
+           The text will be the same, but depending on the setup we will send it only to the administrator
+           or to a set of recipients including the student and the lecturers ... */
+        $mail_recipients = ADMIN_EMAIL;
         if (SEND_MAIL)
         {
-            /* Mail the student */
-            mail(SessionDataBean::getUserEmail(), $subject, $message, $header);
+            /* Add the e-mail of the student. */
+            $mail_recipients .= ', ' . SessionDataBean::getUserEmail();
 
-            /* Mail the lecturers. */
+            /* Add the e-mails of the lecturers. */
             $llb = new LectureLecturerBean(null, $this->_smarty, null, null);
             $lecturers = $llb->getLecturersForLecture();
             error_log('lecturers: ' . print_r($lecturers, true));
             foreach ($lecturers as $key => $val)
             {
                 error_log('lecturer email: ' . $val['email']);
-                mail($val['email'], $subject, $message, $header);
+                $mail_recipients .= ', ' . $val['email'];
             }
         }
 
-        /* ... and send a copy to the administrator. */
-        mail(ADMIN_EMAIL, $subject, $message, $header);
+        /* ... and send the e-mail with a default copy to the administrator. */
+        error_log('mail recipients: ' . $mail_recipients);
+        mail($mail_recipients, $subject, $message, $header);
     }
 
 

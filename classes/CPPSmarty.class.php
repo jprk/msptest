@@ -16,7 +16,7 @@ define('IMG_SIZE', 190);
  * Modified Smarty class for LectWeb.
  * @method void assign(string $smartyVariable, mixed $data) Assigns data to Smarty variable.
  */
-class CPPSmarty extends Smarty
+class LectwebSmarty extends Smarty
 {
     private $_config;
     private $_currencies;

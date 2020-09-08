@@ -9,6 +9,7 @@ define('SB_STUDENT_NEGATIVE', 3);
 define('SB_SORT_BY_ID', 1);
 define('SB_SORT_BY_NAME', 2);
 define('SB_SORT_BY_LOGIN', 3);
+define('SB_SORT_BY_DATE', 4);
 
 function studentListIdCmp($a, $b)
 {
@@ -47,6 +48,59 @@ function studentListLoginCmp($a, $b)
     $ret = strcmp($ha, $hb);
 
     return $ret;
+}
+
+/**
+ * @param $a
+ * @param $b
+ * @return bool|int
+ * @throws Exception
+ */
+function studentListDateCmp($a, $b)
+{
+    /* Dates are strings or NULLs. */
+    $ha = $a['grade_confirmed'];
+    $hb = $b['grade_confirmed'];
+
+    if (is_null($ha))
+    {
+        /* In case that both are NULL, they are equal and we will sort by surname and name. */
+        if (is_null($hb))
+        {
+            $sa = $a['surname'];
+            $sb = $b['surname'];
+            $ret = strcoll($sa, $sb);
+            if ($ret == 0)
+            {
+                $sa = $a['firstname'];
+                $sb = $b['firstname'];
+                $ret = strcoll($sa, $sb);
+            }
+            return $ret;
+        }
+        /* Otherwise the existing second date is always greater. */
+        return 1;
+    }
+    /* Only the second date is NULL, hence the first one is smaller. */
+    elseif (is_null($hb))
+    {
+        return -1;
+    }
+    else
+    {
+        $dha = new DateTime($ha);
+        $dhb = new DateTime($hb);
+        echo "<!-- studentListDateCmp: ha=$ha, hb=$hb, dha=" . print_r($dha, true) . ", dhb=" . print_r($dhb, true) . " -->\n";
+        if ($dha < $dhb) return -1;
+        if ($dha > $dhb) return 1;
+        return 0;
+    }
+
+
+    /* Compare both dates. */
+    // $ret = $ha < $hb;
+
+    // return $ret;
 }
 
 class StudentBean extends DatabaseBean
@@ -1326,6 +1380,27 @@ class StudentBean extends DatabaseBean
                 break;
             case SB_SORT_BY_LOGIN:
                 usort($studentList, 'studentListLoginCmp');
+                break;
+            case SB_SORT_BY_DATE:
+                /* TODO: Allow for parameterised locale. */
+                // locale_set_default('cs_CZ.utf8');
+                setlocale(LC_COLLATE, '');
+                setlocale(LC_ALL, 'cs_CZ.utf8');
+                setlocale(LC_COLLATE, 'cs_CZ.utf8');
+                error_log('locale_get_default() = ' . locale_get_default());
+                usort($studentList, 'studentListDateCmp');
+                /* Locale test */
+                $c = "Červinka";
+                $a = array("Zhang", $c, 'Österreich', 'Oesterreich');
+                // $encoding = mb_detect_encoding($c);
+                // error_log("'$c' has encoding $encoding");
+                $locale = setlocale(LC_COLLATE, 'cs_CZ.UTF-8');
+                error_log("locale set to $locale");
+                usort($a, 'strcoll');
+                error_log(print_r($a, true));
+                error_log("strcoll('A', 'Z') = " . strcoll('A', 'Z'));
+                error_log("strcoll('Č', 'Z') = " . strcoll('Č', 'Z'));
+                error_log("strcoll('Ö', 'Z') = " . strcoll('Ö', 'Z'));
                 break;
         }
 

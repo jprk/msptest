@@ -14,13 +14,16 @@ class StudentLectureBean extends DatabaseBean
     private $fromCount;
     private $student_id;      // Student that will be added to the lecture
     private $relation;
+    private $sort;            // Sort type
 
+    /* TODO: SB_SORT_BY_NAME is a global define, should be a constant. */
     function _setDefaults()
     {
         $this->studentList = array();
         $this->resType = SB_STUDENT_ANY; // Defined in StudentBean.class.php
         $this->firstLetter = '';
         $this->fromCount = 0;
+        $this->sort = SB_SORT_BY_NAME;
     }
 
     /* Constructor */
@@ -34,7 +37,7 @@ class StudentLectureBean extends DatabaseBean
 
     /**
      * Append a single student to the list of lecture students in this school year.
-     * @param int $student_id
+     * @param $student_id
      */
     function dbAppendSingle($student_id)
     {
@@ -73,6 +76,8 @@ class StudentLectureBean extends DatabaseBean
 
     /**
      * Append (possibly replace) list of students to the lecture.
+     * @param $stlist
+     * @param bool $replace
      */
     function setStudentList($stlist, $replace = false)
     {
@@ -101,6 +106,7 @@ class StudentLectureBean extends DatabaseBean
         assignGetIfExists($this->firstLetter, $this->rs, 'first');
         assignGetIfExists($this->fromCount, $this->rs, 'from');
         assignGetIfExists($this->student_id, $this->rs, 'student_id');
+        assignGetIfExists($this->sort, $this->rs, 'sort');
     }
 
     function getStudentListForLecture()
@@ -231,10 +237,9 @@ class StudentLectureBean extends DatabaseBean
      * Throws an Exception with code self::E_INIT_FAILED in case of missing evaluation scheme.
      * Throws an Exception with code self::E_NO_SUBTASKS in case of missing subtasks.
      * This is very similar to prepareExerciseData() in ExerciseBean.
-     * TODO: SB_SORT_BY_NAME is a global define, should be a constant.
      * @throws Exception in case that the evaluation scheme does not exit or the subtask map is empty.
      */
-    function prepareStudentLectureData($sortType = SB_SORT_BY_NAME)
+    function prepareStudentLectureData()
     {
         /* Get the list of students for this exercise. The list will contain
            only student IDs. */
@@ -303,7 +308,7 @@ class StudentLectureBean extends DatabaseBean
             $data = $studentBean->getStudentDataFromList(
                 $studentList, $points, $evalBean, $subtaskMap,
                 $fullSubtaskList, $fullTaskList,
-                $this->resType, $sortType,
+                $this->resType, $this->sort,
                 $this->id);
             $data[] = $fullSubtaskList;
             $data[] = $fullTaskList;
@@ -348,6 +353,7 @@ class StudentLectureBean extends DatabaseBean
             $data = $this->prepareStudentLectureData();
             $this->assign('studentList', $data[0]);
             $this->assign('statData', $data[1]);
+            $this->assign('restype', $this->resType);
         } catch (Exception $e)
         {
             switch ($e->getCode())

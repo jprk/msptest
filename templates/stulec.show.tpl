@@ -38,7 +38,7 @@ function rollback ( elem )
 </p>
 <table class="admintable table-override" style="border: 1px solid black;" border="0" cellpadding="4" cellspacing="1">
 <thead class="rowA">
-<th style="width: 6em; text-align: left; border-bottom: 1px solid black;">Příjmení</th>
+<th style="width: 6em; text-align: left; border-bottom: 1px solid black;"><a href="?act=show,stulec,{$lecture.id}&restype={$restype}&sort=2">Příjmení</a></th>
 <th style="width: 5em; text-align: left; border-bottom: 1px solid black;">Jméno</th>
 <th style="width: 2em; border-bottom: 1px solid black;">{throt text="Ročník / skupina"}</th>
 {section name=subtaskPos loop=$subtaskList}
@@ -60,7 +60,7 @@ function rollback ( elem )
 {assign var="evalHdr" value="Zápočet"}
 {/if}
 <th class="smaller" style="width: 5ex; border-bottom: 1px solid black; border-left: 1px solid black;">{throt text=$evalHdr}</th>
-<th class="smaller" style="width: 6em; border-bottom: 1px solid black;">Datum zápočtu</th>
+<th class="smaller" style="width: 12em; border-bottom: 1px solid black;"><a href="?act=show,stulec,{$lecture.id}&restype={$restype}&sort=4">Datum</a></th>
 </thead>
 {* ---------- end header ---------- *}
 {section name=studentPos loop=$studentList}

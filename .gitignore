@@ -34,3 +34,16 @@ webdir/index_top.php
 # Ignore Dibi
 #
 classes/external/dibi
+#
+# Ignore the local copy of smarty that is used for Windows development
+#
+smarty
+templates_c
+#
+# Ignore remaining Flarum files
+#
+classes/external/flarum-sso/Forum.php
+classes/external/flarum-sso/config.php.dist
+classes/external/flarum-sso/index.php
+classes/external/flarum-sso/logout.php
+classes/external/flarum-sso/wordpress-flarum-sso.php

@@ -77,18 +77,29 @@ function rollback ( elem )
 {/section}
 {section name=taskPos loop=$taskList}
 {if $smarty.section.taskPos.first}
-{assign var="tskBorder" value="style=\"border-left: 1px solid black;\""}
+    {assign var="tskBorder" value="style=\"border-left: 1px solid black;\""}
 {else}
-{assign var="tskBorder" value=""}
+    {assign var="tskBorder" value=""}
 {/if}
-{if $smarty.section.studentPos.iteration is even}<td class="tskA{$studentList[studentPos].taskclass[taskPos]}"{$tskBorder}>{else}<td class="tskB{$studentList[studentPos].taskclass[taskPos]}"{$tskBorder}>{/if}{$studentList[studentPos].taskpoints[taskPos]}</td>
+    {if $smarty.section.studentPos.iteration is even}
+        <td class="tskA{$studentList[studentPos].taskclass[taskPos]}"{$tskBorder}>{else}<td class="tskB{$studentList[studentPos].taskclass[taskPos]}"{$tskBorder}>{/if}{$studentList[studentPos].taskpoints[taskPos]}</td>
 {/section}
-{* ---------- end tasks ---------- *}
-{if $smarty.section.studentPos.iteration is even}<td style="border-left: 1px solid black;" class="sumA{$studentList[studentPos].sumclass}">{else}<td style="border-left: 1px solid black;" class="sumB{$studentList[studentPos].sumclass}">{/if}{$studentList[studentPos].sumpoints}</td>
-{if $smarty.section.studentPos.iteration is even}<td style="border-left: 1px solid black;" class="sumA{$studentList[studentPos].sumclass}">{else}<td style="border-left: 1px solid black;" class="sumB{$studentList[studentPos].sumclass}">{/if}<strong>{$studentList[studentPos].exmpoints}</strong></td>
-{if $smarty.section.studentPos.iteration is even}<td style="border-left: 1px solid black;" class="sumA{$studentList[studentPos].sumclass}">{else}<td style="border-left: 1px solid black;" class="sumB{$studentList[studentPos].sumclass}">{/if}{$studentList[studentPos].gotcredit}</td>
-<td>&nbsp;</td>
-</tr>
+    {* ---------- end tasks ---------- *}
+{if $smarty.section.studentPos.iteration is even}
+    <td style="border-left: 1px solid black;" class="sumA{$studentList[studentPos].sumclass}">{else}
+    <td style="border-left: 1px solid black;"
+        class="sumB{$studentList[studentPos].sumclass}">{/if}{$studentList[studentPos].sumpoints}</td>
+{if $smarty.section.studentPos.iteration is even}
+    <td style="border-left: 1px solid black;" class="sumA{$studentList[studentPos].sumclass}">{else}
+    <td style="border-left: 1px solid black;" class="sumB{$studentList[studentPos].sumclass}">{/if}
+    <strong>{$studentList[studentPos].exmpoints}</strong></td>
+{if $smarty.section.studentPos.iteration is even}
+    <td style="border-left: 1px solid black;" class="sumA{$studentList[studentPos].sumclass}">
+    {else}
+    <td style="border-left: 1px solid black;"
+        class="sumB{$studentList[studentPos].sumclass}">{/if}{$studentList[studentPos].gotcredit}</td>
+    <td style="white-space: nowrap;">{if isset($studentList[studentPos].grade_confirmed)}{$studentList[studentPos].grade_confirmed|date_format:"%d.%m.%Y %H:%M:%S"}{/if}</td>
+    </tr>
 {/section}
 <tr class="rowA">
 <td colspan="3" style="border-top: 1px solid black;">Průměr</td>

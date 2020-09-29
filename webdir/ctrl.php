@@ -1,6 +1,6 @@
 <?php
 /**
- * Controller of the CPPSmarty application.
+ * Controller of the LectwebSmarty application.
  *
  * (c) 2009,2010,2011,2012 Jan Prikryl, FD CVUT Praha
  *
@@ -14,7 +14,7 @@ $timeStart = microtime(true);
 require('config.php');
 
 /* Read implementation of all classes that will be needed by our code. */
-require(REQUIRE_DIR . 'CPPSmarty.class.php');
+require(REQUIRE_DIR . 'LectwebSmarty.class.php');
 require(REQUIRE_DIR . 'BaseBean.class.php');
 require(REQUIRE_DIR . 'DatabaseBean.class.php');
 
@@ -331,7 +331,7 @@ else if ($loginNeeded)
 }
 
 /* Construct a Smarty instance. Configuration has been specified in config.php. */
-$smarty = new CPPSmarty ($config, $isPageOutput);
+$smarty = new LectwebSmarty ($config, $isPageOutput);
 
 /* Initialise database connection */
 try

@@ -21,7 +21,7 @@ class LDAPConnection
     private $debug;
 
     /**
-     * @param $smarty CPPSmarty
+     * @param $smarty LectwebSmarty
      * @return mixed
      */
     static function isActive(&$smarty)
@@ -32,7 +32,7 @@ class LDAPConnection
     /**
      * Class constructor.
      * Opens connection to an LDAP server. Checked only with URL based ldaps:// connections.
-     * @param CPPSmarty $smarty Smarty object containing configuration parameters of the LDAP connection, 'ldap_server_url' and 'ldap_basedn'.
+     * @param LectwebSmarty $smarty Smarty object containing configuration parameters of the LDAP connection, 'ldap_server_url' and 'ldap_basedn'.
      * @throws Exception
      */
     function __construct(&$smarty)

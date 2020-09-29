@@ -14,8 +14,8 @@ session_start ();
 require ( 'config.php' );
 
 //require ( REQUIRE_DIR . 'tools.php');
-require ( REQUIRE_DIR . 'CPPSmarty.class.php');
-require ( REQUIRE_DIR . 'BaseBean.class.php');
+require(REQUIRE_DIR . 'LectwebSmarty.class.php');
+require(REQUIRE_DIR . 'BaseBean.class.php');
 require ( REQUIRE_DIR . 'DatabaseBean.class.php');
 //require ( REQUIRE_DIR . 'FileBean.class.php');
 //require ( REQUIRE_DIR . 'UserBean.class.php');
@@ -50,7 +50,7 @@ if ( is_uploaded_file ( $_FILES['kosfile']['tmp_name'] ))
 	if ( $handle )
 	{
         /* Construct a Smarty instance. Configuration has been specified in config.php. */
-        $smarty = new CPPSmarty ( $config, TRUE );
+        $smarty = new LectwebSmarty ($config, TRUE);
         /* Initialise database connection */
         $smlink = $smarty->dbOpen ();
         $lct = new LectureBean ( 0, $smarty, "x", "x" );

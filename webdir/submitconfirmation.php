@@ -10,7 +10,7 @@ $timeStart = microtime(true);
 require('config.php');
 
 /* Read implementation of all classes that will be needed by our code. */
-require(REQUIRE_DIR . 'CPPSmarty.class.php');
+require(REQUIRE_DIR . 'LectwebSmarty.class.php');
 require(REQUIRE_DIR . 'BaseBean.class.php');
 require(REQUIRE_DIR . 'DatabaseBean.class.php');
 
@@ -36,7 +36,7 @@ session_start();
 SessionDataBean::conditionalInit(SchoolYearBean::getSchoolYearStart());
 
 /* Construct a Smarty instance. Configuration has been specified in config.php. */
-$smarty = new CPPSmarty ($config, false);
+$smarty = new LectwebSmarty ($config, false);
 
 /* Initialise error message and status. */
 $status = 2;

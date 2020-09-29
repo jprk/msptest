@@ -10,8 +10,8 @@
 require ( 'config.php' );
 
 //require ( REQUIRE_DIR . 'tools.php');
-require ( REQUIRE_DIR . 'CPPSmarty.class.php');
-require ( REQUIRE_DIR . 'BaseBean.class.php');
+require(REQUIRE_DIR . 'LectwebSmarty.class.php');
+require(REQUIRE_DIR . 'BaseBean.class.php');
 require ( REQUIRE_DIR . 'DatabaseBean.class.php');
 
 //require ( REQUIRE_DIR . 'ArticleBean.class.php');
@@ -59,7 +59,7 @@ require ( REQUIRE_DIR . 'UserBean.class.php');
 
     /* Construct a Smarty instance. Configuration has been specified
        in config.php. */
-    $smarty = new CPPSmarty ( $config, true );
+$smarty = new LectwebSmarty ($config, true);
 
     /* Initialise database connection */
     $smlink = $smarty->dbOpen ();

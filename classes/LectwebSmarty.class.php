@@ -91,7 +91,7 @@ class LectwebSmarty extends Smarty
         $this->_dayMap = self::_assignDayMap();
         $this->_yearMap = self::_assignYearMap();
 
-        $this->assign('app_name', 'CPPSmarty');
+        $this->assign('app_name', 'LectwebSmarty');
         $this->assign('yesno', $this->_yesno);
         $this->assign('daySelect', $this->_dayMap);
         $this->assign('yearSelect', $this->_yearMap);
@@ -216,6 +216,7 @@ class LectwebSmarty extends Smarty
         }
         $user_id = SessionDataBean::getUserId();
         $lecture_id = SessionDataBean::getLectureId();
+        if (empty($lecture_id)) $lecture_id = 0;
         $get_data = $this->dbEscape(json_encode($_GET));
         $post_data = $this->dbEscape(json_encode($internal_post));
         $ip_address = $this->dbEscape($_SERVER['REMOTE_ADDR']);

@@ -23,8 +23,8 @@ require ( REQUIRE_DIR . 'DatabaseBean.class.php');
 //require ( REQUIRE_DIR . 'TaskSubtasksBean.class.php');
 //require ( REQUIRE_DIR . 'EvaluationBean.class.php');
 //require ( REQUIRE_DIR . 'EvaluationTasksBean.class.php');
-require ( REQUIRE_DIR . 'CPPSmarty.class.php');
-require ( REQUIRE_DIR . 'StudentBean.class.php');
+require(REQUIRE_DIR . 'LectwebSmarty.class.php');
+require(REQUIRE_DIR . 'StudentBean.class.php');
 //require ( REQUIRE_DIR . 'LectureBean.class.php');
 //require ( REQUIRE_DIR . 'LecturerBean.class.php');
 //require ( REQUIRE_DIR . 'ExerciseBean.class.php');
@@ -34,21 +34,21 @@ require ( REQUIRE_DIR . 'StudentBean.class.php');
 
 if ( is_uploaded_file ( $_FILES['csvfile']['tmp_name'] ))
 {
-	echo "<h1>File ". $_FILES['csvfile']['name'] ." uploaded successfully.</h1>\n";
-	echo "<p>Displaying contents:<p>\n";
-	
-	/* Construct a Smarty instance. Configuration has been specified in config.php. */
-	$smarty = new CPPSmarty ( $config );
-	/* Initialise database connection */
-	$smlink = $smarty->dbOpen ();
-	
-	$handle = @fopen ( $_FILES['csvfile']['tmp_name'], "r" );
-	if ( $handle )
-	{
-		$date = getdate ();
-		echo "<table>";
-		while ( !feof ( $handle ))
-		{
+    echo "<h1>File " . $_FILES['csvfile']['name'] . " uploaded successfully.</h1>\n";
+    echo "<p>Displaying contents:<p>\n";
+
+    /* Construct a Smarty instance. Configuration has been specified in config.php. */
+    $smarty = new LectwebSmarty ($config);
+    /* Initialise database connection */
+    $smlink = $smarty->dbOpen();
+
+    $handle = @fopen($_FILES['csvfile']['tmp_name'], "r");
+    if ($handle)
+    {
+        $date = getdate();
+        echo "<table>";
+        while (!feof($handle))
+        {
 			$buffer = fgets ( $handle, 4096 );
 			$trimmed = trim ( $buffer );
 			$la = explode ( ";",  $trimmed );

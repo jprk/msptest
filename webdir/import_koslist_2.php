@@ -16,9 +16,9 @@ require ( REQUIRE_DIR . 'TaskBean.class.php');
 require ( REQUIRE_DIR . 'SubtaskBean.class.php');
 require ( REQUIRE_DIR . 'TaskSubtasksBean.class.php');
 require ( REQUIRE_DIR . 'EvaluationBean.class.php');
-require ( REQUIRE_DIR . 'EvaluationTasksBean.class.php');
-require ( REQUIRE_DIR . 'CPPSmarty.class.php');
-require ( REQUIRE_DIR . 'StudentBean.class.php');
+require(REQUIRE_DIR . 'EvaluationTasksBean.class.php');
+require(REQUIRE_DIR . 'LectwebSmarty.class.php');
+require(REQUIRE_DIR . 'StudentBean.class.php');
 //require ( REQUIRE_DIR . 'LectureBean.class.php');
 //require ( REQUIRE_DIR . 'LecturerBean.class.php');
 //require ( REQUIRE_DIR . 'ExerciseBean.class.php');
@@ -70,18 +70,18 @@ if ( ! $isAllowed )         $errstr .= "<li>Nemáte dostatečná oprávnění pr
 
 if ( empty ( $errstr ))
 {
-	/* Construct a Smarty instance. Configuration has been specified in config.php. */
-	$smarty = new CPPSmarty ( $config, true );
-	/* Initialise database connection */
-	$smlink = $smarty->dbOpen ();
+    /* Construct a Smarty instance. Configuration has been specified in config.php. */
+    $smarty = new LectwebSmarty ($config, true);
+    /* Initialise database connection */
+    $smlink = $smarty->dbOpen();
 
     /* Get the information about evaluation. We have to initialise points to
        PTS_NOT_CLASSIFIED. Abort if there is no evaluation. */
-	$evaluationBean = new EvaluationBean (0, $smarty, "x", "x");
-	/* This will initialise EvaluationBean with evaluation scheme for lecture
-	   given by $this->lecture_id. The function returns 'true' if the bean
-	   has been initialised. */
-	$ret = $evaluationBean->initialiseFor ( $lecture_id );
+    $evaluationBean = new EvaluationBean (0, $smarty, "x", "x");
+    /* This will initialise EvaluationBean with evaluation scheme for lecture
+       given by $this->lecture_id. The function returns 'true' if the bean
+       has been initialised. */
+    $ret = $evaluationBean->initialiseFor($lecture_id);
 	
 	/* Check the initialisation status. */
 	if ( ! $ret )

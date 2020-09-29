@@ -343,7 +343,7 @@ function numToDayString($num)
 }
 
 /**
- * Convert day enumerator as defined by CPPSmarty::_assignDayMap() to time offset string.
+ * Convert day enumerator as defined by LectwebSmarty::_assignDayMap() to time offset string.
  *
  * Used to determine all dates of exercises during a schoolyear term.
  *

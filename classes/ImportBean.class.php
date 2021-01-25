@@ -2,6 +2,7 @@
 
 class ImportBean extends DatabaseBean
 {
+    const FORMAT_WEBKOS_2020 = 6;
     const FORMAT_WEBKOS_2017 = 5;
     const FORMAT_IKOS_ROZ = 4;
     const FORMAT_IKOS = 3;
@@ -153,11 +154,25 @@ class ImportBean extends DatabaseBean
                            The (again) updated WEBKOS format adds an extra header line in the format
                               KOSI export_prez_sez_<term_id e.g. B162>_<lecture_id e.g. 11FY1>;;;;;;;;;;;;
                            and an extra column "Typ programu". */
-                        if ($row == 0 && strpos($buffer, 'KOSI export_prez_sez') === 0)
-                        {
-                            /* New WEBKOS format */
-                            $format = self::FORMAT_WEBKOS_2017;
-                            error_log('import::FORMAT_WEBKOS_2017');
+                        if ($row == 0 && strpos($buffer, 'KOSI export_prez_sez') === 0) {
+                            /* New WEBKOS format:
+                             * - the initial version goes back to cca 2017 and had 14 columns
+                             * - in 09/2020 a new version with 15 columns has been introduced
+                             */
+                            $semester_str = substr($trimmed, 22, 3);
+                            if ($semester_str === false) {
+                                throw new Exception('WEBKOS export format mismatch: cannot find semester number');
+                            }
+                            $semester = intval($semester_str);
+                            error_log("semester_str = $semester_str");
+                            error_log("semester = $semester");
+                            if ($semester < 200) {
+                                $format = self::FORMAT_WEBKOS_2017;
+                                error_log('import::FORMAT_WEBKOS_2017');
+                            } else {
+                                $format = self::FORMAT_WEBKOS_2020;
+                                error_log('import::FORMAT_WEBKOS_2020');
+                            }
                         }
                         else
                         {
@@ -197,6 +212,7 @@ class ImportBean extends DatabaseBean
                             break;
                         case self::FORMAT_WEBKOS_2015:
                         case self::FORMAT_WEBKOS_2017:
+                        case self::FORMAT_WEBKOS_2020:
                             $idx = array(
                                 self::FORMAT_WEBKOS_2015 => array(
                                     'yearno' => 9,
@@ -209,7 +225,13 @@ class ImportBean extends DatabaseBean
                                     'groupno' => 13,
                                     'numcols' => 14,
                                     'manual_login' => 13,
-                                    'manual_email' => 14));
+                                    'manual_email' => 14),
+                                self::FORMAT_WEBKOS_2020 => array(
+                                    'yearno' => 10,
+                                    'groupno' => 13,
+                                    'numcols' => 15,
+                                    'manual_login' => 14,
+                                    'manual_email' => 15));
                             $data['surname'] = iconv("windows-1250", "utf-8", trim($la[0], " \t\n\r\"\xa0"));
                             $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\"\xa0"));
                             // up to 2012-11-05 ... $data['yearno']    = trim ( $la[8], " \t\n\r\"" );
@@ -229,22 +251,19 @@ class ImportBean extends DatabaseBean
                             /* We have the possibility to append `login` and `e-mail` information manually, circumventing
                                the need for LDAP queiries (again, this is mostly necessary for Decin). */
                             $this->dumpVar('count(la)', count($la));
-                            if (count($la) <= $idx[$format]['numcols'])
-                            {
+                            if (count($la) <= $idx[$format]['numcols']) {
                                 /* Fetch information from LDAP about this student. */
                                 $info = $ldap->searchSingle("cvutid=$cvutid");
 
                                 /* Check that the returned record has `dn` field */
-                                if (is_null($info))
-                                {
+                                if (is_null($info)) {
                                     throw new Exception (
                                         "Row $row: LDAP info neobsahuje záznam pro ČVUT ID `$cvutid`"
                                     );
                                 }
 
                                 /* Check that the returned record has `dn` field */
-                                if (!array_key_exists('dn', $info))
-                                {
+                                if (!array_key_exists('dn', $info)) {
                                     throw new Exception (
                                         'LDAP info neobsahuje DN záznam pro studenta ' .
                                         $data['firstname'] . ' ' .
@@ -256,8 +275,7 @@ class ImportBean extends DatabaseBean
                                 /* First `cn` record in DN string contains the login. */
                                 $dn_data = $ldap->parseLdapDn($info['dn']);
                                 self::dumpVar('dn_data', $dn_data);
-                                if (!array_key_exists('cn', $dn_data))
-                                {
+                                if (!array_key_exists('cn', $dn_data)) {
                                     throw new Exception (
                                         'LDAP DN záznam pro studenta ' .
                                         $data['firstname'] . ' ' .
@@ -268,8 +286,7 @@ class ImportBean extends DatabaseBean
                                 $data['login'] = $dn_data['cn'][0];
 
                                 /* Check that the returned record has also `mail` field. */
-                                if (!array_key_exists('mail', $info))
-                                {
+                                if (!array_key_exists('mail', $info)) {
                                     $errStr .=
                                         'LDAP info neobsahuje údaje o e-mailu pro studenta ' .
                                         $data['firstname'] . ' ' .
@@ -277,28 +294,22 @@ class ImportBean extends DatabaseBean
                                         $cvutid . ')<br/>';
                                     /* ... guess the missing information. */
                                     $data['email'] = $data['login'] . '@fd.cvut.cz';
-                                }
-                                else
-                                {
+                                } else {
                                     /* ... and fill in the missing information. */
                                     $data['email'] = $info['mail'][0];
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 /* Manually extended WebKOS output with login and e-mail information. */
                                 $i = $idx[$format]['manual_login'];
                                 $data['login'] = $la[$i];
                                 /* Check that the data contains something meaningful */
-                                if (empty ($data['login']))
-                                {
+                                if (empty ($data['login'])) {
                                     throw new Exception("Row $row: Expected field $i to contain login, but the field is empty.");
                                 }
                                 $i = $idx[$format]['manual_email'];
                                 $data['email'] = $la[$i];
                                 /* Check that the data contains something meaningful */
-                                if (empty ($data['login']))
-                                {
+                                if (empty ($data['login'])) {
                                     throw new Exception("Row $row: Expected field $i to contain e-mail address, but the field is empty.");
                                 }
                             }

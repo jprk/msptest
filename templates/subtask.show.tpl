@@ -8,11 +8,11 @@
 <h3>{czech}Text zadání{/czech}{english}Problem formulation{/english}</h3>
 {$subtask.assignment}
 {/if}
-{if $assignment.file_id}
-<p>
-{czech}Soubor se zadáním si stáhněte{/czech}{english}Download the text from{/english}
-    <a href="?act=show,file,{$assignment.file_id}">{czech}zde{/czech}{english}here{/english}</a>.
-</p>
+{if isset($assignment.file_id)}
+    <p>
+        {czech}Soubor se zadáním si stáhněte{/czech}{english}Download the text from{/english}
+        <a href="?act=show,file,{$assignment.file_id}">{czech}zde{/czech}{english}here{/english}</a>.
+    </p>
 {/if}
 <h3>{czech}Odevzdání{/czech}{english}Submission{/english}</h3>
 <p>

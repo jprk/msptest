@@ -71,8 +71,12 @@ div.formula {
 div.onlineteaching {
     border: 1px solid #9caac8;
     background-color: #ccecff;
-    margin: 1ex;
+    margin: 1ex 0ex;
     padding: 1ex;
+}
+
+div.onlineteaching:last-child {
+    margin-bottom: 0ex;
 }
 
 div.onlineteaching p:first-of-type {

@@ -291,7 +291,7 @@ class TaskBean extends DatabaseBean
         $this->assignSingle();
 
         /* Publish a list of task types. */
-        $this->assignTaskTypeSelect();
+        $this->assignTypeSelect();
 
         /* Get a list of lectures. */
         $lectureBean = new LectureBean (0, $this->_smarty, "", "");

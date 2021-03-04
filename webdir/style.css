@@ -16,17 +16,28 @@ table.admintable, table.pointtable {
 }
 
 table.admintable td,
-table.admintable th
-{
-	padding: 4px;
+table.admintable th {
+    padding: 4px;
 }
 
+/* Rotated table header */
+th.rotated {
+    vertical-align: bottom;
+    text-align: center;
+}
+
+th.rotated span {
+    transform: rotate(180deg);
+    writing-mode: vertical-rl;
+}
+
+
 #main, #news {
-  padding-top: 8px;
+    padding-top: 8px;
 }
 
 #main, #news, #maintitle, #newstitle {
-  margin-left: 4px;
+    margin-left: 4px;
 }
 
 #main table {

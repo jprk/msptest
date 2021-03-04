@@ -425,6 +425,18 @@ class SubtaskBean extends DatabaseBean
         $this->assign('subtask', $this->rs);
     }
 
+    /**
+     * Shuffle subtask positions according to the parameter.
+     */
+    function shuffleEntries($subtaskList)
+    {
+        foreach ($subtaskList as $pos => $id)
+        {
+            $this->dbQuery('UPDATE subtask SET position=' . $pos . ' WHERE id=' . $id);
+        }
+    }
+
+
     /* -------------------------------------------------------------------
        HANDLER: SHOW
        ------------------------------------------------------------------- */

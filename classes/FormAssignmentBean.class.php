@@ -740,7 +740,7 @@ class FormAssignmentBean extends DatabaseBean
                 /* Store information about the generated file in file table. */
                 $cmsFileName = $cmsFileName . ".pdf";
                 $cmsFileBase = $cmsFileBase . ".pdf";
-                $fileId = $fileBean->addFile(FT_X_ASSIGNMENT, $id_subtask, $studentId, $cmsFileBase, $cmsFileName,
+                $fileId = $fileBean->addFile(FT_X_INDIV_ASSIGNMENT, $id_subtask, $studentId, $cmsFileBase, $cmsFileName,
                     "Úloha " . $subtask_code . ", příklad " . $id . ", student " . $u8name);
                 error_log("* new file ID $fileId created for $cmsFileName");
             }
@@ -1072,7 +1072,7 @@ class FormAssignmentBean extends DatabaseBean
                         $grpid = $sgb->getGroupIdByNum($num);
                         if ($grpid > 0 ) {
                             /* Record information into the database. */
-                            $file_id = $fileBean->addFile(FT_X_ASSIGNMENT, $this->id, $grpid,
+                            $file_id = $fileBean->addFile(FT_X_GROUP_ASSIGNMENT, $this->id, $grpid,
                                 $file, basename($file), "Úloha $subtask_code, zadání pro skupinu $num");
                             /* Loop over all students of the group and create assignment record for them. */
                             $student_list = $sgb->getStudentsIdsForGroupId($grpid);

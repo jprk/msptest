@@ -12,11 +12,14 @@ class TaskBean extends DatabaseBean
     const TT_WEEKLY_TF = 104;
     const TT_LECTURE_PDF = 105;
     const TT_LECTURE_ZIP = 106;
+    const TT_GROUP_ZIP = 107;
+    const TT_GROUP_PDF = 108;
     const TT_SEMESTRAL_ZIP = 200;
     const TT_SEMESTRAL_INDIV_PDF = 201;
     const TT_ACTIVITY = 300;
     const TT_WRITTEN = 400;
-    const TT_NO_TOTAL_POINTS = 500; /**> A necessary condition without any points added to the total. */
+    const TT_NO_TOTAL_POINTS = 500;
+    /**> A necessary condition without any points added to the total. */
 
     var $type;
     var $title;
@@ -40,16 +43,27 @@ class TaskBean extends DatabaseBean
             self::NULL_TASK_ID => "Vyberte ze seznamu ...",
             self::TT_ACTIVITY => "Aktivita na cvičeních",
             self::TT_WRITTEN => "Písemný test",
-            self::TT_WEEKLY_FORM => "Individuální týdenní úloha (vyplňovací formulář A-F)",
-            self::TT_WEEKLY_SIMU => "Individuální týdenní úloha (Simulink *.mdl + *.pdf)",
-            self::TT_WEEKLY_ZIP => "Individuální týdenní úloha (kód jako *.zip + *.pdf)",
-            self::TT_WEEKLY_PDF => "Individuální týdenní úloha (odevzdává se jeden soubor *.pdf)",
+            self::TT_WEEKLY_FORM => "Individuální úloha (vyplňovací formulář A-F)",
+            self::TT_WEEKLY_SIMU => "Individuální úloha (Simulink *.mdl + *.pdf)",
+            self::TT_WEEKLY_TF => "Individuální úloha (formulář s přenosovou fcí)",
+            self::TT_WEEKLY_ZIP => "Individuální úloha (kód jako *.zip + *.pdf)",
+            self::TT_WEEKLY_PDF => "Individuální úloha (odevzdává se jeden soubor *.pdf)",
+            self::TT_GROUP_ZIP => "Skupinová úloha (kód jako *.zip + *.pdf)",
+            self::TT_GROUP_PDF => "Skupinová úloha (odevzdává se jeden soubor *.pdf)",
             self::TT_LECTURE_PDF => "Hromadně zadaná úloha všem (odevzdává se jeden soubor *.pdf)",
             self::TT_LECTURE_ZIP => "Hromadně zadaná úloha všem (odevzdává se jeden soubor *.zip)",
-            self::TT_WEEKLY_TF => "Povinná týdenní úloha (formulář s přenosovou fcí)",
             self::TT_SEMESTRAL_ZIP => "Semestrální úloha (odevzdává se jeden soubor *.zip)",
             self::TT_SEMESTRAL_INDIV_PDF => "Semestrální úloha s individuálním zadáním (odevzdává se jeden soubor *.pdf)",
             self::TT_NO_TOTAL_POINTS => "Podmínka zápočtu bez připsání bodů"
+        );
+    }
+
+    static function GroupTaskTypes()
+    {
+        return array(
+            self::TT_GROUP_ZIP, self::TT_GROUP_PDF,
+            self::TT_LECTURE_PDF, self::TT_LECTURE_ZIP,
+            self::TT_SEMESTRAL_ZIP, self::TT_SEMESTRAL_INDIV_PDF
         );
     }
 

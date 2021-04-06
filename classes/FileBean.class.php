@@ -15,8 +15,9 @@ define('FT_LAB_THUMB', 8); // Physics - thumbnail of the experiment photo
 define('FT_S_IMAGE', 9); // Image for use within section text
 
 /* Private file types */
+define('FT_X_GROUP_ASSIGNMENT', 252); // Assignment for student groups
 define('FT_X_LECTUREDATA', 253); // Private file that is available only to logged in students of the lecture
-define('FT_X_ASSIGNMENT', 254); // Assignment for students
+define('FT_X_INDIV_ASSIGNMENT', 254); // Assignment for individual students (even when student groups are active)
 define('FT_X_SOLUTION', 255); // Solution to a subtask submitted by a student
 
 /* File type lists for use in the SQL 'type IN (...)' excpressions */
@@ -289,7 +290,7 @@ class FileBean extends DatabaseBean
     function clearAssignmentFiles($subtaskId)
     {
         /* Get the list of all assigment files in concern. */
-        $where = "WHERE type=" . FT_X_ASSIGNMENT . " AND objid=" . $subtaskId;
+        $where = "WHERE type=" . FT_X_INDIV_ASSIGNMENT . " AND objid=" . $subtaskId;
         $rs = DatabaseBean::dbQuery("SELECT * FROM file " . $where);
         /* And if there are some, delete them. */
         if (!empty ($rs))
@@ -486,7 +487,7 @@ class FileBean extends DatabaseBean
             "objid=" . $subtaskId .
             " AND uid=" . $studentId .
             " AND ",
-            FT_X_ASSIGNMENT
+            FT_X_INDIV_ASSIGNMENT
         );
         if (count($resultset) > 1)
         {
@@ -793,7 +794,8 @@ class FileBean extends DatabaseBean
         /* In case that this is an assignment file, check that the file UID
               corresponds to the user UID. */
         $doServeFile = true;
-        if ($this->type == FT_X_ASSIGNMENT || $this->type == FT_X_SOLUTION)
+
+        if ($this->type == FT_X_INDIV_ASSIGNMENT || $this->type == FT_X_GROUP_ASSIGNMENT || $this->type == FT_X_SOLUTION)
         {
             /* Do not allow access to anonymous users. */
             if ($role == USR_ANONYMOUS)
@@ -805,23 +807,34 @@ class FileBean extends DatabaseBean
                on what they are allowed to see. */
             if ($role == USR_STUDENT)
             {
-                /* If the lecture student group mode is on, check that the student is a member of the student group that
-                   owns the file. */
-                if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
+                /* If the lecture student group mode is on, and if the file is a group-related file, we have to
+                   check that the student is a member of the student group that owns the file. */
+                if ($this->type == FT_X_GROUP_ASSIGNMENT)
                 {
-                    /* Group mode on. Check the student group ids. */
-                    $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
-                    $group_id = $sgb->getGroupIdForStudent($userId);
-                    if ($this->uid != $group_id)
+                    if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
                     {
-                        /* Access to assignment files of other student group is not allowed. */
-                        $this->action = "e_group";
+                        /* Group mode on. Check the student group ids. */
+                        $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+                        $group_id = $sgb->getGroupIdForStudent($userId);
+                        if ($this->uid != $group_id)
+                        {
+                            /* Access to assignment files of other student group is not allowed. */
+                            $this->action = "e_group";
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        /* Group mode off, but the file is a group assignment. This is something that should not
+                           have happened. */
+                        $this->action = "e_groupfail";
                         return false;
+
                     }
                 }
                 else
                 {
-                    /* Do not allow access to students with different uids. */
+                    /* This is an individual assignment file. Do not allow access to students with different uids. */
                     if ($this->uid != $userId)
                     {
                         /* Access to assignment files of other students is not allowed. */

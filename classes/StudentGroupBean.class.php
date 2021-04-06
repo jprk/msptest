@@ -488,6 +488,11 @@ class StudentGroupBean extends DatabaseBean
         return array($student_id => array('id' => $student_id));
     }
 
+    /**
+     * Get the students in the same student group as student `$student_id`.
+     * @param $student_id
+     * @return array[] All students of a student group where `$student_id` is a member.
+     */
     function getGroupStudentsOfStudent($student_id)
     {
         /* Note: if the format of $ret changes, change also self::getDefaultGroupStudents() accordingly. */
@@ -573,6 +578,42 @@ class StudentGroupBean extends DatabaseBean
     }
 
     /**
+     * Return a list of students solving the same subtask as the active student.
+     * In case that the task is not a group task, an array with only one entry is returned.
+     * In case of a group task and a student that does not belong to any group, NULL is returned and `action` flag is
+     * set to 'e_nogroup'.
+     * @param boolean $task_is_group_task True if the caller task/subtask is a group task.
+     * @return array | null Result of comparison
+     */
+    function getValidStudentsForTaskType($task_is_group_task)
+    {
+        /* Initialise the return variable. */
+        $students = null;
+
+        /* Check student group validity if the task is a group task. */
+        if ($task_is_group_task && (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE))
+        {
+            // $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+            $students = $this->getGroupStudentsOfStudent(SessionDataBean::getUserId());
+            /* Check that the student is really member of a student group.
+               If so, the $students will contain at least his/her student id. */
+            if (empty($students))
+            {
+                /* Check failed. Indicate it. */
+                $students = null;
+            }
+        }
+        else
+        {
+            /* Not a group task. */
+            $students = StudentGroupBean::getDefaultGroupStudents(SessionDataBean::getUserId());
+        }
+
+        return $students;
+    }
+
+
+    /**
      * Provide a full list of student groups with membership info.
      * @param int $sort_type
      * @return array Hierarchical array of groups and studens
@@ -580,7 +621,7 @@ class StudentGroupBean extends DatabaseBean
      */
     function assignFullGroupList($sort_type = self::GRP_SORT_BY_GRP)
     {
-        $this->dumpVar('lecture group type',SessionDataBean::getLectureGroupType());
+        $this->dumpVar('lecture group type', SessionDataBean::getLectureGroupType());
         $group_list = array();
         switch (SessionDataBean::getLectureGroupType())
         {

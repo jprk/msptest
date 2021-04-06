@@ -1,14 +1,16 @@
-{if $lecture.do_groups}
+{if $lecture.do_groups && $subtask.is_group_task}
     <p>
         Hodnocení úlohy číslo {$subtask.id} s názvem <i>{$subtask.title}</i>
-        za studentskou skupinu <i>{$group_data.name}</i> odevzdané studentem/studentkou <i>{$student.firstname} {$student.surname}</i> (login {$student.login})
+        za studentskou skupinu <i>{$group_data.name}</i> odevzdané studentem/studentkou
+        <i>{$student.firstname} {$student.surname}</i> (login {$student.login})
         v souboru <i>{$file.origfname}</i> bylo uloženo do systému.
     </p>
     <p>
         Za úlohu bylo přiděleno bodové hodnocení {$points} bod/body/bodů studentům
-        <ul>
-            {foreach from=$group_students item=grps name=grp_students}<li>{$grps.firstname} {$grps.surname} (login {$grps.login})</li>{/foreach}
-        </ul>
+    <ul>
+        {foreach from=$group_students item=grps name=grp_students}
+            <li>{$grps.firstname} {$grps.surname} (login {$grps.login})</li>{/foreach}
+    </ul>
     </p>
 {else}
     <p>

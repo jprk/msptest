@@ -5,6 +5,7 @@ class SubtaskBean extends DatabaseBean
     var $title;
     var $ttitle;
     var $type;
+    var $is_group_task;
     var $maxpts;
     var $position;
     var $lecture_id;
@@ -24,6 +25,7 @@ class SubtaskBean extends DatabaseBean
         $this->position = $this->rs['position'] = 0;
         $this->lecture_id = $this->rs['lecture_id'] = '';
         $this->active = $this->rs['active'] = false;
+        $this->is_group_task = $this->rs['is_group_task'] = false;
     }
 
     /* Constructor */
@@ -55,6 +57,7 @@ class SubtaskBean extends DatabaseBean
     function _updateFromResultSet()
     {
         $this->type = $this->rs['type'];
+        $this->is_group_task = $this->isGroupTask();
         $this->title = vlnka(stripslashes($this->rs['title']));
         $this->ttitle = vlnka(stripslashes($this->rs['ttitle']));
         $this->assignment = vlnka(stripslashes($this->rs['assignment']));
@@ -67,6 +70,7 @@ class SubtaskBean extends DatabaseBean
         $this->rs['title'] = $this->title;
         $this->rs['ttitle'] = $this->ttitle;
         $this->rs['assignment'] = $this->assignment;
+        $this->rs['is_group_task'] = $this->is_group_task;
     }
 
     function dbQuerySingle($alt_id = 0)
@@ -377,7 +381,7 @@ class SubtaskBean extends DatabaseBean
             {
                 $this->rs['issimuassignment'] = true;
             }
-            else if ($this->type == TaskBean::TT_WEEKLY_PDF)
+            else if ($this->type == TaskBean::TT_WEEKLY_PDF || $this->type == TaskBean::TT_GROUP_PDF)
             {
                 $this->rs['ispdfassignment'] = true;
             }
@@ -385,7 +389,7 @@ class SubtaskBean extends DatabaseBean
             {
                 $this->rs['islpdfassignment'] = true;
             }
-            else if ($this->type == TaskBean::TT_WEEKLY_ZIP || $this->type == TaskBean::TT_SEMESTRAL_ZIP)
+            else if ($this->type == TaskBean::TT_WEEKLY_ZIP || $this->type == TaskBean::TT_GROUP_ZIP || $this->type == TaskBean::TT_SEMESTRAL_ZIP)
             {
                 $this->rs['iszipassignment'] = true;
             }
@@ -436,6 +440,26 @@ class SubtaskBean extends DatabaseBean
         }
     }
 
+    /**
+     * Check if the task type corresponds to a student group task.
+     * @return bool The subtask type denotes a student group task.
+     */
+    function isGroupTask()
+    {
+        return in_array($this->type, TaskBean::GroupTaskTypes());
+    }
+
+    /**
+     * In cases where this subtask is a student group task, check that the student operating on it is a student
+     * that indeed belongs to some group. Returns an synthetic group of a single student in case that the subtask
+     * is a standard individual task.
+     * @return array[]|null List of students in a group or null in case that group check failed.
+     */
+    function checkStudentGroup()
+    {
+        $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
+        return $sgb->getValidStudentsForTaskType($this->isGroupTask());
+    }
 
     /* -------------------------------------------------------------------
        HANDLER: SHOW
@@ -449,18 +473,12 @@ class SubtaskBean extends DatabaseBean
         $assignmentBean = new AssignmentsBean ($this->id, $this->_smarty, null, null);
         $assignmentBean->assignSingle();
 
-        /* Get student group */
-        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
+        /* Make sure that the displayed subtask is not displayed by a student that does not have a student
+           group assigned. */
+        if ($this->checkStudentGroup() === null)
         {
-            $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
-            $students = $sgb->getGroupStudentsOfStudent(SessionDataBean::getUserId());
-            /* Check that the student is really member of a student group.
-               If so, the $students will contain at least his/her student id. */
-            if (empty($students))
-            {
-                $this->action = 'e_nogroup';
-                return;
-            }
+            /* Check failed, the subtask is a group task and the student does not belong to a group. */
+            $this->action = 'e_nogroup';
         }
     }
 

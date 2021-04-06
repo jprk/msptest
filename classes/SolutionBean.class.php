@@ -327,9 +327,13 @@ class SolutionBean extends DatabaseBean
         $studentBean = new StudentBean ($fileBean->uid, $this->_smarty, null, null);
         $studentBean->assignSingle();
 
-        /* In case that the lecture uses student group tasks, we have to fetch also information about
+        /* And also display some details about the subtask. */
+        $subtaskBean = new SubtaskBean ($fileBean->objid, $this->_smarty, null, null);
+        $subtaskBean->assignSingle();
+
+        /* In case that the lecture allows student group tasks, we have to fetch also information about
            the student group. */
-        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
+        if ($subtaskBean->isGroupTask() && (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE))
         {
             /* Get the student group of the student that submitted the file. */
             $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
@@ -351,6 +355,11 @@ class SolutionBean extends DatabaseBean
         {
             /* Assignment file UID block contains the UID of the student that submitted the solution. */
             $file_uid = $fileBean->uid;
+            /* This part of the code may be also invoked for lectures that use student groups. Make the
+               student group data empty, but existent so that the template may display some meaningful
+               content. */
+            $this->assign('group_data', array('name' => '&mdash;'));
+            $this->assign('group_students', array());
         }
 
         /* Now let us try to find the original assignment file. For some subtask types this file will not exist
@@ -363,9 +372,6 @@ class SolutionBean extends DatabaseBean
         $pointsBean = new PointsBean (null, $this->_smarty, null, null);
         $pointsBean->assignStudentSubtask($fileBean->uid, $fileBean->objid);
 
-        /* And also display some details about the subtask. */
-        $subtaskBean = new SubtaskBean ($fileBean->objid, $this->_smarty, null, null);
-        $subtaskBean->assignSingle();
         /* Keep information about ordering. */
         $this->processGetVars();
         $this->_smarty->assign('order', $this->order);
@@ -386,9 +392,13 @@ class SolutionBean extends DatabaseBean
         /* Update the points. */
         $pointsBean = new PointsBean (null, $this->_smarty, null, null);
 
+        /* And also display some details about the subtask. */
+        $subtaskBean = new SubtaskBean ($this->subtask_id, $this->_smarty, null, null);
+        $subtaskBean->assignSingle();
+
         /* In case that the lecture uses student group tasks, we have to award the same points to every member
            of the group. */
-        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
+        if ($subtaskBean->isGroupTask() && (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE))
         {
             $group_res = $_SESSION['group_res'];
             $group_data = $group_res[0];
@@ -416,6 +426,11 @@ class SolutionBean extends DatabaseBean
                 $this->schoolyear,
                 $this->points,
                 $this->comment);
+            /* This part of the code may be also invoked for lectures that use student groups. Make the
+               student group data empty but existent, so that the template may display some meaningful
+               content. */
+            $this->assign('group_data', array('name' => '&mdash;'));
+            $this->assign('group_students', array());
         }
 
         /* Publish the number of points that were awarded for this solution. */
@@ -432,9 +447,9 @@ class SolutionBean extends DatabaseBean
         /**
          * @var SubtaskBean $subtaskBean
          * And also display some details about the subtask. The same as above applies. */
-        $subtaskBean = $_SESSION['subtask'];
-        $subtaskBean->setSmarty($this->_smarty);
-        $subtaskBean->assign_rs();
+        //$subtaskBean = $_SESSION['subtask'];
+        //$subtaskBean->setSmarty($this->_smarty);
+        //$subtaskBean->assign_rs();
 
         /* And we need also information about the file. */
         $fileBean = new FileBean ($this->id, $this->_smarty, null, null);

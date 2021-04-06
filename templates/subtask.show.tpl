@@ -1,12 +1,14 @@
 <h2>{czech}Informace o úloze{/czech}{english}Information about the task{/english}</h2>
 <p>
-<strong>{czech}Aktivní od:{/czech}{english}Active from:{/english}</strong> {$subtask.datefrom|date_format:"%d.%m.%Y"}<br>
-<strong>{czech}Aktivní do:{/czech}{english}Deadline:{/english}</strong> {$subtask.dateto|date_format:"%d.%m.%Y"}<br>
-<strong>{czech}Bodové maximum:{/czech}{english}Maximum points:{/english}</strong> {$subtask.maxpts}
+    <strong>{czech}Aktivní od:{/czech}{english}Active from:{/english}</strong> {$subtask.datefrom|date_format:"%d.%m.%Y %H:%M"}
+    <br>
+    <strong>{czech}Aktivní do:{/czech}{english}Deadline:{/english}</strong> {$subtask.dateto|date_format:"%d.%m.%Y %H:%M"}
+    <br>
+    <strong>{czech}Bodové maximum:{/czech}{english}Maximum points:{/english}</strong> {$subtask.maxpts}
 </p>
 {if $subtask.assignment}
-<h3>{czech}Text zadání{/czech}{english}Problem formulation{/english}</h3>
-{$subtask.assignment}
+    <h3>{czech}Text zadání{/czech}{english}Problem formulation{/english}</h3>
+    {$subtask.assignment}
 {/if}
 {if isset($assignment.file_id)}
     <p>

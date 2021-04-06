@@ -367,7 +367,7 @@ class FormSolutionsBean extends DatabaseBean
      */
     function sendConfirmationEmail($stb, $students, $group_task = true)
     {
-        /* Send an e-mail to the user saying that the password has been changed. */
+        /* Send an e-mail to the user saying that the solution has been uploaded. */
 
         $header = "From: " . SENDER_FULL . "\r\n";
         // $header  .= "To: <" . $this->email . ">\r\n";
@@ -530,22 +530,17 @@ class FormSolutionsBean extends DatabaseBean
         $ce = array();
         $cf = array();
 
-        /* Get student group */
-        if (SessionDataBean::getLectureGroupType() != StudentGroupBean::GRPTYPE_NONE)
+        /* In case of a group task, populate `$students` with the list of students in the group of the current
+           student and check that the student submitting the solution is a member of a student group.
+           If the student is not a member of a group, $students will be null.
+           If the submitted solution is not a solution to a group task, $students contains only the ID of the
+           current student. */
+        $students = $subtaskBean->checkStudentGroup();
+        if ($students === null)
         {
-            $sgb = new StudentGroupBean(null, $this->_smarty, null, null);
-            $students = $sgb->getGroupStudentsOfStudent($studentId);
-            /* Check that the student is really member of a student group.
-               If so, the $students will contain at least his/her student id. */
-            if (empty($students))
-            {
-                $this->action = 'e_nogroup';
-                return;
-            }
-        }
-        else
-        {
-            $students = StudentGroupBean::getDefaultGroupStudents($studentId);
+            /* Check failed, the subtask is a group task and the student does not belong to a group. */
+            $this->action = 'e_nogroup';
+            return;
         }
 
         /* Check that the assignment has not been submitted already by this student. */
@@ -559,7 +554,8 @@ class FormSolutionsBean extends DatabaseBean
         {
             /* Refuse to submit a subtask that is not active. */
             $this->action = "err02";
-        } /* Store the assignment. */
+        }
+        /* Store the assignment. */
         else
         {
             switch ($subtaskBean->type)
@@ -700,6 +696,7 @@ class FormSolutionsBean extends DatabaseBean
                     break;
 
                 case TaskBean::TT_WEEKLY_PDF:
+                case TaskBean::TT_GROUP_PDF:
                 case TaskBean::TT_LECTURE_PDF:
                 case TaskBean::TT_SEMESTRAL_INDIV_PDF:
                     /* Construct the file bean that implements also all operations on 
@@ -807,6 +804,7 @@ class FormSolutionsBean extends DatabaseBean
                     break;
 
                 case TaskBean::TT_WEEKLY_ZIP:
+                case TaskBean::TT_GROUP_ZIP:
                 case TaskBean::TT_LECTURE_ZIP:
                 case TaskBean::TT_SEMESTRAL_ZIP:
                     /* Construct the file bean that implements also all operations on assigment files. */

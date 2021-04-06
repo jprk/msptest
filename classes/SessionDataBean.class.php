@@ -10,6 +10,10 @@ class SessionDataBean
     const SDB_USER_DATA = 'user';
     const SDB_FROM_POWER_USER = 'from_power_user';
     const SDB_FLARUM_SSO = 'flarum_sso';
+    const SDB_LAST_ACTIVITY = 'last_activity';
+    const SDB_CREATED_TIME = 'created_time';
+
+    const SDB_SESSION_LENGTH = 1800;
 
     /**
      * Constructor is empty in this case. This class has only static methods.
@@ -38,6 +42,28 @@ class SessionDataBean
             /* Make sure that we have some lecture identifier. The
                default layout has an id==0. */
             self::setDefaultLecture();
+        }
+
+        /* Handle session timeout. The session times out after SDB_SESSION_LENGTH seconds
+           of inactivity. */
+        $timestamp = time();
+        if (isset($_SESSION[self::SDB_LAST_ACTIVITY]) && (time() - $_SESSION[self::SDB_LAST_ACTIVITY] > self::SDB_SESSION_LENGTH))
+        {
+            // last request was more than 30 minutes ago
+            session_unset();     // unset $_SESSION variable for the run-time
+            session_destroy();   // destroy session data in storage
+        }
+        $_SESSION[self::SDB_LAST_ACTIVITY] = $timestamp; // update last activity time stamp
+
+        if (!isset($_SESSION[self::SDB_CREATED_TIME]))
+        {
+            $_SESSION[self::SDB_CREATED_TIME] = $timestamp;
+        }
+        else if ($timestamp - $_SESSION[self::SDB_CREATED_TIME] > self::SDB_SESSION_LENGTH)
+        {
+            // session started more than 30 minutes ago
+            session_regenerate_id(true);    // change session ID for the current session and invalidate old session ID
+            $_SESSION[self::SDB_CREATED_TIME] = $timestamp;  // update creation time
         }
     }
 

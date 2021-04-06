@@ -8,17 +8,17 @@
   <td>{$subtask.title} ({$subtask.ttitle})</td>
 </tr>
 <tr class="rowB">
-{if $lecture.do_groups}
+{if $lecture.do_groups && $subtask.is_group_task}
   <td>Studentská skupina:</td>
   <td>{if $group_data}{$group_data.name}{else}nepřiřazen{/if}</td>
 </tr>
-<tr class="rowA">
+  <tr class="rowA">
     <td>Studenti ve skupině:</td>
     <td>{foreach from=$group_students item=grps name=grp_students}{$grps.firstname} {$grps.surname}{if not $smarty.foreach.grp_students.last}, {/if}{/foreach}</td>
-<tr class="rowB">
+  <tr class="rowB">
     <td>Odevzdal(a):</td>
-{else}
-  <td>Student:</td>
+    {else}
+    <td>Student:</td>
 {/if}
   <td>{$student.firstname} {$student.surname} ({$student.yearno}/{$student.groupno})</td>
 </tr>

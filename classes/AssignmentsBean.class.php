@@ -132,31 +132,39 @@ class AssignmentsBean extends DatabaseBean
 
     /**
      * Get the ID of an assignment for particular student and subtask.
-     * Returns ID_INVALID in case that the assinment ID cannot be found and
+     * Returns ID_INVALID in case that the assignment ID cannot be found and
      * ID_UNDEFINED for tasks that do not have any individual assignments.
+     * @throws Exception
      */
     function getAssignmentId($studentId, $subtaskId, $subtaskType)
     {
+        $assignId = self::ID_INVALID;
         /* First check the subtask type. */
         if (SubtaskBean::noAssignmentIdRequired($subtaskType))
         {
-            $assignmntId = self::ID_UNDEFINED;
+            /* This is a subtask without individual assignments, i.e. it has no assignment id. */
+            $assignId = self::ID_UNDEFINED;
         }
         else
         {
+            /* This subtask should have a list of assignment ids available. */
             $rs = $this->getSingle($studentId, $subtaskId);
-            $this->dumpVar('getassignmentid', $rs);
+            $this->dumpVar('getAssignmentId::rs', $rs);
             if (!empty ($rs))
             {
                 if ($rs['assignmnt_id'] <= self::ID_UNDEFINED)
                 {
-                    trigger_error("getAssignmentId(): assignmnt_id is zero");
+                    throw new Exception('Data inconsistent: `assignment_id` is zero or lower!');
                 }
+                $assignId = $rs['assignmnt_id'];
             }
-            $assignmntId = (empty ($rs)) ? self::ID_INVALID : $rs['assignmnt_id'];
+            else
+            {
+                throw new Exception('Data inconsistent: compulsory `assignment_id` is not defined for this subtask!');
+            }
         }
 
-        return $assignmntId;
+        return $assignId;
     }
 
     /**

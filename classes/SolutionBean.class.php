@@ -110,6 +110,8 @@ class SolutionBean extends DatabaseBean
             TaskBean::TT_WEEKLY_ZIP,
             TaskBean::TT_LECTURE_PDF,
             TaskBean::TT_LECTURE_ZIP,
+            TaskBean::TT_GROUP_PDF,
+            TaskBean::TT_GROUP_ZIP,
             TaskBean::TT_SEMESTRAL_ZIP,
             TaskBean::TT_SEMESTRAL_INDIV_PDF);
         $tLst = arrayToDBString($ta);

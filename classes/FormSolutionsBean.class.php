@@ -99,6 +99,13 @@ class FormSolutionsBean extends DatabaseBean
         assignPostIfExists($this->confirmed, $this->rs, 'confirmed');
     }
 
+    /**
+     * @param $subtaskId
+     * @param $students
+     * @param $assignmentId
+     * @return bool
+     * @throws Exception
+     */
     function haveSolution($subtaskId, $students, $assignmentId)
     {
         /* Limit the solution check to solutions submitted within the
@@ -142,6 +149,8 @@ class FormSolutionsBean extends DatabaseBean
 
     /**
      * Fetch a complete list of assigments for a single subtask.
+     * @param $subtaskList
+     * @return array
      */
     function getFullSubtaskList($subtaskList)
     {

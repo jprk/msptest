@@ -52,7 +52,7 @@ class TaskBean extends DatabaseBean
             self::TT_GROUP_PDF => "Skupinová úloha (odevzdává se jeden soubor *.pdf)",
             self::TT_LECTURE_PDF => "Hromadně zadaná úloha všem (odevzdává se jeden soubor *.pdf)",
             self::TT_LECTURE_ZIP => "Hromadně zadaná úloha všem (odevzdává se jeden soubor *.zip)",
-            self::TT_SEMESTRAL_ZIP => "Semestrální úloha (odevzdává se jeden soubor *.zip)",
+            self::TT_SEMESTRAL_ZIP => "Semestrální úloha s hromadným zadáním (odevzdává se jeden soubor *.zip)",
             self::TT_SEMESTRAL_INDIV_PDF => "Semestrální úloha s individuálním zadáním (odevzdává se jeden soubor *.pdf)",
             self::TT_NO_TOTAL_POINTS => "Podmínka zápočtu bez připsání bodů"
         );

@@ -1,4 +1,4 @@
 <p>
-Při pokusu zpracovat Vámi nahraný soubor nebyl tento soubor nalezen. Opakujte
-prosím ovezdání úlohy.
+    Při pokusu zpracovat Vámi nahraný soubor nebyl tento soubor nalezen. Opakujte prosím ovezdání úlohy s
+    menším souborem, případně jej zkuste přejmenovat.
 <p>

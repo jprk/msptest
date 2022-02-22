@@ -187,12 +187,16 @@ if ($stringId != (string)$id or
    and testing web applications on the same machine, or different applications
    on the same machine), we will use a named session. The name of the
    session will be identical to the base directory of the application. */
-session_name(BASE_DIR);
+session_name('session_' . str_replace('/', '_', trim(BASE_DIR, '/')));
 session_start();
 
 /* Start buffering output so that headers that may be emitted in the handlers are still sent
    to the client. */
 ob_start();
+
+// error_log('main: script ' . $_SERVER['SCRIPT_URI']);
+// error_log('main: request ' . $_SERVER['REQUEST_URI']);
+// error_log('main: session SID=' . session_id());
 
 /* Check for a sign that we have been connected to an existing session. In case that the session does not contain
    instance data of LectureBean as `lecture`, we will force a redirect to the home page. */

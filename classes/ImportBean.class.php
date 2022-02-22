@@ -1,5 +1,8 @@
 <?php
 
+require_once('external/SimpleXLSX.php');
+use Shuchkin\SimpleXLSX;
+
 class ImportBean extends DatabaseBean
 {
     const FORMAT_WEBKOS_2020 = 6;
@@ -97,6 +100,7 @@ class ImportBean extends DatabaseBean
            'v2' is the newer format provided by WebKOS that unfortunately
                 lacks student e-mails and logins. */
         $format = (int)$_POST['format'];
+        error_log("import format = $format");
 
         /* Check if the automatic study year increment has been requested. */
         $addyear = (isset ($_POST['addyear']));
@@ -125,9 +129,26 @@ class ImportBean extends DatabaseBean
 
         if (is_uploaded_file($kosfile['tmp_name']))
         {
+            /* Originally, the uploaded file was a CSV file which had different formats depending on the terminal /
+               GUI / webkos version that produced them. Cca 2020 the web version of the KOS started to export native
+               XLSX, and since the "new webkos version" of spring 2022 we support also direct import from KOS-generated
+               Excel file. */
+            $path_parts = pathinfo($kosfile['name']);
+            if ($path_parts['extension'] == 'xlsx')
+            {
+                /* The uploaded file is anMS Excel XLSX file, parse it. */
+                $xlsx = SimpleXLSX::parse($kosfile['tmp_name']);
+                $kos_rows = $xlsx->rows();
+                die('XLSX implementation not finished yet.');
+            }
             $handle = @fopen($kosfile['tmp_name'], "r");
             if ($handle)
             {
+                /* Guess the encoding. */
+                $string_data = fread($handle, 8192);
+                $encoding = @mb_detect_encoding($string_data, 'ascii, utf-8, windows-1250, iso-8859-2');
+                fseek($handle, 0);
+                error_log("import: guessed encoding = $encoding");
                 /* In case of FORMAT_WEBKOS_2015 or FORMAT_IKOS we have to skip the first line (or two) of
                    the imported CSV file - it contains header information. */
                 $skipHeader = ($format == self::FORMAT_WEBKOS_2015) || ($format == self::FORMAT_IKOS) || ($format == self::FORMAT_IKOS_ROZ);
@@ -154,7 +175,14 @@ class ImportBean extends DatabaseBean
                            The (again) updated WEBKOS format adds an extra header line in the format
                               KOSI export_prez_sez_<term_id e.g. B162>_<lecture_id e.g. 11FY1>;;;;;;;;;;;;
                            and an extra column "Typ programu". */
-                        if ($row == 0 && strpos($buffer, 'KOSI export_prez_sez') === 0) {
+                        error_log("import: row = $row");
+                        error_log("import: trimmed buffer = `$trimmed`");
+                        /* Sometimes the file comes with UTF-8 BOM at the beginning which needs to be removed. */
+                        $trimmed = trim($trimmed, "\xef\xbb\xbf");
+                        error_log("import: trimmed buffer without BOM = `$trimmed`");
+                        if ($row == 0 && strpos($trimmed, 'KOSI export_prez_sez') === 0)
+                        {
+                            error_log("import: new WEBKOS format detected");
                             /* New WEBKOS format:
                              * - the initial version goes back to cca 2017 and had 14 columns
                              * - in 09/2020 a new version with 15 columns has been introduced
@@ -164,8 +192,8 @@ class ImportBean extends DatabaseBean
                                 throw new Exception('WEBKOS export format mismatch: cannot find semester number');
                             }
                             $semester = intval($semester_str);
-                            error_log("semester_str = $semester_str");
-                            error_log("semester = $semester");
+                            error_log("import: semester_str = $semester_str");
+                            error_log("import: semester = $semester");
                             if ($semester < 200) {
                                 $format = self::FORMAT_WEBKOS_2017;
                                 error_log('import::FORMAT_WEBKOS_2017');
@@ -232,8 +260,8 @@ class ImportBean extends DatabaseBean
                                     'numcols' => 15,
                                     'manual_login' => 14,
                                     'manual_email' => 15));
-                            $data['surname'] = iconv("windows-1250", "utf-8", trim($la[0], " \t\n\r\"\xa0"));
-                            $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\"\xa0"));
+                            $data['surname'] = iconv($encoding, "utf-8", trim($la[0], " \t\n\r\"\xa0"));
+                            $data['firstname'] = iconv($encoding, "utf-8", trim($la[1], " \t\n\r\"\xa0"));
                             // up to 2012-11-05 ... $data['yearno']    = trim ( $la[8], " \t\n\r\"" );
                             $i = $idx[$format]['yearno'];
                             $data['yearno'] = trim($la[$i], " \t\n\r\"");

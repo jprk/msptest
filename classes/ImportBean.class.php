@@ -5,6 +5,7 @@ use Shuchkin\SimpleXLSX;
 
 class ImportBean extends DatabaseBean
 {
+    const FORMAT_WEBKOS_XLSX_2022 = 7;
     const FORMAT_WEBKOS_2020 = 6;
     const FORMAT_WEBKOS_2017 = 5;
     const FORMAT_IKOS_ROZ = 4;
@@ -60,6 +61,61 @@ class ImportBean extends DatabaseBean
     function dbReplace()
     {
 
+    }
+
+    /**
+     * Query the LDAP server for student login and email.
+     * @param $ldap LDAPConnection LDAP server connection.
+     * @param $data array Currently known student data.
+     * @param $row integer Row number in the input file.
+     * @return array Triplet of (login, email, error string).
+     * @throws Exception
+     *@todo Should be probably moved to the LDAPConnection class.
+     *
+     */
+    function QueryLDAPInfo(LDAPConnection $ldap, array $data, int $row): array
+    {
+        /* Convenience variables */
+        $cvutid = $data['cvutid'];
+        $student_info = 'record for student ' . $data['firstname'] . ' ' . $data['surname'] . ' (cvutid ' . $cvutid . ')';
+
+        /* Fetch information from LDAP about this student. */
+        $info = $ldap->searchSingle("cvutid=$cvutid");
+
+        /* Check that the returned record has `dn` field */
+        if (is_null($info)) {
+            throw new Exception ("Row $row: LDAP info does not contain $student_info");
+        }
+
+        /* Check that the returned record has `dn` field */
+        if (!array_key_exists('dn', $info)) {
+            throw new Exception ("Row $row: LDAP info does not contain DN $student_info");
+        }
+
+        /* First `cn` record in DN string contains the login. */
+        $dn_data = $ldap->parseLdapDn($info['dn']);
+        self::dumpVar('dn_data', $dn_data);
+        if (!array_key_exists('cn', $dn_data)) {
+            throw new Exception ("Row $row: LDAP $student_info does not contain 'cn'.");
+        }
+        $ret_login = $dn_data['cn'][0];
+
+        /* Check that the returned record has also `mail` field. */
+        $ret_err = '';
+        if (!array_key_exists('mail', $info)) {
+            $ret_err =
+                'LDAP info neobsahuje údaje o e-mailu pro studenta ' .
+                $data['firstname'] . ' ' .
+                $data['surname'] . ' (cvutid ' .
+                $cvutid . ')<br/>';
+            /* ... guess the missing information. */
+            $ret_email = $data['login'] . '@fd.cvut.cz';
+        } else {
+            /* ... and fill in the missing information. */
+            $ret_email = $info['mail'][0];
+        }
+
+        return array($ret_login, $ret_email, $ret_err);
     }
 
     /* -------------------------------------------------------------------
@@ -139,244 +195,56 @@ class ImportBean extends DatabaseBean
                 /* The uploaded file is anMS Excel XLSX file, parse it. */
                 $xlsx = SimpleXLSX::parse($kosfile['tmp_name']);
                 $kos_rows = $xlsx->rows();
-                die('XLSX implementation not finished yet.');
-            }
-            $handle = @fopen($kosfile['tmp_name'], "r");
-            if ($handle)
-            {
-                /* Guess the encoding. */
-                $string_data = fread($handle, 8192);
-                $encoding = @mb_detect_encoding($string_data, 'ascii, utf-8, windows-1250, iso-8859-2');
-                fseek($handle, 0);
-                error_log("import: guessed encoding = $encoding");
-                /* In case of FORMAT_WEBKOS_2015 or FORMAT_IKOS we have to skip the first line (or two) of
-                   the imported CSV file - it contains header information. */
-                $skipHeader = ($format == self::FORMAT_WEBKOS_2015) || ($format == self::FORMAT_IKOS) || ($format == self::FORMAT_IKOS_ROZ);
-                /* First row of the resulting list. */
-                $row = 0;
-                /* And loop while we have something to chew on ... */
-                while (!feof($handle))
+                /*
+                    echo("<samp>\n");
+                    foreach ($kos_rows as $row => $data)
+                    {
+                        echo("import: xlsx row $row: ");
+                        // foreach($data as $elem) { echo($elem); }
+                        print_r($data);
+                        echo("<br/>\n");
+                    }
+                    echo("</samp>\n");
+                */
+                /* FORMAT_WEBKOS_XLSX_2022:
+                   $kos_rows[0][0] == 'Prezenční seznam'
+                   $kos_rows[1][0] == 'Předmět:', $kos_rows[1][1] == '11ELMO – Elektromagnetismus a optika'
+                   $kos_rows[2][0] == 'Semestr:', $kos_rows[2][1] == 'B212'
+                   $kos_rows[3] contains 19 empty elements
+                   $kos_rows[4] is Array ( [0] => Příjmení [1] => Jméno [2] => Osobní číslo [3] => Username [4] => Fakulta [5] => Studijní program [6] => Typ programu [7] => Forma studia [8] => Obor (Specializace) [9] => Role předmětu [10] => Stav [11] => Ročník [12] => Skupina [13] => Přednášková paralelka [14] => Učitel přednáškové paralelky [15] => Cvičební paralelka [16] => Učitel cvičební paralelky [17] => Laboratorní paralelka [18] => Učitel laboratorní paralelky )
+                */
+                if ($kos_rows[0][0] == 'Prezenční seznam' &&
+                    $kos_rows[1][0] == 'Předmět:' &&
+                    $kos_rows[2][0] == 'Semestr:' &&
+                    count($kos_rows[4]) == 19 )
                 {
-                    /* Read a line of text from the submitted file. */
-                    $buffer = fgets($handle, 4096);
-                    /* The file contains sometimes also form feed character
-                       (^L, 0x0c) which shall be removed as well. */
-                    $trimmed = trim($buffer, " \t\n\r\0\x0b\x0c\xa0");
-                    /* The file may also contain some empty lines, and trimming
-                       the form feed will generate another empty line. */
-                    if (empty ($trimmed))
-                    {
-                        /* Skip empty lines. */
-                        continue;
-                    }
-                    if ($skipHeader)
-                    {
-                        /* Skip the header line in case of FORMAT_WEBKOS_2015/IKOS.
-                           The (again) updated WEBKOS format adds an extra header line in the format
-                              KOSI export_prez_sez_<term_id e.g. B162>_<lecture_id e.g. 11FY1>;;;;;;;;;;;;
-                           and an extra column "Typ programu". */
-                        error_log("import: row = $row");
-                        error_log("import: trimmed buffer = `$trimmed`");
-                        /* Sometimes the file comes with UTF-8 BOM at the beginning which needs to be removed. */
-                        $trimmed = trim($trimmed, "\xef\xbb\xbf");
-                        error_log("import: trimmed buffer without BOM = `$trimmed`");
-                        if ($row == 0 && strpos($trimmed, 'KOSI export_prez_sez') === 0)
-                        {
-                            error_log("import: new WEBKOS format detected");
-                            /* New WEBKOS format:
-                             * - the initial version goes back to cca 2017 and had 14 columns
-                             * - in 09/2020 a new version with 15 columns has been introduced
-                             */
-                            $semester_str = substr($trimmed, 22, 3);
-                            if ($semester_str === false) {
-                                throw new Exception('WEBKOS export format mismatch: cannot find semester number');
-                            }
-                            $semester = intval($semester_str);
-                            error_log("import: semester_str = $semester_str");
-                            error_log("import: semester = $semester");
-                            if ($semester < 200) {
-                                $format = self::FORMAT_WEBKOS_2017;
-                                error_log('import::FORMAT_WEBKOS_2017');
-                            } else {
-                                $format = self::FORMAT_WEBKOS_2020;
-                                error_log('import::FORMAT_WEBKOS_2020');
-                            }
-                        }
-                        else
-                        {
-                            /* For other formats only the first line will be skipped, but for the new WEBKOS
-                               format we will skip at least two lines. */
-                            $skipHeader = false;
-                        }
-                        continue;
-                    }
-                    /* The line contains several fields separated by semicolon. */
-                    $la = explode(";", $trimmed);
-                    self::dumpVar('la', $la);
+                    $format = self::FORMAT_WEBKOS_XLSX_2022;
+                    $firstRow = 5;
+                }
+                else
+                {
+                    throw new Exception("File '" . $kosfile['name'] . "' is in unsupported WEBKOS XLSX format.");
+                }
 
-                    /* Convert data from the file. */
+                foreach ($kos_rows as $row => $la)
+                {
+                    if ($row < $firstRow) continue;
+
                     $data = array();
-                    switch ($format)
+                    // if ($format == self::FORMAT_WEBKOS_XLSX_2022)
                     {
-                        case self::FORMAT_TERMINAL:
-                            $data['surname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\""));
-                            $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[2], " \t\n\r\""));
-                            $data['yearno'] = trim($la[3], " \t\n\r\"");
-                            $data['groupno'] = trim($la[4], " \t\n\r\"");
-                            $data['email'] = trim($la[5], " \t\n\r\"");
-                            $emailex = explode("@", $data['email']);
-                            $data['login'] = trim($emailex[0], " \t\n\r\"");
-                            $data['hash'] = trim($la[6], " \t\n\r\"");
-                            /* We have the possibility to not specify `cvutid` at all - this corresponds to the
-                               original terminal version of KOS. */
-                            if (count($la) <= 7)
-                                $data['cvutid'] = 0;
-                            else
-                                $data['cvutid'] = trim($la[7], " \t\n\r\"");
-                            /* In some years, students from Decin do not have a group
-                                     number. We will assign them with group id 0 which is not
-                                     used anywhere. */
-                            if (empty ($data['groupno'])) $data['groupno'] = "0";
-                            break;
-                        case self::FORMAT_WEBKOS_2015:
-                        case self::FORMAT_WEBKOS_2017:
-                        case self::FORMAT_WEBKOS_2020:
-                            $idx = array(
-                                self::FORMAT_WEBKOS_2015 => array(
-                                    'yearno' => 9,
-                                    'groupno' => 11,
-                                    'numcols' => 13,
-                                    'manual_login' => 12,
-                                    'manual_email' => 13),
-                                self::FORMAT_WEBKOS_2017 => array(
-                                    'yearno' => 10,
-                                    'groupno' => 13,
-                                    'numcols' => 14,
-                                    'manual_login' => 13,
-                                    'manual_email' => 14),
-                                self::FORMAT_WEBKOS_2020 => array(
-                                    'yearno' => 10,
-                                    'groupno' => 13,
-                                    'numcols' => 15,
-                                    'manual_login' => 14,
-                                    'manual_email' => 15));
-                            $data['surname'] = iconv($encoding, "utf-8", trim($la[0], " \t\n\r\"\xa0"));
-                            $data['firstname'] = iconv($encoding, "utf-8", trim($la[1], " \t\n\r\"\xa0"));
-                            // up to 2012-11-05 ... $data['yearno']    = trim ( $la[8], " \t\n\r\"" );
-                            $i = $idx[$format]['yearno'];
-                            $data['yearno'] = trim($la[$i], " \t\n\r\"");
-                            // up to 2012-11-05 ... $data['groupno']   = trim ( $la[10], " \t\n\r\"" );
-                            $i = $idx[$format]['groupno'];
-                            $data['groupno'] = trim($la[$i], " \t\n\r\"");
-                            $cvutid = trim($la[2], " \t\n\r\"");
-                            $data['cvutid'] = $cvutid;
-                            $data['hash'] = $cvutid;
-                            /* In some years, students from Decin do not have a group
-                             number. We will assign them with group id 0 which is not
-                            used anywhere. */
-                            if (empty ($data['groupno'])) $data['groupno'] = "0";
+                        $data['surname'] = $la[0];
+                        $data['firstname'] = $la[1];
+                        $data['cvutid'] = $la[2];
+                        $data['login'] = strtolower($la[3]);
+                        $data['yearno'] = $la[11];
+                        $data['groupno'] = $la[12];
+                        $data['email'] = $data['login'] . "@fd.cvut.cz";
+                        $data['hash'] = $la[2];
 
-                            /* We have the possibility to append `login` and `e-mail` information manually, circumventing
-                               the need for LDAP queiries (again, this is mostly necessary for Decin). */
-                            $this->dumpVar('count(la)', count($la));
-                            if (count($la) <= $idx[$format]['numcols']) {
-                                /* Fetch information from LDAP about this student. */
-                                $info = $ldap->searchSingle("cvutid=$cvutid");
-
-                                /* Check that the returned record has `dn` field */
-                                if (is_null($info)) {
-                                    throw new Exception (
-                                        "Row $row: LDAP info neobsahuje záznam pro ČVUT ID `$cvutid`"
-                                    );
-                                }
-
-                                /* Check that the returned record has `dn` field */
-                                if (!array_key_exists('dn', $info)) {
-                                    throw new Exception (
-                                        'LDAP info neobsahuje DN záznam pro studenta ' .
-                                        $data['firstname'] . ' ' .
-                                        $data['surname'] . ' (cvutid ' .
-                                        $cvutid . ')'
-                                    );
-                                }
-
-                                /* First `cn` record in DN string contains the login. */
-                                $dn_data = $ldap->parseLdapDn($info['dn']);
-                                self::dumpVar('dn_data', $dn_data);
-                                if (!array_key_exists('cn', $dn_data)) {
-                                    throw new Exception (
-                                        'LDAP DN záznam pro studenta ' .
-                                        $data['firstname'] . ' ' .
-                                        $data['surname'] . ' (cvutid ' .
-                                        $cvutid . ') neobsahuje `cn`.'
-                                    );
-                                }
-                                $data['login'] = $dn_data['cn'][0];
-
-                                /* Check that the returned record has also `mail` field. */
-                                if (!array_key_exists('mail', $info)) {
-                                    $errStr .=
-                                        'LDAP info neobsahuje údaje o e-mailu pro studenta ' .
-                                        $data['firstname'] . ' ' .
-                                        $data['surname'] . ' (cvutid ' .
-                                        $cvutid . ')<br/>';
-                                    /* ... guess the missing information. */
-                                    $data['email'] = $data['login'] . '@fd.cvut.cz';
-                                } else {
-                                    /* ... and fill in the missing information. */
-                                    $data['email'] = $info['mail'][0];
-                                }
-                            } else {
-                                /* Manually extended WebKOS output with login and e-mail information. */
-                                $i = $idx[$format]['manual_login'];
-                                $data['login'] = $la[$i];
-                                /* Check that the data contains something meaningful */
-                                if (empty ($data['login'])) {
-                                    throw new Exception("Row $row: Expected field $i to contain login, but the field is empty.");
-                                }
-                                $i = $idx[$format]['manual_email'];
-                                $data['email'] = $la[$i];
-                                /* Check that the data contains something meaningful */
-                                if (empty ($data['login'])) {
-                                    throw new Exception("Row $row: Expected field $i to contain e-mail address, but the field is empty.");
-                                }
-                            }
-
-                            break;
-                        case self::FORMAT_IKOS:
-                            $data['surname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\""));
-                            $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[2], " \t\n\r\""));
-                            $data['yearno'] = trim($la[11], " \t\n\r\"");
-                            $data['groupno'] = trim($la[12], " \t\n\r\"");
-                            $data['login'] = strtolower(trim($la[5], " \t\n\r\""));
-                            $data['email'] = $data['login'] . "@fd.cvut.cz";
-                            $data['hash'] = trim($la[3], " \t\n\r\"");
-                            $data['cvutid'] = trim($la[4], " \t\n\r\"");
-                            /* In some years, students from Decin do not have a group
-                                     number. We will assign them with group id 0 which is not
-                                     used anywhere. */
-                            if (empty ($data['groupno'])) $data['groupno'] = "0";
-                            break;
-                        case self::FORMAT_IKOS_ROZ:
-                            /* This type of output contains a complete name of student in a single field.
-                               We will do out best to decipher the name and surname part, but obviously in some
-                               cases we will be wrong (for multi-word surnames) */
-                            $namefield = explode(" ", $la[2], 2);
-                            $data['surname'] = iconv("windows-1250", "utf-8", trim($namefield[0], " \t\n\r\""));
-                            $data['firstname'] = iconv("windows-1250", "utf-8", trim($namefield[1], " \t\n\r\""));
-                            $data['yearno'] = trim($la[10], " \t\n\r\"");
-                            $data['groupno'] = trim($la[11], " \t\n\r\"");
-                            $data['login'] = strtolower(trim($la[4], " \t\n\r\""));
-                            $data['email'] = $data['login'] . "@fd.cvut.cz";
-                            $data['hash'] = trim($la[3], " \t\n\r\"");
-                            $data['cvutid'] = trim($la[3], " \t\n\r\"");
-                            /* In some years, students from Decin do not have a group
-                               number. We will assign them with group id 0 which is not
-                               used anywhere. */
-                            if (empty ($data['groupno'])) $data['groupno'] = "0";
-                            break;
-                        default:
-                            throw new Exception ('Neplatný formát vstupního souboru.');
+                        list($data['login'], $data['email'], $e) = self::QueryLDAPInfo($ldap, $data, $row);
+                        // Append the error text if any to the output error string.
+                        $errStr .= $e;
                     }
 
                     /* If requested, increment the year number. */
@@ -389,21 +257,219 @@ class ImportBean extends DatabaseBean
                     $group = (int)$data['groupno'];
                     $groupList[$group] = $group;
 
-                    /* Check the format of the file. */
-
                     /* Append the record to the list of displayed names. */
-                    $studentList[$row] = $data;
-                    $row++;
+                    $studentList[] = $data;
                 }
-
-                /* Close the input file. */
-                fclose($handle);
             }
-            else
-            {
-                /* The file cannot be opened for reading. */
-                $this->action = 'e_open';
-                return ERR_ADMIN_MODE;
+            else {
+                $handle = @fopen($kosfile['tmp_name'], "r");
+                if ($handle) {
+                    /* Guess the encoding. */
+                    $string_data = fread($handle, 8192);
+                    $encoding = @mb_detect_encoding($string_data, 'ascii, utf-8, windows-1250, iso-8859-2');
+                    fseek($handle, 0);
+                    error_log("import: guessed encoding = $encoding");
+                    /* In case of FORMAT_WEBKOS_2015 or FORMAT_IKOS we have to skip the first line (or two) of
+                       the imported CSV file - it contains header information. */
+                    $skipHeader = ($format == self::FORMAT_WEBKOS_2015) || ($format == self::FORMAT_IKOS) || ($format == self::FORMAT_IKOS_ROZ);
+                    /* First row of the resulting list. */
+                    $row = 0;
+                    /* And loop while we have something to chew on ... */
+                    while (!feof($handle)) {
+                        /* Read a line of text from the submitted file. */
+                        $buffer = fgets($handle, 4096);
+                        /* The file contains sometimes also form feed character
+                           (^L, 0x0c) which shall be removed as well. */
+                        $trimmed = trim($buffer, " \t\n\r\0\x0b\x0c\xa0");
+                        /* The file may also contain some empty lines, and trimming
+                           the form feed will generate another empty line. */
+                        if (empty ($trimmed)) {
+                            /* Skip empty lines. */
+                            continue;
+                        }
+                        if ($skipHeader) {
+                            /* Skip the header line in case of FORMAT_WEBKOS_2015/IKOS.
+                               The (again) updated WEBKOS format adds an extra header line in the format
+                                  KOSI export_prez_sez_<term_id e.g. B162>_<lecture_id e.g. 11FY1>;;;;;;;;;;;;
+                               and an extra column "Typ programu". */
+                            error_log("import: row = $row");
+                            error_log("import: trimmed buffer = `$trimmed`");
+                            /* Sometimes the file comes with UTF-8 BOM at the beginning which needs to be removed. */
+                            $trimmed = trim($trimmed, "\xef\xbb\xbf");
+                            error_log("import: trimmed buffer without BOM = `$trimmed`");
+                            if ($row == 0 && strpos($trimmed, 'KOSI export_prez_sez') === 0) {
+                                error_log("import: new WEBKOS format detected");
+                                /* New WEBKOS format:
+                                 * - the initial version goes back to cca 2017 and had 14 columns
+                                 * - in 09/2020 a new version with 15 columns has been introduced
+                                 */
+                                $semester_str = substr($trimmed, 22, 3);
+                                if ($semester_str === false) {
+                                    throw new Exception('WEBKOS export format mismatch: cannot find semester number');
+                                }
+                                $semester = intval($semester_str);
+                                error_log("import: semester_str = $semester_str");
+                                error_log("import: semester = $semester");
+                                if ($semester < 200) {
+                                    $format = self::FORMAT_WEBKOS_2017;
+                                    error_log('import::FORMAT_WEBKOS_2017');
+                                } else {
+                                    $format = self::FORMAT_WEBKOS_2020;
+                                    error_log('import::FORMAT_WEBKOS_2020');
+                                }
+                            } else {
+                                /* For other formats only the first line will be skipped, but for the new WEBKOS
+                                   format we will skip at least two lines. */
+                                $skipHeader = false;
+                            }
+                            continue;
+                        }
+                        /* The line contains several fields separated by semicolon. */
+                        $la = explode(";", $trimmed);
+                        self::dumpVar('la', $la);
+
+                        /* Convert data from the file. */
+                        $data = array();
+                        switch ($format) {
+                            case self::FORMAT_TERMINAL:
+                                $data['surname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\""));
+                                $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[2], " \t\n\r\""));
+                                $data['yearno'] = trim($la[3], " \t\n\r\"");
+                                $data['groupno'] = trim($la[4], " \t\n\r\"");
+                                $data['email'] = trim($la[5], " \t\n\r\"");
+                                $emailex = explode("@", $data['email']);
+                                $data['login'] = trim($emailex[0], " \t\n\r\"");
+                                $data['hash'] = trim($la[6], " \t\n\r\"");
+                                /* We have the possibility to not specify `cvutid` at all - this corresponds to the
+                                   original terminal version of KOS. */
+                                if (count($la) <= 7)
+                                    $data['cvutid'] = 0;
+                                else
+                                    $data['cvutid'] = trim($la[7], " \t\n\r\"");
+                                /* In some years, students from Decin do not have a group
+                                         number. We will assign them with group id 0 which is not
+                                         used anywhere. */
+                                if (empty ($data['groupno'])) $data['groupno'] = "0";
+                                break;
+                            case self::FORMAT_WEBKOS_2015:
+                            case self::FORMAT_WEBKOS_2017:
+                            case self::FORMAT_WEBKOS_2020:
+                                $idx = array(
+                                    self::FORMAT_WEBKOS_2015 => array(
+                                        'yearno' => 9,
+                                        'groupno' => 11,
+                                        'numcols' => 13,
+                                        'manual_login' => 12,
+                                        'manual_email' => 13),
+                                    self::FORMAT_WEBKOS_2017 => array(
+                                        'yearno' => 10,
+                                        'groupno' => 13,
+                                        'numcols' => 14,
+                                        'manual_login' => 13,
+                                        'manual_email' => 14),
+                                    self::FORMAT_WEBKOS_2020 => array(
+                                        'yearno' => 10,
+                                        'groupno' => 13,
+                                        'numcols' => 15,
+                                        'manual_login' => 14,
+                                        'manual_email' => 15));
+                                $data['surname'] = iconv($encoding, "utf-8", trim($la[0], " \t\n\r\"\xa0"));
+                                $data['firstname'] = iconv($encoding, "utf-8", trim($la[1], " \t\n\r\"\xa0"));
+                                // up to 2012-11-05 ... $data['yearno']    = trim ( $la[8], " \t\n\r\"" );
+                                $i = $idx[$format]['yearno'];
+                                $data['yearno'] = trim($la[$i], " \t\n\r\"");
+                                // up to 2012-11-05 ... $data['groupno']   = trim ( $la[10], " \t\n\r\"" );
+                                $i = $idx[$format]['groupno'];
+                                $data['groupno'] = trim($la[$i], " \t\n\r\"");
+                                $cvutid = trim($la[2], " \t\n\r\"");
+                                $data['cvutid'] = $cvutid;
+                                $data['hash'] = $cvutid;
+                                /* In some years, students from Decin do not have a group
+                                 number. We will assign them with group id 0 which is not
+                                used anywhere. */
+                                if (empty ($data['groupno'])) $data['groupno'] = "0";
+
+                                /* We have the possibility to append `login` and `e-mail` information manually, circumventing
+                                   the need for LDAP queiries (again, this is mostly necessary for Decin). */
+                                $this->dumpVar('count(la)', count($la));
+                                if (count($la) <= $idx[$format]['numcols']) {
+                                    $res = self::QueryLDAPInfo($ldap, $data, $row);
+                                    list($data['login'], $data['email'], $e) = $res;
+                                    $errStr .= $e;
+                                } else {
+                                    /* Manually extended WebKOS output with login and e-mail information. */
+                                    $i = $idx[$format]['manual_login'];
+                                    $data['login'] = $la[$i];
+                                    /* Check that the data contains something meaningful */
+                                    if (empty ($data['login'])) {
+                                        throw new Exception("Row $row: Expected field $i to contain manually added login, but the field is empty.");
+                                    }
+                                    $i = $idx[$format]['manual_email'];
+                                    $data['email'] = $la[$i];
+                                    /* Check that the data contains something meaningful */
+                                    if (empty ($data['login'])) {
+                                        throw new Exception("Row $row: Expected field $i to contain manually added e-mail address, but the field is empty.");
+                                    }
+                                }
+
+                                break;
+                            case self::FORMAT_IKOS:
+                                $data['surname'] = iconv("windows-1250", "utf-8", trim($la[1], " \t\n\r\""));
+                                $data['firstname'] = iconv("windows-1250", "utf-8", trim($la[2], " \t\n\r\""));
+                                $data['yearno'] = trim($la[11], " \t\n\r\"");
+                                $data['groupno'] = trim($la[12], " \t\n\r\"");
+                                $data['login'] = strtolower(trim($la[5], " \t\n\r\""));
+                                $data['email'] = $data['login'] . "@fd.cvut.cz";
+                                $data['hash'] = trim($la[3], " \t\n\r\"");
+                                $data['cvutid'] = trim($la[4], " \t\n\r\"");
+                                /* In some years, students from Decin do not have a group
+                                         number. We will assign them with group id 0 which is not
+                                         used anywhere. */
+                                if (empty ($data['groupno'])) $data['groupno'] = "0";
+                                break;
+                            case self::FORMAT_IKOS_ROZ:
+                                /* This type of output contains a complete name of student in a single field.
+                                   We will do out best to decipher the name and surname part, but obviously in some
+                                   cases we will be wrong (for multi-word surnames) */
+                                $namefield = explode(" ", $la[2], 2);
+                                $data['surname'] = iconv("windows-1250", "utf-8", trim($namefield[0], " \t\n\r\""));
+                                $data['firstname'] = iconv("windows-1250", "utf-8", trim($namefield[1], " \t\n\r\""));
+                                $data['yearno'] = trim($la[10], " \t\n\r\"");
+                                $data['groupno'] = trim($la[11], " \t\n\r\"");
+                                $data['login'] = strtolower(trim($la[4], " \t\n\r\""));
+                                $data['email'] = $data['login'] . "@fd.cvut.cz";
+                                $data['hash'] = trim($la[3], " \t\n\r\"");
+                                $data['cvutid'] = trim($la[3], " \t\n\r\"");
+                                /* In some years, students from Decin do not have a group
+                                   number. We will assign them with group id 0 which is not
+                                   used anywhere. */
+                                if (empty ($data['groupno'])) $data['groupno'] = "0";
+                                break;
+                            default:
+                                throw new Exception ('Neplatný formát vstupního souboru.');
+                        }
+
+                        /* If requested, increment the year number. */
+                        if ($addyear) {
+                            $data['yearno']++;
+                        }
+
+                        /* Append the group number to the list of group numbers. */
+                        $group = (int)$data['groupno'];
+                        $groupList[$group] = $group;
+
+                        /* Append the record to the list of displayed names. */
+                        $studentList[$row] = $data;
+                        $row++;
+                    }
+
+                    /* Close the input file. */
+                    fclose($handle);
+                } else {
+                    /* The file cannot be opened for reading. */
+                    $this->action = 'e_open';
+                    return ERR_ADMIN_MODE;
+                }
             }
         }
         else

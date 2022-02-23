@@ -7,10 +7,11 @@
 require ( 'config.php' );
 
 /* Read implementation of all classes that will be needed by our code. */
-require(REQUIRE_DIR . 'LectwebSmarty.class.php');
-require(REQUIRE_DIR . 'BaseBean.class.php');
+require ( REQUIRE_DIR . 'LectwebSmarty.class.php');
+require ( REQUIRE_DIR . 'BaseBean.class.php');
 require ( REQUIRE_DIR . 'DatabaseBean.class.php');
 
+require ( REQUIRE_DIR . 'StudentGroupBean.class.php');
 require ( REQUIRE_DIR . 'LectureBean.class.php');
 require ( REQUIRE_DIR . 'LectureLecturerBean.class.php');
 require ( REQUIRE_DIR . 'SchoolYearBean.class.php');
@@ -22,7 +23,8 @@ require ( REQUIRE_DIR . 'UserBean.class.php');
    and testing web applications on the same machine, or different applications
    on the same machine), we will use a named session. The name of the
    session will be identical to the base directory of the application. */
-session_name ( BASE_DIR );
+// @todo This code is duplicated, the same part will be at least in ctrl.php ...
+session_name('session_' . str_replace('/', '_', trim(BASE_DIR, '/')));
 session_start ();
 
 /* Initialise session defaults in case that the session data storage does not

@@ -22,15 +22,15 @@
 <td class="center">{$exercise.room}</td>
   <td class="center">{if $exercise.groupno > 0}{$exercise.groupno}{else}&ndash;{/if}</td>
 <td class="center">
-  {* current storage of tutors, ordered list of persons per exercise*}
+  {* current storage of tutors, ordered list of persons per exercise *}
   {strip}
   {foreach from=$exercise.tutors item=tutor name=tul}
     {if $smarty.foreach.tul.index > 0}, {/if}
     {$tutor.firstname} {$tutor.surname}
   {/foreach}
   {/strip}
-  {* legacy storage of tutors, a single person per exercise*}
-  {$exercise.lecturer.firstname} {$exercise.lecturer.surname}</td>
+  {* legacy storage of tutors, a single person per exercise *}
+  {if not empty($exercise.lecturer)}{$exercise.lecturer.firstname} {$exercise.lecturer.surname}{/if}</td>
 <td class="center" style="height: 3.2ex;"
   ><a href="?act=show,exercise,{$exercise.id}"
     ><img src="images/famfamfam/application_view_detail.png" alt="[ukázat]"

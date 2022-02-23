@@ -105,7 +105,7 @@
           </td>
           <td width="720" valign="top" style="border-right: 1px solid #eeeeee;"><div style="padding: 6px;">
           <table border="0" cellspacing="0" cellpadding="0">
-{if $newsList}
+{if not empty($newsList)}
             <tr>
               <td valign="top">
                 <br><img id="newstitle" src="hg.php?text={czech}Novinky{/czech}{english}News{/english}" alt="[Novinky]" border="0">

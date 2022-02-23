@@ -114,8 +114,13 @@ class LabtaskBean extends DatabaseBean
         {
             if (array_key_exists($lab['id'], $activeLabList))
             {
-                $labSectionList[$key]['checked'] = ' checked="checked"';
+                 $checked = ' checked="checked"';
             }
+            else
+            {
+                $checked = '';
+            }
+            $labSectionList[$key]['checked'] = $checked;
         }
         $this->_smarty->assign('labtaskList', $labSectionList);
     }

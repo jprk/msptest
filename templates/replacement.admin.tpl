@@ -83,7 +83,7 @@ function markAll(formName) {
                         {/foreach}
                     {/strip}
                     {* legacy storage of tutors, a single person per exercise*}
-                    {$repl.lecturer.firstname} {$repl.lecturer.surname}</td>
+                    {if not empty($repl.lecturer)}{$repl.lecturer.firstname} {$repl.lecturer.surname}{/if}</td>
                 <td class="center">{if $repl.manual_term}(nepravidelný){/if}</td>
             </tr>
             {/foreach}

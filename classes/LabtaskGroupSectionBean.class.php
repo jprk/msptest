@@ -77,6 +77,10 @@ class LabtaskGroupSectionBean extends DatabaseBean
 
     function getLabtasksForGroups($lgrpList)
     {
+        $grpIdArray = array_column($lgrpList, 'id');
+        self::dumpVar('lgrpList', $lgrpList);
+        self::dumpVar('grpIdArray', $grpIdArray);
+
         $grpIds = array2ToDBString($lgrpList, 'id');
         $rs = DatabaseBean::dbQuery(
             "SELECT * FROM lgrp_sec LEFT JOIN section ON id=section_id " .
@@ -84,7 +88,8 @@ class LabtaskGroupSectionBean extends DatabaseBean
             "ORDER BY ival1"
         );
 
-        $labtaskList = array();
+        /* Initialise $labtaskList as an array of empty arrays, indexed by group id. */
+        $labtaskList = array_fill_keys($grpIdArray, array());
         if (isset ($rs))
         {
             foreach ($rs as $val)
@@ -136,8 +141,13 @@ class LabtaskGroupSectionBean extends DatabaseBean
         {
             if (array_key_exists($lab['id'], $groupLabList))
             {
-                $labSectionList[$key]['checked'] = ' checked="checked"';
+                $checked = ' checked="checked"';
             }
+            else
+            {
+                $checked = '';
+            }
+            $labSectionList[$key]['checked'] = $checked;
         }
 
         $this->_smarty->assign('labList', $labSectionList);

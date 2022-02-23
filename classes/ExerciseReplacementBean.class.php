@@ -305,6 +305,7 @@ class ExerciseReplacementBean extends DatabaseBean
                 $tmpRec['to'] = strtotime('1970-01-01 ' . $tmpRec['to']);
                 $tmpRec['date'] = $date;
                 $tmpRec['manual_term'] = false;
+                $tmpRec['checked'] = '';  // checkbox is not checked by default
                 //$this->dumpVar('replacement date',$date);
 
                 /* Handle the existing replacement exercises. */

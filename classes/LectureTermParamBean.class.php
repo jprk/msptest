@@ -89,19 +89,36 @@ class LectureTermParamBean extends DatabaseBean
     }
 
     /**
+     * @param bool $allow_empty To not throw exception on empty result and rather initialise empty dataset.
      * @throws Exception
      */
-    protected function assignSingle()
+    protected function assignSingle($allow_empty = false)
     {
         if ($this->schoolyear && $this->lecture_id)
         {
-            $this->dbQuerySingle();
-            $this->assign('termParam', $this->rs);
+            try {
+                $this->dbQuerySingle();
+            }
+            catch (InvalidArgumentException $e)
+            {
+                /* Need to decide what to do next: if the entry does not exist, we will either rethrow the exception
+                   or we will return a dummy default that can be e.g. edited later. */
+                if ($allow_empty)
+                {
+                    $this->_setDefaults();
+                }
+                else
+                {
+                    /* Rethrow the exception */
+                    throw $e;
+                }
+            }
         }
         else
         {
-            throw new Exception('Lecture and school year info not available.');
+            throw new InvalidArgumentException('Lecture and/or school year info not specified.');
         }
+        $this->assign('termParam', $this->rs);
     }
 
     /* -------------------------------------------------------------------
@@ -161,7 +178,7 @@ class LectureTermParamBean extends DatabaseBean
         /* If id == 0, we will create a new record. Otherwise, we will
            fetch the lecture data from database. The result will be
            assigned to template variable 'lectureInfo'. */
-        $this->assignSingle();
+        $this->assignSingle(true);
     }
 
     /**

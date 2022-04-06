@@ -4,26 +4,30 @@
  */
 
 /* Global configuration */
-require ( 'config.php' );
+require('config.php');
 
 /* Read implementation of all classes that will be needed by our code. */
 require(REQUIRE_DIR . 'LectwebSmarty.class.php');
 require(REQUIRE_DIR . 'BaseBean.class.php');
-require ( REQUIRE_DIR . 'DatabaseBean.class.php');
+require(REQUIRE_DIR . 'DatabaseBean.class.php');
 
-require ( REQUIRE_DIR . 'ExerciseBean.class.php');
-require ( REQUIRE_DIR . 'PointsBean.class.php');
-require ( REQUIRE_DIR . 'LectureBean.class.php');
-require ( REQUIRE_DIR . 'SchoolYearBean.class.php');
-require ( REQUIRE_DIR . 'SessionDataBean.class.php');
-require ( REQUIRE_DIR . 'UserBean.class.php');
+require(REQUIRE_DIR . 'ExerciseBean.class.php');
+require(REQUIRE_DIR . 'PointsBean.class.php');
+require(REQUIRE_DIR . 'LectureBean.class.php');
+require(REQUIRE_DIR . 'SchoolYearBean.class.php');
+require(REQUIRE_DIR . 'SessionDataBean.class.php');
+require(REQUIRE_DIR . 'StudentGroupBean.class.php');
+require(REQUIRE_DIR . 'UserBean.class.php');
 
 /* Fetch / initialize session.
    In order to prevent mixing of sessions for differens base URLS (live
    and testing web applications on the same machine, or different applications
    on the same machine), we will use a named session. The name of the
-   session will be identical to the base directory of the application. */
-session_name ( BASE_DIR );
+   session will be identical to the base directory of the application.
+   Note: Do not forget to change the code of all related AJAX service-points
+   that shall use the same session (e.g. submitpoints.php).
+   TODO: Provide unified session starter for all service points. */
+session_name('session_' . str_replace('/', '_', trim(BASE_DIR, '/')));
 session_start ();
 
 /* Initialise session defaults in case that the session data storage does not

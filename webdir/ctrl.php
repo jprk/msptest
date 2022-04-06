@@ -186,7 +186,10 @@ if ($stringId != (string)$id or
    In order to prevent mixing of sessions for different base URLS (live
    and testing web applications on the same machine, or different applications
    on the same machine), we will use a named session. The name of the
-   session will be identical to the base directory of the application. */
+   session will be identical to the base directory of the application.
+   Note: Do not forget to change the code of all related AJAX service-points
+   that shall use the same session (e.g. submitpoints.php).
+   TODO: Provide unified session starter for all service points. */
 session_name('session_' . str_replace('/', '_', trim(BASE_DIR, '/')));
 session_start();
 

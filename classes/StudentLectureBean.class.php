@@ -284,7 +284,10 @@ class StudentLectureBean extends DatabaseBean
            tasks of the chosen evaluation scheme and assign this list to the
            Smarty variable 'subtaskList'. */
         $tsBean = new TaskSubtasksBean (0, $this->_smarty, '', '');
-        $subtaskMap = $tsBean->getSubtaskMapForTaskList($taskList, $evalBean->getEvalYear());
+        /* This is likely to cause discrepancies as evaluation year is not necessarily identical to
+           the current school year.
+           $subtaskMap = $tsBean->getSubtaskMapForTaskList($taskList, $evalBean->getEvalYear()); */
+        $subtaskMap = $tsBean->getSubtaskMapForTaskList($taskList);
         $this->dumpVar('subtaskMap', $subtaskMap);
         if (empty ($subtaskMap))
         {

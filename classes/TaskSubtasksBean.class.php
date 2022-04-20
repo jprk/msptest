@@ -87,6 +87,14 @@ class TaskSubtasksBean extends DatabaseBean
      */
     function getSubtaskMapForTaskList($task_list, $evaluation_year = null)
     {
+        $this->dumpVar('getSubtaskListForTaskList::evaluation_year', $evaluation_year);
+        if ($this->_debugMode)
+        {
+            $text = getDebugBacktrace(debug_backtrace(), "", $sfx = "\n");
+            $text = "<!--\n$text-->\n";
+            print($text);
+        }
+
         /* Default is the current school year. */
         if (is_null($evaluation_year)) $evaluation_year = $this->schoolyear;
 

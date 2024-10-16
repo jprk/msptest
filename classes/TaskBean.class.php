@@ -18,23 +18,31 @@ class TaskBean extends DatabaseBean
     const TT_SEMESTRAL_INDIV_PDF = 201;
     const TT_ACTIVITY = 300;
     const TT_WRITTEN = 400;
-    const TT_NO_TOTAL_POINTS = 500;
-    /**> A necessary condition without any points added to the total. */
+    const TT_NO_TOTAL_POINTS = 500; /**> A necessary condition without any points added to the total. */
+
+    /* Combination types */
+    const TC_NULL = 0;
+    const TC_SUM = 1;  /**> Sum all subtask points */
+    const TC_MEAN = 2;  /**> Mean of all subtask points */
+    const TC_MAX = 3;  /**> Maximum of all subtask points */
+    const TC_MIN = 4;  /**> Minimum of all subtask points */
 
     var $type;
+    var $subtask_combination;
     var $title;
     var $minpts;
     var $position;
-    var $lectureId;
+    var $lecture_id;
 
     /* Fill in reasonable defaults. */
     function _setDefaults()
     {
-        $this->type = $this->rs['type'] = 0;
+        $this->type = $this->rs['type'] = self::NULL_TASK_ID;
         $this->title = $this->rs['title'] = '';
         $this->minpts = $this->rs['minpts'] = 0;
         $this->position = $this->rs['position'] = 0;
         $this->lecture_id = $this->rs['lecture_id'] = 0;
+        $this->subtask_combination = $this->rs['subtask_combination'] = self::TC_NULL;
     }
 
     static function getTaskTypes()
@@ -55,6 +63,17 @@ class TaskBean extends DatabaseBean
             self::TT_SEMESTRAL_ZIP => "Semestrální úloha s hromadným zadáním (odevzdává se jeden soubor *.zip)",
             self::TT_SEMESTRAL_INDIV_PDF => "Semestrální úloha s individuálním zadáním (odevzdává se jeden soubor *.pdf)",
             self::TT_NO_TOTAL_POINTS => "Podmínka zápočtu bez připsání bodů"
+        );
+    }
+
+    static function getTaskCombinations()
+    {
+        return array(
+            self::TC_NULL => "Vyberte ze seznamu ...",
+            self::TC_SUM => "Součet bodů dílčích úloh",
+            self::TC_MEAN => "Průměr bodů dílčích úloh",
+            self::TC_MAX => "Maximum bodů z dílčí úlohy",
+            self::TC_MIN => "Minimum bodů z dílčí úlohy"
         );
     }
 
@@ -81,7 +100,8 @@ class TaskBean extends DatabaseBean
         DatabaseBean::dbQuery(
             "REPLACE task VALUES ("
             . $this->id . ","
-            . $this->type . ",'"
+            . $this->type . ","
+            . $this->subtask_combination . ",'"
             . $this->dbEscape($this->title) . "',"
             . $this->minpts . ","
             . $this->position . ","

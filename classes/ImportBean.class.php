@@ -5,6 +5,7 @@ use Shuchkin\SimpleXLSX;
 
 class ImportBean extends DatabaseBean
 {
+    const FORMAT_WEBKOS_XLSX_2024 = 8;
     const FORMAT_WEBKOS_XLSX_2022 = 7;
     const FORMAT_WEBKOS_2020 = 6;
     const FORMAT_WEBKOS_2017 = 5;
@@ -195,17 +196,17 @@ class ImportBean extends DatabaseBean
                 /* The uploaded file is anMS Excel XLSX file, parse it. */
                 $xlsx = SimpleXLSX::parse($kosfile['tmp_name']);
                 $kos_rows = $xlsx->rows();
-                /*
+                if (false) {
                     echo("<samp>\n");
                     foreach ($kos_rows as $row => $data)
                     {
                         echo("import: xlsx row $row: ");
-                        // foreach($data as $elem) { echo($elem); }
+                        foreach($data as $elem) { echo($elem); }
                         print_r($data);
                         echo("<br/>\n");
                     }
                     echo("</samp>\n");
-                */
+                }
                 /* FORMAT_WEBKOS_XLSX_2022:
                    $kos_rows[0][0] == 'Prezenční seznam'
                    $kos_rows[1][0] == 'Předmět:', $kos_rows[1][1] == '11ELMO – Elektromagnetismus a optika'
@@ -221,6 +222,13 @@ class ImportBean extends DatabaseBean
                     $format = self::FORMAT_WEBKOS_XLSX_2022;
                     $firstRow = 5;
                 }
+                elseif ($kos_rows[1][0] == 'Semestr:' &&
+                    $kos_rows[2][0] == 'Zakončení:' &&
+                    count($kos_rows[4]) == 19 )
+                {
+                    $format = self::FORMAT_WEBKOS_XLSX_2024;
+                    $firstRow = 5;
+                }
                 else
                 {
                     throw new Exception("File '" . $kosfile['name'] . "' is in unsupported WEBKOS XLSX format.");
@@ -231,20 +239,37 @@ class ImportBean extends DatabaseBean
                     if ($row < $firstRow) continue;
 
                     $data = array();
-                    // if ($format == self::FORMAT_WEBKOS_XLSX_2022)
-                    {
-                        $data['surname'] = $la[0];
-                        $data['firstname'] = $la[1];
-                        $data['cvutid'] = $la[2];
-                        $data['login'] = strtolower($la[3]);
-                        $data['yearno'] = $la[11];
-                        $data['groupno'] = $la[12];
-                        $data['email'] = $data['login'] . "@fd.cvut.cz";
-                        $data['hash'] = $la[2];
+                    switch ($format) {
+                        case self::FORMAT_WEBKOS_XLSX_2022:
+                            $data['surname'] = $la[0];
+                            $data['firstname'] = $la[1];
+                            $data['cvutid'] = $la[2];
+                            $data['login'] = strtolower($la[3]);
+                            $data['yearno'] = $la[11];
+                            $data['groupno'] = $la[12];
+                            $data['email'] = $data['login'] . "@fd.cvut.cz";
+                            $data['hash'] = $la[2];
 
-                        list($data['login'], $data['email'], $e) = self::QueryLDAPInfo($ldap, $data, $row);
-                        // Append the error text if any to the output error string.
-                        $errStr .= $e;
+                            list($data['login'], $data['email'], $e) = self::QueryLDAPInfo($ldap, $data, $row);
+                            // Append the error text if any to the output error string.
+                            $errStr .= $e;
+                            break;
+                        case self::FORMAT_WEBKOS_XLSX_2024:
+                            $data['surname'] = $la[0];
+                            $data['firstname'] = $la[1];
+                            $data['login'] = strtolower($la[2]);
+                            $data['cvutid'] = $la[3];
+                            $data['yearno'] = $la[11];
+                            $data['groupno'] = $la[12];
+                            $data['email'] = $data['login'] . "@fd.cvut.cz";
+                            $data['hash'] = $la[3];
+
+                            list($data['login'], $data['email'], $e) = self::QueryLDAPInfo($ldap, $data, $row);
+                            // Append the error text if any to the output error string.
+                            $errStr .= $e;
+                            break;
+                        default:
+                            throw new Exception("Unsupported format $format");
                     }
 
                     /* If requested, increment the year number. */
@@ -501,6 +526,17 @@ class ImportBean extends DatabaseBean
            remove evil tags where applicable. */
         $this->processPostVars();
 
+        if (false) {
+            echo("<samp>\n");
+            echo("POST[]: ");
+            print_r($_POST);
+            echo("\n");
+            echo("groups[]: ");
+            print_r($this->groups);
+            echo("\n");
+            echo("</samp>\n");
+        }
+
         $errstr = '';
         if (empty ($this->firstname)) $errstr .= "<li>Chybí křestní jména</li>\n";
         if (empty ($this->surname)) $errstr .= "<li>Chybí příjmení</li>\n";
@@ -511,7 +547,7 @@ class ImportBean extends DatabaseBean
 
         if (empty ($this->hash)) $errstr .= "<li>Chybí heše</li>\n";
         if (empty ($this->cvutid)) $errstr .= "<li>Chybí ČVUT ID</li>\n";
-        if (empty ($this->groups)) $errstr .= "<li>Chybí seznam importovaných studijních skupin</li>\n";
+        if (empty ($this->groups)) $errstr .= "<li>Chybí seznam importovaných studijních skupin (ověřte nastavení limitu <code>max_input_vars</code> v PHP)</li>\n";
 
         if (empty ($errstr))
         {

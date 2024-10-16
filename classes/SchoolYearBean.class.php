@@ -82,10 +82,18 @@ class SchoolYearBean extends BaseBean
                 self::TERMTYPE_WINTER => array('from' => '2022-09-21', 'to' => '2023-02-19'),
                 self::TERMTYPE_SUMMER => array('from' => '2023-02-20', 'to' => '2023-09-24')
             ),
-            /* Dummy, there is no official info yet. */
             2023 => array(
                 self::TERMTYPE_WINTER => array('from' => '2023-09-25', 'to' => '2024-02-18'),
-                self::TERMTYPE_SUMMER => array('from' => '2024-02-19', 'to' => '2024-09-30')
+                self::TERMTYPE_SUMMER => array('from' => '2024-02-19', 'to' => '2024-09-22')
+            ),
+            2024 => array(
+                self::TERMTYPE_WINTER => array('from' => '2024-09-23', 'to' => '2025-02-16'),
+                self::TERMTYPE_SUMMER => array('from' => '2025-02-17', 'to' => '2025-09-21')
+            ),
+            /* Dummy, there is no official info yet. */
+            2025 => array(
+                self::TERMTYPE_WINTER => array('from' => '2025-09-23', 'to' => '2026-02-16'),
+                self::TERMTYPE_SUMMER => array('from' => '2026-02-17', 'to' => '2026-09-21')
             ));
 
         if (array_key_exists($schoolyear, $_dates))

@@ -5,6 +5,7 @@ use Shuchkin\SimpleXLSX;
 
 class ImportBean extends DatabaseBean
 {
+U    const FORMAT_WEBKOS_XLSX_2026 = 9;
     const FORMAT_WEBKOS_XLSX_2024 = 8;
     const FORMAT_WEBKOS_XLSX_2022 = 7;
     const FORMAT_WEBKOS_2020 = 6;
@@ -229,14 +230,27 @@ class ImportBean extends DatabaseBean
                     $format = self::FORMAT_WEBKOS_XLSX_2024;
                     $firstRow = 5;
                 }
+                elseif ($kos_rows[1][0] == 'Semestr:' &&
+                    $kos_rows[2][0] == 'Zakončení:' &&
+                    count($kos_rows[4]) == 22 )
+                {
+                    $format = self::FORMAT_WEBKOS_XLSX_2026;
+                    $firstRow = 5;
+                }
                 else
                 {
                     throw new Exception("File '" . $kosfile['name'] . "' is in unsupported WEBKOS XLSX format.");
                 }
 
+                // echo("<p>format=$format</p>");
+                //print_r($la);
+                //echo("</samp><br/>");
+
                 foreach ($kos_rows as $row => $la)
                 {
                     if ($row < $firstRow) continue;
+
+                    // echo("<p>row=$row</p>");
 
                     $data = array();
                     switch ($format) {
@@ -263,10 +277,35 @@ class ImportBean extends DatabaseBean
                             $data['groupno'] = $la[12];
                             $data['email'] = $data['login'] . "@fd.cvut.cz";
                             $data['hash'] = $la[3];
-
-                            list($data['login'], $data['email'], $e) = self::QueryLDAPInfo($ldap, $data, $row);
-                            // Append the error text if any to the output error string.
-                            $errStr .= $e;
+                            // logSystemError(print_r($data, true));
+                            try {
+                                list($data['login'], $data['email'], $e) = self::QueryLDAPInfo($ldap, $data, $row);
+                                // Append the error text if any to the output error string.
+                                $errStr .= $e;
+                            }
+                            catch (Exception $ex) {
+                                // Append the error message to the output error string.
+                                $errStr .= $ex->getMessage() . "<br/>";
+                            }
+                        case self::FORMAT_WEBKOS_XLSX_2026:
+                            $data['surname'] = $la[0];
+                            $data['firstname'] = $la[1];
+                            $data['login'] = strtolower($la[3]);
+                            $data['cvutid'] = $la[4];
+                            $data['yearno'] = $la[12];
+                            $data['groupno'] = $la[13];
+                            $data['email'] = $data['login'] . "@fd.cvut.cz";
+                            $data['hash'] = $la[4];
+                            // logSystemError(print_r($data, true));
+                            try {
+                                list($data['login'], $data['email'], $e) = self::QueryLDAPInfo($ldap, $data, $row);
+                                // Append the error text if any to the output error string.
+                                $errStr .= $e;
+                            }
+                            catch (Exception $ex) {
+                                // Append the error message to the output error string.
+                                $errStr .= $ex->getMessage() . "<br/>";
+                            }
                             break;
                         default:
                             throw new Exception("Unsupported format $format");
@@ -285,6 +324,9 @@ class ImportBean extends DatabaseBean
                     /* Append the record to the list of displayed names. */
                     $studentList[] = $data;
                 }
+
+                // print_r($studentList);
+
             }
             else {
                 $handle = @fopen($kosfile['tmp_name'], "r");
@@ -514,6 +556,9 @@ class ImportBean extends DatabaseBean
         $this->assign('studentList', $studentList);
         $this->assign('groupList', $groupList);
         $this->assign('errors', $errStr);
+
+        self::dumpSmarty();
+
         return RET_OK;
     }
 
